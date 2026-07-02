@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{ --bg:#171614; --bg-alt:#1D1B18; --surface:#221F1B; --line:#34302A; --bone:#F2EDE4; --bone-dim:#A39A8B; --brass:#C9A227; --brass-soft:#E4C25A; --err:#c0392b; --ok:#4a7c59; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--bone); font-family:'Inter', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:820px; margin:0 auto; padding:0 24px; }
+  @media (max-width:640px){ .wrap{ padding:0 18px; } }
+
+  nav{ border-bottom:1px solid var(--line); background:rgba(23,22,20,0.9); backdrop-filter:blur(10px); position:sticky; top:0; z-index:10; }
+  nav .inner{ max-width:820px; margin:0 auto; padding:0 24px; height:68px; display:flex; align-items:center; justify-content:space-between; }
+  .logo{ font-family:'Fraunces', serif; font-size:19px; }
+  .logo em{ font-style:italic; color:var(--brass); }
+  .logout-btn{ font-size:13px; color:var(--bone-dim); background:none; border:1px solid var(--line); padding:8px 16px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif; }
+  .logout-btn:hover{ border-color:var(--bone-dim); color:var(--bone); }
+
+  main{ padding:44px 0 100px; }
+
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(26px,4vw,34px); margin-bottom:4px; }
+  .sub{ color:var(--bone-dim); font-size:14.5px; margin-bottom:32px; }
+
+  .login-wrap{ display:none; min-height:70vh; align-items:center; justify-content:center; padding:20px; }
+  .login-wrap.active{ display:flex; }
+  .login-card{ width:100%; max-width:380px; }
+  .login-card h1{ font-size:24px; text-align:center; margin-bottom:28px; }
+  .field-group{ margin-bottom:16px; }
+  label{ display:block; font-size:13px; color:var(--bone-dim); margin-bottom:7px; }
+  input{ width:100%; background:var(--surface); border:1px solid var(--line); color:var(--bone); padding:12px 14px; border-radius:4px; font-size:14px; font-family:'Inter', sans-serif; }
+  input:focus{ outline:none; border-color:var(--brass); }
+  .error-text{ font-size:12.5px; color:var(--err); margin-top:12px; display:none; text-align:center; }
+  .btn{ padding:12px 22px; border-radius:4px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
+  .btn-primary{ background:var(--brass); color:var(--bg); width:100%; padding:13px; margin-top:6px; }
+  .btn-primary:hover{ background:var(--brass-soft); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .toggle-mode{ text-align:center; font-size:13px; color:var(--bone-dim); margin-top:20px; cursor:pointer; }
+  .toggle-mode span{ color:var(--brass); font-weight:600; }
+
+  .not-authorized{ display:none; text-align:center; padding:100px 20px; }
+  .not-authorized.active{ display:block; }
+  .not-authorized .icon{ font-size:36px; margin-bottom:18px; }
+  .not-authorized h2{ font-family:'Fraunces', serif; font-size:24px; margin-bottom:10px; }
+  .not-authorized p{ color:var(--bone-dim); font-size:14.5px; }
+
+  .empty-pending{ text-align:center; padding:56px 20px; border:1px dashed var(--line); border-radius:8px; color:var(--bone-dim); font-size:14px; }
+
+  .review-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:22px 24px; margin-bottom:14px; }
+  .review-card h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; margin-bottom:4px; }
+  .review-meta{ font-size:12.5px; color:var(--bone-dim); margin-bottom:12px; }
+  .review-bio{ font-size:13.5px; line-height:1.65; color:var(--bone); margin-bottom:14px; }
+  .review-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+  .review-tag{ font-size:11px; border:1px solid var(--line); color:var(--bone-dim); padding:4px 9px; border-radius:20px; }
+  .review-actions{ display:flex; gap:10px; }
+  .btn-approve{ background:var(--ok); color:var(--bone); padding:10px 20px; font-size:13px; }
+  .btn-approve:hover{ opacity:0.9; }
+  .btn-reject{ background:none; border:1px solid var(--err); color:var(--err); padding:10px 20px; font-size:13px; }
+  .btn-reject:hover{ background:rgba(192,57,43,0.1); }
+  .review-actions button:disabled{ opacity:0.5; cursor:not-allowed; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a href="index.html" class="logo">ust<em>a</em>ra</a>
+    <button class="logout-btn" id="logoutBtn" style="display:none;" data-i18n="logout">Log out</button>
+  </div>
+</nav>
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <h1 id="loginTitle" data-i18n="login_title">Admin login</h1>
+    <form id="loginForm">
+      <div class="field-group">
+        <label data-i18n="l_email">Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="field-group">
+        <label data-i18n="l_password">Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <div class="error-text" id="errorMsg" data-i18n="err_generic">Incorrect email or password.</div>
+      <button type="submit" class="btn btn-primary" id="submitBtn" data-i18n="login_btn">Log in</button>
+    </form>
+    <div class="toggle-mode" id="toggleMode" data-i18n-html="toggle_signup">First time here? <span>Create admin account</span></div>
+  </div>
+</div>
+
+<div class="not-authorized" id="notAuthorized">
+  <div class="icon">🔒</div>
+  <h2 data-i18n="not_auth_h">Not authorized</h2>
+  <p data-i18n="not_auth_p">This page is restricted to the Ustara founder account.</p>
+</div>
+
+<main id="adminMain" style="display:none;">
+  <div class="wrap">
+    <h1 data-i18n="title">Pending barbers</h1>
+    <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
+    <div id="pendingArea"></div>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const FOUNDER_EMAIL = 'izzatilloanvarov641@gmail.com';
+
+const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
+const SPECIALTIES_LOCAL = {
+  en: SPECIALTIES_EN,
+  uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
+  ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
+};
+
+const I18N = {
+  en:{ logout:"Log out", login_title:"Admin login", l_email:"Email", l_password:"Password",
+    err_generic:"Incorrect email or password.", login_btn:"Log in", signup_btn:"Create account",
+    toggle_signup:'First time here? <span>Create admin account</span>', toggle_login:'Already have an account? <span>Log in</span>',
+    not_auth_h:"Not authorized", not_auth_p:"This page is restricted to the Ustara founder account.",
+    title:"Pending barbers", sub:"Review new barber profiles before they go live.",
+    empty_pending:"No barbers waiting for review right now.",
+    rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"yrs",
+    approve:"Approve", reject:"Reject", not_set:"—" },
+  uz:{ logout:"Chiqish", login_title:"Admin kirish", l_email:"Email", l_password:"Parol",
+    err_generic:"Email yoki parol noto'g'ri.", login_btn:"Kirish", signup_btn:"Hisob yaratish",
+    toggle_signup:'Birinchi marta? <span>Admin hisobini yarating</span>', toggle_login:'Hisobingiz bormi? <span>Kirish</span>',
+    not_auth_h:"Ruxsat yo'q", not_auth_p:"Bu sahifa faqat Ustara asoschisi uchun.",
+    title:"Kutilayotgan sartaroshlar", sub:"Yangi sartarosh profillarini faollashtirishdan oldin ko'rib chiqing.",
+    empty_pending:"Hozircha ko'rib chiqish uchun sartaroshlar yo'q.",
+    rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
+    approve:"Tasdiqlash", reject:"Rad etish", not_set:"—" },
+  ru:{ logout:"Выйти", login_title:"Вход для админа", l_email:"Email", l_password:"Пароль",
+    err_generic:"Неверный email или пароль.", login_btn:"Войти", signup_btn:"Создать аккаунт",
+    toggle_signup:'Первый раз? <span>Создать аккаунт админа</span>', toggle_login:'Уже есть аккаунт? <span>Войти</span>',
+    not_auth_h:"Нет доступа", not_auth_p:"Эта страница доступна только основателю Ustara.",
+    title:"Барберы на рассмотрении", sub:"Проверяйте новые профили барберов перед публикацией.",
+    empty_pending:"Пока никто не ждёт проверки.",
+    rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
+    approve:"Одобрить", reject:"Отклонить", not_set:"—" }
+};
+
+const browserLang = (navigator.language || 'en').slice(0,2);
+const currentLang = I18N[browserLang] ? browserLang : 'en';
+let signupMode = false;
+
+function t(key){ return I18N[currentLang][key]; }
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    if(I18N[currentLang][el.dataset.i18nHtml] !== undefined) el.innerHTML = I18N[currentLang][el.dataset.i18nHtml];
+  });
+}
+applyStaticI18n();
+
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+function localizeSpecialty(enTag){
+  const idx = SPECIALTIES_EN.indexOf(enTag);
+  return idx === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][idx];
+}
+
+document.getElementById('toggleMode').addEventListener('click', ()=>{
+  signupMode = !signupMode;
+  document.getElementById('loginTitle').textContent = signupMode ? t('signup_btn') : t('login_title');
+  document.getElementById('submitBtn').textContent = signupMode ? t('signup_btn') : t('login_btn');
+  document.getElementById('toggleMode').innerHTML = signupMode ? t('toggle_login') : t('toggle_signup');
+  document.getElementById('errorMsg').style.display = 'none';
+});
+
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  errorMsg.style.display = 'none';
+  const emailVal = document.getElementById('email').value.trim();
+  const passwordVal = document.getElementById('password').value;
+
+  btn.disabled = true;
+  const { data, error } = signupMode
+    ? await supabaseClient.auth.signUp({ email: emailVal, password: passwordVal })
+    : await supabaseClient.auth.signInWithPassword({ email: emailVal, password: passwordVal });
+  btn.disabled = false;
+
+  if(error){
+    errorMsg.textContent = t('err_generic');
+    errorMsg.style.display = 'block';
+    return;
+  }
+  if(!data.session){
+    // no active session yet (e.g. email confirmation still required) — nothing more we can do here
+    errorMsg.textContent = t('err_generic');
+    errorMsg.style.display = 'block';
+    return;
+  }
+  await checkAuthorizedAndEnter(data.session.user);
+});
+
+async function checkAuthorizedAndEnter(user){
+  document.getElementById('loginWrap').classList.remove('active');
+  if(!user || user.email !== FOUNDER_EMAIL){
+    await supabaseClient.auth.signOut();
+    document.getElementById('notAuthorized').classList.add('active');
+    return;
+  }
+  document.getElementById('logoutBtn').style.display = 'inline-block';
+  document.getElementById('adminMain').style.display = 'block';
+  loadPending();
+}
+
+async function loadPending(){
+  const area = document.getElementById('pendingArea');
+  const { data, error } = await supabaseClient
+    .from('barbers')
+    .select('*')
+    .eq('is_approved', false)
+    .order('created_at', { ascending:true });
+
+  if(error || !data || data.length === 0){
+    area.innerHTML = `<div class="empty-pending">${t('empty_pending')}</div>`;
+    return;
+  }
+
+  area.innerHTML = data.map(b => {
+    const specs = (b.specialties || []).map(s=>`<span class="review-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
+    return `
+      <div class="review-card">
+        <h3>${escapeHtml(b.full_name)}</h3>
+        <div class="review-meta">${escapeHtml(b.district || t('not_set'))}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
+        ${b.bio ? `<div class="review-bio">${escapeHtml(b.bio)}</div>` : ''}
+        <div class="review-tags">${specs}</div>
+        <div class="review-actions">
+          <button class="btn btn-approve" data-approve="${b.id}">${t('approve')}</button>
+          <button class="btn btn-reject" data-reject="${b.id}">${t('reject')}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  area.querySelectorAll('[data-approve]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      await supabaseClient.from('barbers').update({ is_approved: true }).eq('id', btn.dataset.approve);
+      loadPending();
+    });
+  });
+  area.querySelectorAll('[data-reject]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      await supabaseClient.from('barbers').update({ is_published: false }).eq('id', btn.dataset.reject);
+      loadPending();
+    });
+  });
+}
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await supabaseClient.auth.signOut();
+  window.location.href = 'index.html';
+});
+
+async function init(){
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  if(sessionData.session){
+    await checkAuthorizedAndEnter(sessionData.session.user);
+  } else {
+    document.getElementById('loginWrap').classList.add('active');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

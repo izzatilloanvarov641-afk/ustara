@@ -240,8 +240,11 @@
     font-size:14px; font-weight:600; cursor:pointer; transition:background .18s ease; white-space:nowrap;
   }
   .waitlist-form button:hover{ background:var(--brass-soft); }
+  .waitlist-form.stacked{ flex-direction:column; }
   .form-note{ font-size:12.5px; color:#6B675E; margin-top:16px; }
   .form-success{ display:none; color:var(--brass); font-size:14.5px; font-family:'Fraunces', serif; font-style:italic; }
+  .form-error{ display:none; color:#c0392b; font-size:13px; margin-top:14px; }
+  .form-error a{ color:var(--brass); font-weight:600; }
   @media (max-width:520px){ .waitlist-form{ flex-direction:column; } }
 
   footer{ padding:56px 0 40px; }
@@ -398,9 +401,12 @@
       </div>
 
       <form class="waitlist-form" id="waitlistForm">
+        <input type="text" id="waitlistName" data-i18n-ph="wl_name_ph" placeholder="Full name" style="display:none;">
         <input type="text" id="waitlistInput" data-i18n-ph="wl_input_ph" placeholder="Phone number or email" required>
+        <input type="password" id="waitlistPassword" data-i18n-ph="wl_password_ph" placeholder="Create a password" style="display:none;" minlength="6">
         <button type="submit" data-i18n="wl_submit">Join</button>
       </form>
+      <div class="form-error" id="waitlistError"></div>
       <div class="form-success" id="formSuccess" data-i18n="wl_success">You're on the list — welcome to Ustara.</div>
       <p class="form-note" data-i18n="wl_note">By joining, you agree to be contacted about Ustara's launch in Tashkent.</p>
     </div>
@@ -460,9 +466,13 @@ const I18N = {
     wl_eyebrow:"Launching in Tashkent", wl_h2:'Be first to the <em>chair</em>.',
     wl_p:"We're onboarding the first barbers and clients before public launch. Leave your contact — no spam, one message when we're live.",
     wl_toggle_client:"I'm a client", wl_toggle_barber:"I'm a barber",
-    wl_input_ph:"Phone number or email", wl_submit:"Join",
+    wl_input_ph:"Phone number or email", wl_email_ph:"Email address", wl_name_ph:"Full name",
+    wl_password_ph:"Create a password", wl_submit:"Join",
     wl_success:"You're on the list — welcome to Ustara.",
     wl_note:"By joining, you agree to be contacted about Ustara's launch in Tashkent.",
+    wl_invalid_email:"Enter a valid email address.",
+    wl_duplicate:'You already have an account. <a href="client-auth.html">Log in instead →</a>',
+    wl_signup_error:"Something went wrong — try again.",
     foot_client_login:"Client login", foot_barber_login:"Barber login",
     foot_copy:"© 2026 Ustara. Tashkent, Uzbekistan."
   },
@@ -494,8 +504,12 @@ const I18N = {
     wl_eyebrow:"Toshkentda ishga tushmoqda", wl_h2:"Birinchi bo'lib <em>stulga</em> o'tiring.",
     wl_p:"Ommaviy ishga tushishdan oldin birinchi sartaroshlar va mijozlarni qabul qilyapmiz. Aloqangizni qoldiring — spam yo'q, ishga tushganimizda bitta xabar.",
     wl_toggle_client:"Men mijozman", wl_toggle_barber:"Men sartaroshman",
-    wl_input_ph:"Telefon raqami yoki email", wl_submit:"Qo'shilish",
+    wl_input_ph:"Telefon raqami yoki email", wl_email_ph:"Email manzil", wl_name_ph:"To'liq ism",
+    wl_password_ph:"Parol yarating", wl_submit:"Qo'shilish",
     wl_success:"Siz ro'yxatdasiz — Ustara'ga xush kelibsiz.",
+    wl_invalid_email:"To'g'ri email manzilini kiriting.",
+    wl_duplicate:'Sizda allaqachon hisob bor. <a href="client-auth.html">Buning o\'rniga kiring →</a>',
+    wl_signup_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
     wl_note:"Qo'shilish orqali Ustara'ning Toshkentdagi ishga tushishi haqida bog'lanishga rozilik bildirasiz.",
     foot_client_login:"Mijoz sifatida kirish", foot_barber_login:"Sartarosh sifatida kirish",
     foot_copy:"© 2026 Ustara. Toshkent, O'zbekiston."
@@ -528,9 +542,13 @@ const I18N = {
     wl_eyebrow:"Запуск в Ташкенте", wl_h2:"Будьте первым в <em>кресле</em>.",
     wl_p:"Мы набираем первых барберов и клиентов до публичного запуска. Оставьте контакт — без спама, одно сообщение при запуске.",
     wl_toggle_client:"Я клиент", wl_toggle_barber:"Я барбер",
-    wl_input_ph:"Телефон или email", wl_submit:"Записаться",
+    wl_input_ph:"Телефон или email", wl_email_ph:"Email адрес", wl_name_ph:"Полное имя",
+    wl_password_ph:"Придумайте пароль", wl_submit:"Записаться",
     wl_success:"Вы в списке — добро пожаловать в Ustara.",
     wl_note:"Присоединяясь, вы соглашаетесь на связь по поводу запуска Ustara в Ташкенте.",
+    wl_invalid_email:"Введите корректный email адрес.",
+    wl_duplicate:'У вас уже есть аккаунт. <a href="client-auth.html">Войти →</a>',
+    wl_signup_error:"Что-то пошло не так — попробуйте снова.",
     foot_client_login:"Вход для клиентов", foot_barber_login:"Вход для барберов",
     foot_copy:"© 2026 Ustara. Ташкент, Узбекистан."
   }
@@ -641,27 +659,115 @@ document.getElementById('heroCaptureForm').addEventListener('submit', async func
   appendNextStep(form.parentNode, 'client');
 });
 
+function isValidEmail(value){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function updateWaitlistFormForRole(){
+  const nameInput = document.getElementById('waitlistName');
+  const mainInput = document.getElementById('waitlistInput');
+  const passwordInput = document.getElementById('waitlistPassword');
+  const form = document.getElementById('waitlistForm');
+  document.getElementById('waitlistError').style.display = 'none';
+
+  if(selectedRole === 'client'){
+    nameInput.style.display = 'block';
+    nameInput.required = true;
+    passwordInput.style.display = 'block';
+    passwordInput.required = true;
+    form.classList.add('stacked');
+    mainInput.type = 'email';
+    mainInput.dataset.i18nPh = 'wl_email_ph';
+    mainInput.placeholder = I18N[currentLang].wl_email_ph;
+  } else {
+    nameInput.style.display = 'none';
+    nameInput.required = false;
+    passwordInput.style.display = 'none';
+    passwordInput.required = false;
+    form.classList.remove('stacked');
+    mainInput.type = 'text';
+    mainInput.dataset.i18nPh = 'wl_input_ph';
+    mainInput.placeholder = I18N[currentLang].wl_input_ph;
+  }
+}
+
 let selectedRole = 'client';
 document.querySelectorAll('.toggle button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     selectedRole = btn.dataset.role;
+    updateWaitlistFormForRole();
   });
 });
+updateWaitlistFormForRole();
 
 document.getElementById('waitlistForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const form = this;
   const input = document.getElementById('waitlistInput');
+  const nameInput = document.getElementById('waitlistName');
+  const passwordInput = document.getElementById('waitlistPassword');
   const success = document.getElementById('formSuccess');
+  const errorEl = document.getElementById('waitlistError');
   const submitBtn = form.querySelector('button[type="submit"]');
   const contact = input.value.trim();
+  errorEl.style.display = 'none';
   if(!contact) return;
+
+  if(selectedRole === 'client' && !isValidEmail(contact)){
+    errorEl.textContent = I18N[currentLang].wl_invalid_email;
+    errorEl.style.display = 'block';
+    return;
+  }
 
   const originalBtnText = submitBtn.textContent;
   submitBtn.disabled = true;
   submitBtn.textContent = '...';
+
+  if(selectedRole === 'client'){
+    const fullName = nameInput.value.trim();
+    const password = passwordInput.value;
+
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: contact, password });
+
+    if(!authError && authData.user && authData.user.identities && authData.user.identities.length === 0){
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      errorEl.innerHTML = I18N[currentLang].wl_duplicate;
+      errorEl.style.display = 'block';
+      return;
+    }
+    if(authError){
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      if(/already registered|already exists/i.test(authError.message || '')){
+        errorEl.innerHTML = I18N[currentLang].wl_duplicate;
+      } else {
+        errorEl.textContent = I18N[currentLang].wl_signup_error;
+      }
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const userId = authData.user ? authData.user.id : null;
+    if(userId){
+      await supabaseClient.from('clients').insert([{ id: userId, full_name: fullName }]);
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalBtnText;
+
+    if(authData.session){
+      window.location.href = 'client-dashboard.html';
+      return;
+    }
+
+    form.style.display = 'none';
+    success.style.display = 'block';
+    appendNextStep(success.parentNode, 'client');
+    return;
+  }
 
   const result = await submitToWaitlist(contact, selectedRole);
 
@@ -669,8 +775,8 @@ document.getElementById('waitlistForm').addEventListener('submit', async functio
   submitBtn.textContent = originalBtnText;
 
   if(!result.ok){
-    input.style.borderColor = '#c0392b';
-    input.placeholder = 'Something went wrong — try again';
+    errorEl.textContent = I18N[currentLang].wl_signup_error;
+    errorEl.style.display = 'block';
     return;
   }
 

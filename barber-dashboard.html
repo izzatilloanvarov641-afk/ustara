@@ -26,6 +26,8 @@
   .gate{ display:none; text-align:center; padding:100px 20px; color:var(--bone-dim); }
   .gate.active{ display:block; }
 
+  .pending-banner{ padding:14px 20px; background:rgba(201,162,39,0.08); border:1px solid rgba(201,162,39,0.3); border-radius:8px; font-size:13.5px; color:var(--brass-soft); margin-bottom:16px; text-align:center; display:none; }
+  .pending-banner.active{ display:block; }
   .status-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:36px; padding:20px 24px; background:var(--surface); border:1px solid var(--line); border-radius:8px; }
   .status-left{ display:flex; align-items:center; gap:14px; }
   .status-dot{ width:10px; height:10px; border-radius:50%; background:#5a5347; flex-shrink:0; }
@@ -69,6 +71,12 @@
   .chip{ border:1px solid var(--line); color:var(--bone-dim); padding:9px 15px; border-radius:20px; font-size:13px; cursor:pointer; background:var(--bg); }
   .chip.selected{ background:var(--brass); border-color:var(--brass); color:var(--bg); font-weight:600; }
 
+  .service-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); }
+  .service-row:last-child{ border-bottom:none; }
+  .service-duration{ display:flex; align-items:center; gap:7px; flex-shrink:0; }
+  .service-duration input{ width:64px; padding:8px 10px; text-align:center; }
+  .service-duration span{ font-size:12.5px; color:var(--bone-dim); white-space:nowrap; }
+
   .btn-row{ display:flex; gap:10px; margin-top:24px; }
   .btn{ padding:12px 22px; border-radius:4px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
   .btn-primary{ background:var(--brass); color:var(--bg); }
@@ -96,6 +104,8 @@
   <div class="wrap">
     <h1 data-i18n="welcome">Welcome back<span id="nameInsert"></span></h1>
     <p class="sub" data-i18n="sub">Manage your profile and see your bookings.</p>
+
+    <div class="pending-banner" id="pendingBanner" data-i18n="pending_review_msg">Pending review — we'll notify you once approved.</div>
 
     <div class="status-row">
       <div class="status-left">
@@ -191,6 +201,22 @@
     </div>
 
     <div class="section-title">
+      <span data-i18n="services_title">Services</span>
+      <span class="edit-link" id="editServicesLink" data-i18n="edit">Edit</span>
+    </div>
+    <div class="profile-card">
+      <div class="profile-view" id="servicesView"></div>
+      <div class="profile-edit" id="servicesEdit">
+        <div id="serviceRows"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
+          <button class="btn btn-secondary" id="cancelServicesBtn" data-i18n="cancel">Cancel</button>
+        </div>
+        <div class="save-msg" id="saveServicesMsg" data-i18n="saved">Saved.</div>
+      </div>
+    </div>
+
+    <div class="section-title">
       <span data-i18n="bookings_title">Upcoming bookings</span>
     </div>
     <div id="bookingsArea"></div>
@@ -209,6 +235,13 @@ const SPECIALTIES_LOCAL = {
   ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
 };
 
+const SERVICE_KEYS = ["haircut","beard_trim","haircut_beard","kids_haircut","lineup","coloring"];
+const SERVICES_LOCAL = {
+  en: ["Haircut","Beard trim","Haircut + beard","Kids' haircut","Line-up","Coloring"],
+  uz: ["Soch olish","Soqol olish","Soch + soqol","Bolalar uchun soch olish","Line-up","Soch bo'yash"],
+  ru: ["Стрижка","Оформление бороды","Стрижка + борода","Детская стрижка","Line-up","Окрашивание"]
+};
+
 const I18N = {
   en:{ logout:"Log out", gate_msg:"Checking your session...", welcome:"Welcome back", sub:"Manage your profile and see your bookings.",
     status_on:"Your profile is live", status_on_sub:"Clients can find and book you.",
@@ -220,7 +253,9 @@ const I18N = {
     availability_title:"Working hours", l_days:"Working days", l_start:"Opens at", l_end:"Closes at",
     l_duration:"Appointment length", rv_days:"Days", rv_hours:"Hours", rv_duration:"Length",
     not_set:"Not set yet", confirm:"Confirm", cancel_booking:"Cancel", confirmed:"confirmed", cancelled:"cancelled",
-    day_mon:"Mon", day_tue:"Tue", day_wed:"Wed", day_thu:"Thu", day_fri:"Fri", day_sat:"Sat", day_sun:"Sun" },
+    day_mon:"Mon", day_tue:"Tue", day_wed:"Wed", day_thu:"Thu", day_fri:"Fri", day_sat:"Sat", day_sun:"Sun",
+    services_title:"Services", min_short:"min",
+    pending_review_msg:"Pending review — we'll notify you once approved." },
   uz:{ logout:"Chiqish", gate_msg:"Sessiya tekshirilmoqda...", welcome:"Xush kelibsiz", sub:"Profilingizni boshqaring va bandlarni ko'ring.",
     status_on:"Profilingiz faol", status_on_sub:"Mijozlar sizni topib, band qilishlari mumkin.",
     status_off:"Profilingiz yashirin", status_off_sub:"Mijozlar sizni topishi uchun buni yoqing.",
@@ -231,7 +266,9 @@ const I18N = {
     availability_title:"Ish vaqti", l_days:"Ish kunlari", l_start:"Ochilish vaqti", l_end:"Yopilish vaqti",
     l_duration:"Uchrashuv davomiyligi", rv_days:"Kunlar", rv_hours:"Vaqt", rv_duration:"Davomiyligi",
     not_set:"Hali sozlanmagan", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish", confirmed:"tasdiqlangan", cancelled:"bekor qilingan",
-    day_mon:"Du", day_tue:"Se", day_wed:"Ch", day_thu:"Pa", day_fri:"Ju", day_sat:"Sh", day_sun:"Ya" },
+    day_mon:"Du", day_tue:"Se", day_wed:"Ch", day_thu:"Pa", day_fri:"Ju", day_sat:"Sh", day_sun:"Ya",
+    services_title:"Xizmatlar", min_short:"daq",
+    pending_review_msg:"Ko'rib chiqilmoqda — tasdiqlangach sizga xabar beramiz." },
   ru:{ logout:"Выйти", gate_msg:"Проверка сессии...", welcome:"С возвращением", sub:"Управляйте профилем и смотрите записи.",
     status_on:"Профиль активен", status_on_sub:"Клиенты могут найти и записаться к вам.",
     status_off:"Профиль скрыт", status_off_sub:"Включите, когда будете готовы принимать клиентов.",
@@ -242,7 +279,9 @@ const I18N = {
     availability_title:"Рабочие часы", l_days:"Рабочие дни", l_start:"Открытие", l_end:"Закрытие",
     l_duration:"Длительность записи", rv_days:"Дни", rv_hours:"Часы", rv_duration:"Длительность",
     not_set:"Ещё не настроено", confirm:"Подтвердить", cancel_booking:"Отменить", confirmed:"подтверждено", cancelled:"отменено",
-    day_mon:"Пн", day_tue:"Вт", day_wed:"Ср", day_thu:"Чт", day_fri:"Пт", day_sat:"Сб", day_sun:"Вс" }
+    day_mon:"Пн", day_tue:"Вт", day_wed:"Ср", day_thu:"Чт", day_fri:"Пт", day_sat:"Сб", day_sun:"Вс",
+    services_title:"Услуги", min_short:"мин",
+    pending_review_msg:"На рассмотрении — мы сообщим, когда вас одобрят." }
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
@@ -250,6 +289,8 @@ const currentLang = I18N[browserLang] ? browserLang : 'en';
 let barberData = null;
 let selectedSpecialties = [];
 let selectedDays = [];
+let barberServices = [];
+let editServiceState = {};
 const DAY_KEYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 function t(key){ return I18N[currentLang][key]; }
@@ -264,6 +305,10 @@ function escapeHtml(str){ const d = document.createElement('div'); d.textContent
 function localizeSpecialty(enTag){
   const idx = SPECIALTIES_EN.indexOf(enTag);
   return idx === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][idx];
+}
+function localizeService(key){
+  const idx = SERVICE_KEYS.indexOf(key);
+  return idx === -1 ? key : SERVICES_LOCAL[currentLang][idx];
 }
 
 async function init(){
@@ -297,6 +342,10 @@ async function init(){
   renderAvailabilityView();
   renderDayChips();
   loadBookings(userId);
+
+  const { data: servicesData } = await supabaseClient.from('services').select('*').eq('barber_id', userId);
+  barberServices = servicesData || [];
+  renderServicesView();
 }
 
 function renderStatus(){
@@ -308,6 +357,7 @@ function renderStatus(){
   dot.classList.toggle('live', !!barberData.is_published);
   headline.textContent = barberData.is_published ? t('status_on') : t('status_off');
   sub.textContent = barberData.is_published ? t('status_on_sub') : t('status_off_sub');
+  document.getElementById('pendingBanner').classList.toggle('active', !barberData.is_approved);
 }
 
 document.getElementById('publishToggle').addEventListener('change', async function(){
@@ -370,6 +420,90 @@ function renderDayChips(){
     grid.appendChild(chip);
   });
 }
+
+function renderServicesView(){
+  const view = document.getElementById('servicesView');
+  const active = barberServices.filter(s => s.is_active);
+  if(active.length === 0){
+    view.innerHTML = `<div class="row"><span class="v" style="text-align:left;">${t('not_set')}</span></div>`;
+    return;
+  }
+  view.innerHTML = active.map(s => `
+    <div class="row"><span class="k">${escapeHtml(localizeService(s.service_key))}</span><span class="v">${s.duration_minutes} ${t('min_short')}</span></div>
+  `).join('');
+}
+
+function renderServiceRows(){
+  const container = document.getElementById('serviceRows');
+  container.innerHTML = SERVICE_KEYS.map((key, i) => {
+    const state = editServiceState[key];
+    return `
+      <div class="service-row">
+        <div class="chip${state.active ? ' selected' : ''}" data-key="${key}">${escapeHtml(SERVICES_LOCAL[currentLang][i])}</div>
+        <div class="service-duration" style="${state.active ? '' : 'visibility:hidden;'}">
+          <input type="number" min="5" step="5" value="${state.duration}" data-duration-key="${key}">
+          <span>${t('min_short')}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.chip[data-key]').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const key = chip.dataset.key;
+      editServiceState[key].active = !editServiceState[key].active;
+      renderServiceRows();
+    });
+  });
+  container.querySelectorAll('input[data-duration-key]').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      editServiceState[inp.dataset.durationKey].duration = parseInt(inp.value) || 30;
+    });
+  });
+}
+
+document.getElementById('editServicesLink').addEventListener('click', ()=>{
+  editServiceState = {};
+  SERVICE_KEYS.forEach(key=>{
+    const existing = barberServices.find(s => s.service_key === key);
+    editServiceState[key] = {
+      active: existing ? existing.is_active : false,
+      duration: existing ? existing.duration_minutes : 30
+    };
+  });
+  renderServiceRows();
+  document.getElementById('servicesView').classList.add('hidden');
+  document.getElementById('servicesEdit').classList.add('active');
+});
+
+document.getElementById('cancelServicesBtn').addEventListener('click', ()=>{
+  document.getElementById('servicesView').classList.remove('hidden');
+  document.getElementById('servicesEdit').classList.remove('active');
+});
+
+document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveServicesBtn');
+  const msg = document.getElementById('saveServicesMsg');
+  btn.disabled = true;
+  const rows = SERVICE_KEYS.map(key => ({
+    barber_id: barberData.id,
+    service_key: key,
+    duration_minutes: editServiceState[key].duration,
+    is_active: editServiceState[key].active
+  }));
+  const { data, error } = await supabaseClient.from('services').upsert(rows, { onConflict: 'barber_id,service_key' }).select();
+  btn.disabled = false;
+  if(!error){
+    barberServices = data || [];
+    renderServicesView();
+    msg.style.display = 'block';
+    setTimeout(()=>{
+      msg.style.display = 'none';
+      document.getElementById('servicesView').classList.remove('hidden');
+      document.getElementById('servicesEdit').classList.remove('active');
+    }, 900);
+  }
+});
 
 document.getElementById('editAvailLink').addEventListener('click', ()=>{
   selectedDays = [...(barberData.work_days || [])];
@@ -462,7 +596,7 @@ async function loadBookings(userId){
   area.innerHTML = data.map(b => `
     <div class="booking-row">
       <div>
-        <strong>${escapeHtml(b.client_name)}</strong><br>
+        <strong>${escapeHtml(b.client_name)}</strong>${b.service_key ? ` · ${escapeHtml(localizeService(b.service_key))}` : ''}<br>
         <span style="color:var(--bone-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
