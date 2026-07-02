@@ -397,12 +397,24 @@ document.getElementById('barberForm').addEventListener('submit', async function(
   const specialties = selectedSpecialties.map(i => SPECIALTIES.en[i]); // store canonical English tags
 
   const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-    email, password
+    email, password,
+    options: {
+      data: {
+        role: 'barber',
+        full_name: fullName,
+        phone: phone,
+        district: district,
+        bio: bio,
+        years_experience: experience,
+        specialties: specialties
+      }
+    }
   });
 
+  submitBtn.disabled = false;
+  submitBtn.textContent = originalText;
+
   if(authError){
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
     if(authError.message && authError.message.toLowerCase().includes('already')){
       emailErr.style.display = 'block';
       goToStep(1);
@@ -410,34 +422,6 @@ document.getElementById('barberForm').addEventListener('submit', async function(
       console.error('Auth error:', authError);
       alert(authError.message || 'Something went wrong. Please try again.');
     }
-    return;
-  }
-
-  const userId = authData.user ? authData.user.id : null;
-  if(!userId){
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalText;
-    alert('Account created — please check your email to confirm, then contact us to finish your profile.');
-    return;
-  }
-
-  const { error: profileError } = await supabaseClient.from('barbers').insert([{
-    id: userId,
-    full_name: fullName,
-    phone: phone,
-    district: district,
-    bio: bio,
-    specialties: specialties,
-    years_experience: experience,
-    is_published: false
-  }]);
-
-  submitBtn.disabled = false;
-  submitBtn.textContent = originalText;
-
-  if(profileError){
-    console.error('Profile insert error:', profileError);
-    alert('Your account was created, but saving your profile details failed. Please contact us.');
     return;
   }
 

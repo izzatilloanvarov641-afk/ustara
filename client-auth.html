@@ -27,6 +27,8 @@
   input{ width:100%; background:var(--surface); border:1px solid var(--line); color:var(--bone); padding:13px 15px; border-radius:4px; font-size:14.5px; font-family:'Inter', sans-serif; }
   input:focus{ outline:none; border-color:var(--brass); }
   .error-text{ font-size:12.5px; color:var(--err); margin-top:14px; display:none; text-align:center; }
+  .info-text{ font-size:12.5px; color:var(--brass); margin-top:14px; display:none; text-align:center; }
+  .info-text a{ color:var(--brass); font-weight:600; text-decoration:underline; }
   .btn{ width:100%; background:var(--brass); color:var(--bg); border:none; padding:14px; border-radius:4px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; }
   .btn:hover{ background:var(--brass-soft); }
   .btn:disabled{ opacity:0.5; cursor:not-allowed; }
@@ -66,6 +68,7 @@
       <div class="error-text" id="signupError" data-i18n="err_signup">Something went wrong. Try again.</div>
       <button type="submit" class="btn" id="signupBtn" data-i18n="submit_signup">Create account</button>
     </form>
+    <div class="info-text" id="signupInfo" data-i18n-html="check_email">Account created — check your email to activate it, then log in.</div>
   </div>
 
   <div class="foot-link" data-i18n-html="foot">Are you a barber? <a href="barber-login.html">Log in here</a></div>
@@ -80,18 +83,21 @@ const I18N = {
     login_title:"Welcome back", signup_title:"Create your account",
     l_email:"Email", l_password:"Password", l_name:"Full name", l_phone:"Phone number",
     err_login:"Incorrect email or password.", err_signup:"Something went wrong. Try again.",
+    check_email:'Account created — check your email to activate it, then <a href="client-auth.html">log in</a>.',
     submit_login:"Log in", submit_signup:"Create account",
     foot:'Are you a barber? <a href="barber-login.html">Log in here</a>' },
   uz:{ eyebrow:"Mijozlar uchun", tab_login:"Kirish", tab_signup:"Ro'yxatdan o'tish",
     login_title:"Xush kelibsiz", signup_title:"Hisob yarating",
     l_email:"Email", l_password:"Parol", l_name:"To'liq ism", l_phone:"Telefon raqami",
     err_login:"Email yoki parol noto'g'ri.", err_signup:"Xatolik yuz berdi. Qayta urinib ko'ring.",
+    check_email:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng <a href="client-auth.html">kiring</a>.',
     submit_login:"Kirish", submit_signup:"Hisob yaratish",
     foot:'Sartaroshmisiz? <a href="barber-login.html">Bu yerdan kiring</a>' },
   ru:{ eyebrow:"Клиентам", tab_login:"Войти", tab_signup:"Регистрация",
     login_title:"С возвращением", signup_title:"Создайте аккаунт",
     l_email:"Email", l_password:"Пароль", l_name:"Полное имя", l_phone:"Номер телефона",
     err_login:"Неверный email или пароль.", err_signup:"Что-то пошло не так. Попробуйте снова.",
+    check_email:'Аккаунт создан — проверьте почту, чтобы активировать его, затем <a href="client-auth.html">войдите</a>.',
     submit_login:"Войти", submit_signup:"Создать аккаунт",
     foot:'Вы барбер? <a href="barber-login.html">Войти здесь</a>' }
 };
@@ -127,9 +133,12 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
 document.getElementById('signupForm').addEventListener('submit', async function(e){
   e.preventDefault();
+  const form = this;
   const btn = document.getElementById('signupBtn');
   const err = document.getElementById('signupError');
+  const info = document.getElementById('signupInfo');
   err.style.display = 'none';
+  info.style.display = 'none';
   btn.disabled = true; const orig = btn.textContent; btn.textContent = '...';
 
   const email = document.getElementById('signupEmail').value.trim();
@@ -137,27 +146,22 @@ document.getElementById('signupForm').addEventListener('submit', async function(
   const fullName = document.getElementById('signupName').value.trim();
   const phone = document.getElementById('signupPhone').value.trim();
 
-  const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
+  const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+    email, password,
+    options: { data: { role: 'client', full_name: fullName, phone: phone } }
+  });
+  btn.disabled = false; btn.textContent = orig;
   if(authError){
-    btn.disabled = false; btn.textContent = orig;
     err.textContent = authError.message || I18N[currentLang].err_signup;
     err.style.display = 'block';
     return;
   }
-  const userId = authData.user ? authData.user.id : null;
-  if(!userId){
-    btn.disabled = false; btn.textContent = orig;
-    alert('Account created — please check your email to confirm, then log in.');
-    return;
+  if(authData.session){
+    window.location.href = 'client-dashboard.html';
+  } else {
+    form.style.display = 'none';
+    info.style.display = 'block';
   }
-  const { error: profileError } = await supabaseClient.from('clients').insert([{ id: userId, full_name: fullName, phone: phone }]);
-  btn.disabled = false; btn.textContent = orig;
-  if(profileError){
-    err.textContent = I18N[currentLang].err_signup;
-    err.style.display = 'block';
-    return;
-  }
-  window.location.href = 'client-dashboard.html';
 });
 
 supabaseClient.auth.getSession().then(({ data })=>{

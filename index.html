@@ -473,6 +473,7 @@ const I18N = {
     wl_invalid_email:"Enter a valid email address.",
     wl_duplicate:'You already have an account. <a href="client-auth.html">Log in instead →</a>',
     wl_signup_error:"Something went wrong — try again.",
+    wl_check_email:'Account created — check your email to activate it, then <a href="client-auth.html">log in</a>.',
     foot_client_login:"Client login", foot_barber_login:"Barber login",
     foot_copy:"© 2026 Ustara. Tashkent, Uzbekistan."
   },
@@ -510,6 +511,7 @@ const I18N = {
     wl_invalid_email:"To'g'ri email manzilini kiriting.",
     wl_duplicate:'Sizda allaqachon hisob bor. <a href="client-auth.html">Buning o\'rniga kiring →</a>',
     wl_signup_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
+    wl_check_email:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng <a href="client-auth.html">kiring</a>.',
     wl_note:"Qo'shilish orqali Ustara'ning Toshkentdagi ishga tushishi haqida bog'lanishga rozilik bildirasiz.",
     foot_client_login:"Mijoz sifatida kirish", foot_barber_login:"Sartarosh sifatida kirish",
     foot_copy:"© 2026 Ustara. Toshkent, O'zbekiston."
@@ -549,6 +551,7 @@ const I18N = {
     wl_invalid_email:"Введите корректный email адрес.",
     wl_duplicate:'У вас уже есть аккаунт. <a href="client-auth.html">Войти →</a>',
     wl_signup_error:"Что-то пошло не так — попробуйте снова.",
+    wl_check_email:'Аккаунт создан — проверьте почту, чтобы активировать его, затем <a href="client-auth.html">войдите</a>.',
     foot_client_login:"Вход для клиентов", foot_barber_login:"Вход для барберов",
     foot_copy:"© 2026 Ustara. Ташкент, Узбекистан."
   }
@@ -729,18 +732,20 @@ document.getElementById('waitlistForm').addEventListener('submit', async functio
     const fullName = nameInput.value.trim();
     const password = passwordInput.value;
 
-    const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: contact, password });
+    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+      email: contact, password,
+      options: { data: { role: 'client', full_name: fullName } }
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalBtnText;
 
     if(!authError && authData.user && authData.user.identities && authData.user.identities.length === 0){
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalBtnText;
       errorEl.innerHTML = I18N[currentLang].wl_duplicate;
       errorEl.style.display = 'block';
       return;
     }
     if(authError){
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalBtnText;
       if(/already registered|already exists/i.test(authError.message || '')){
         errorEl.innerHTML = I18N[currentLang].wl_duplicate;
       } else {
@@ -750,22 +755,15 @@ document.getElementById('waitlistForm').addEventListener('submit', async functio
       return;
     }
 
-    const userId = authData.user ? authData.user.id : null;
-    if(userId){
-      await supabaseClient.from('clients').insert([{ id: userId, full_name: fullName }]);
-    }
-
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalBtnText;
-
     if(authData.session){
       window.location.href = 'client-dashboard.html';
       return;
     }
 
     form.style.display = 'none';
+    success.dataset.i18n = 'wl_check_email';
+    success.innerHTML = I18N[currentLang].wl_check_email;
     success.style.display = 'block';
-    appendNextStep(success.parentNode, 'client');
     return;
   }
 
@@ -781,6 +779,8 @@ document.getElementById('waitlistForm').addEventListener('submit', async functio
   }
 
   form.style.display = 'none';
+  success.dataset.i18n = 'wl_success';
+  success.textContent = I18N[currentLang].wl_success;
   success.style.display = 'block';
   appendNextStep(success.parentNode, selectedRole);
 });
