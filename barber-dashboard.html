@@ -280,6 +280,11 @@ async function init(){
     document.getElementById('gate').classList.add('active');
     return;
   }
+  if(!barber.is_approved){
+    await supabaseClient.auth.signOut();
+    window.location.href = 'barber-login.html';
+    return;
+  }
   barberData = barber;
   selectedSpecialties = (barber.specialties || []).map(s => SPECIALTIES_EN.indexOf(s)).filter(i => i !== -1);
 

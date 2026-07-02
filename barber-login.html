@@ -45,6 +45,7 @@
       <input type="password" id="password" required>
     </div>
     <div class="error-text" id="errorMsg" data-i18n="err_generic">Incorrect email or password.</div>
+    <div class="error-text" id="pendingMsg" data-i18n="err_pending">Your account hasn't been approved yet. We'll notify you by email once it's ready.</div>
     <button type="submit" class="btn" id="submitBtn" data-i18n="submit">Log in</button>
   </form>
   <div class="foot-link" data-i18n-html="foot">New here? <a href="barber-signup.html">Create your profile</a></div>
@@ -56,13 +57,19 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 const I18N = {
   en:{ eyebrow:"For barbers", title:"Log in to your dashboard", l_email:"Email", l_password:"Password",
-       err_generic:"Incorrect email or password.", submit:"Log in",
+       err_generic:"Incorrect email or password.",
+       err_pending:"Your account hasn't been approved yet. We'll notify you by email once it's ready.",
+       submit:"Log in",
        foot:'New here? <a href="barber-signup.html">Create your profile</a>' },
   uz:{ eyebrow:"Sartaroshlar uchun", title:"Boshqaruv paneliga kiring", l_email:"Email", l_password:"Parol",
-       err_generic:"Email yoki parol noto'g'ri.", submit:"Kirish",
+       err_generic:"Email yoki parol noto'g'ri.",
+       err_pending:"Hisobingiz hali tasdiqlanmagan. Tayyor bo'lganda sizga email orqali xabar beramiz.",
+       submit:"Kirish",
        foot:'Yangimisiz? <a href="barber-signup.html">Profil yarating</a>' },
   ru:{ eyebrow:"Барберам", title:"Войти в личный кабинет", l_email:"Email", l_password:"Пароль",
-       err_generic:"Неверный email или пароль.", submit:"Войти",
+       err_generic:"Неверный email или пароль.",
+       err_pending:"Ваш аккаунт ещё не подтверждён. Мы сообщим по email, когда всё будет готово.",
+       submit:"Войти",
        foot:'Впервые? <a href="barber-signup.html">Создайте профиль</a>' }
 };
 const lang = (navigator.language || 'en').slice(0,2);
@@ -74,33 +81,48 @@ document.querySelectorAll('[data-i18n-html]').forEach(el=>{
   el.innerHTML = I18N[currentLang][el.dataset.i18nHtml];
 });
 
+async function checkApprovedAndEnter(userId){
+  const { data: barber, error } = await supabaseClient.from('barbers').select('is_approved').eq('id', userId).single();
+  if(error || !barber || !barber.is_approved){
+    await supabaseClient.auth.signOut();
+    document.getElementById('pendingMsg').style.display = 'block';
+    return false;
+  }
+  window.location.href = 'barber-dashboard.html';
+  return true;
+}
+
 document.getElementById('loginForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const btn = document.getElementById('submitBtn');
   const errorMsg = document.getElementById('errorMsg');
+  const pendingMsg = document.getElementById('pendingMsg');
   errorMsg.style.display = 'none';
+  pendingMsg.style.display = 'none';
   btn.disabled = true;
   const original = btn.textContent;
   btn.textContent = '...';
 
-  const { error } = await supabaseClient.auth.signInWithPassword({
+  const { data: authData, error } = await supabaseClient.auth.signInWithPassword({
     email: document.getElementById('email').value.trim(),
     password: document.getElementById('password').value
   });
 
-  btn.disabled = false;
-  btn.textContent = original;
-
   if(error){
+    btn.disabled = false;
+    btn.textContent = original;
     errorMsg.style.display = 'block';
     return;
   }
-  window.location.href = 'barber-dashboard.html';
+
+  await checkApprovedAndEnter(authData.user.id);
+  btn.disabled = false;
+  btn.textContent = original;
 });
 
-// already logged in? skip straight to dashboard
+// already logged in? check approval before skipping to dashboard
 supabaseClient.auth.getSession().then(({ data })=>{
-  if(data.session) window.location.href = 'barber-dashboard.html';
+  if(data.session) checkApprovedAndEnter(data.session.user.id);
 });
 </script>
 </body>
