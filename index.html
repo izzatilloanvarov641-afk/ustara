@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Find your barber, not just a shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg: #171614;
+    --bg-alt: #1D1B18;
+    --surface: #221F1B;
+    --line: #34302A;
+    --bone: #F2EDE4;
+    --bone-dim: #A39A8B;
+    --brass: #C9A227;
+    --brass-soft: #E4C25A;
+    --steel: #6B7280;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--bg);
+    color:var(--bone);
+    font-family:'Inter', sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .serif{ font-family:'Fraunces', serif; }
+  a{ color:inherit; text-decoration:none; }
+  ::selection{ background:var(--brass); color:var(--bg); }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+  @media (max-width:640px){ .wrap{ padding:0 22px; } }
+
+  .eyebrow{
+    font-size:11.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--brass); font-weight:600;
+  }
+
+  .razor-line{
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--brass) 8%, var(--brass) 92%, transparent);
+    transform-origin:left center;
+    animation:stroke 1.4s cubic-bezier(.65,0,.35,1) forwards;
+  }
+  @keyframes stroke{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+  .hairline{ height:1px; background:var(--line); border:none; }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(23,22,20,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:72px; gap:20px; }
+  .logo{ font-family:'Fraunces', serif; font-size:21px; font-weight:500; letter-spacing:0.01em; flex-shrink:0; }
+  .logo em{ font-style:italic; color:var(--brass); }
+  .nav-links{ display:flex; gap:32px; align-items:center; font-size:14px; color:var(--bone-dim); }
+  .nav-links a:hover{ color:var(--bone); }
+  .nav-right{ display:flex; align-items:center; gap:18px; }
+
+  .lang-switch{
+    display:flex; border:1px solid var(--line); border-radius:20px; padding:3px;
+  }
+  .lang-switch button{
+    background:none; border:none; color:var(--bone-dim);
+    font-family:'Inter', sans-serif; font-size:12px; font-weight:600;
+    padding:6px 11px; border-radius:16px; cursor:pointer; letter-spacing:0.03em;
+    transition:all .18s ease;
+  }
+  .lang-switch button.active{ background:var(--brass); color:var(--bg); }
+
+  .nav-cta{
+    border:1px solid var(--brass); color:var(--brass) !important;
+    padding:9px 18px; border-radius:2px; font-size:13px; letter-spacing:0.03em;
+    transition:all .2s ease; white-space:nowrap;
+  }
+  .nav-cta:hover{ background:var(--brass); color:var(--bg) !important; }
+  @media (max-width:820px){ .nav-links{ display:none; } }
+  @media (max-width:480px){
+    nav .wrap{ height:64px; }
+    .logo{ font-size:18px; }
+    .lang-switch button{ padding:5px 8px; font-size:11px; }
+    .nav-cta{ padding:8px 12px; font-size:12px; }
+  }
+
+  .btn-primary{
+    background:var(--brass); color:var(--bg); padding:15px 28px; font-size:14px;
+    font-weight:600; letter-spacing:0.02em; border-radius:2px;
+    transition:transform .18s ease, background .18s ease; display:inline-block;
+  }
+  .btn-primary:hover{ background:var(--brass-soft); transform:translateY(-1px); }
+  .btn-ghost{
+    border:1px solid var(--line); color:var(--bone); padding:15px 28px; font-size:14px;
+    font-weight:500; border-radius:2px; transition:border-color .18s ease; display:inline-block;
+  }
+  .btn-ghost:hover{ border-color:var(--bone-dim); }
+
+  /* ---------- hero ---------- */
+  .hero{ padding:52px 0 0; position:relative; }
+  .hero-top{ text-align:center; }
+  .launch-pill{
+    display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line);
+    background:var(--bg-alt); padding:8px 16px; border-radius:20px; font-size:11px;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--bone-dim); margin-bottom:34px;
+  }
+  .launch-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--brass); box-shadow:0 0 8px var(--brass); }
+
+  .hero h1{
+    font-family:'Fraunces', serif; font-weight:500; letter-spacing:-0.01em;
+    font-size:clamp(38px, 6.4vw, 76px); line-height:1.05; max-width:920px; margin:0 auto;
+  }
+  .hero h1 em{ font-style:italic; color:var(--brass); font-weight:500; }
+  .hero-line{ margin:32px auto; max-width:460px; }
+  .hero p.lede{
+    font-size:16px; color:var(--bone-dim); max-width:480px; line-height:1.65;
+    margin:0 auto 40px; text-align:center;
+  }
+
+  .hero-capture{
+    display:flex; align-items:center; max-width:600px; margin:0 auto;
+    background:var(--surface); border:1px solid var(--line); border-radius:40px; padding:8px; gap:6px;
+  }
+  .hero-capture .field{ display:flex; align-items:center; gap:10px; flex:1; padding:10px 18px; }
+  .hero-capture .field svg{ flex-shrink:0; opacity:0.5; }
+  .hero-capture input{
+    background:none; border:none; outline:none; color:var(--bone);
+    font-family:'Inter', sans-serif; font-size:14.5px; width:100%;
+  }
+  .hero-capture input::placeholder{ color:#6B675E; }
+  .hero-capture button{
+    background:var(--brass); color:var(--bg); border:none; padding:14px 26px; border-radius:30px;
+    font-size:13.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; white-space:nowrap;
+    transition:background .18s ease; display:flex; align-items:center; gap:8px;
+  }
+  .hero-capture button:hover{ background:var(--brass-soft); }
+  @media (max-width:600px){
+    .hero-capture{ flex-direction:column; border-radius:16px; }
+    .hero-capture .field{ width:100%; }
+    .hero-capture button{ width:100%; justify-content:center; }
+  }
+
+  .hero-stage{ margin-top:20px; width:100%; height:620px; position:relative; overflow:hidden; }
+  .hero-stage::after{
+    content:''; position:absolute; left:0; right:0; bottom:0; height:200px;
+    background:linear-gradient(to bottom, transparent, var(--bg) 90%); z-index:2; pointer-events:none;
+  }
+  #heroCanvas{ width:100%; height:100%; display:block; }
+  @media (max-width:700px){ .hero-stage{ height:400px; margin-top:10px; } }
+
+  /* ---------- strip ---------- */
+  .strip{
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:20px 0;
+    background:var(--bg-alt); overflow:hidden; white-space:nowrap; margin-top:-40px; position:relative; z-index:3;
+  }
+  .strip-track{
+    display:inline-flex; gap:56px; animation:scroll 30s linear infinite;
+    font-family:'Fraunces', serif; font-style:italic; font-size:15px; color:var(--bone-dim);
+  }
+  .strip-track span{ display:inline-flex; align-items:center; gap:56px; }
+  .strip-track span::after{ content:'—'; color:var(--line); margin-left:56px; }
+  @keyframes scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+
+  section{ padding:120px 0; }
+  @media (max-width:700px){ section{ padding:72px 0; } }
+  .section-head{ max-width:620px; margin-bottom:64px; }
+  @media (max-width:700px){ .section-head{ margin-bottom:44px; } }
+  .section-head h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(30px, 4vw, 46px); line-height:1.15; margin-top:18px; }
+  .section-head p{ color:var(--bone-dim); font-size:16px; margin-top:18px; line-height:1.7; }
+
+  .loop{ display:grid; grid-template-columns:repeat(4, 1fr); gap:0; position:relative; }
+  .loop::before{ content:''; position:absolute; top:26px; left:0; right:0; height:1px; background:var(--line); }
+  .loop-step{ padding-right:28px; position:relative; }
+  .loop-dot{ width:9px; height:9px; border-radius:50%; background:var(--brass); position:relative; z-index:2; margin-bottom:26px; }
+  .loop-step h3{ font-family:'Fraunces', serif; font-weight:500; font-size:20px; margin-bottom:10px; }
+  .loop-step p{ color:var(--bone-dim); font-size:14.5px; line-height:1.65; }
+  @media (max-width:900px){
+    .loop{ grid-template-columns:1fr; gap:36px; }
+    .loop::before{ display:none; }
+    .loop-step{ padding-left:22px; border-left:1px solid var(--line); padding-right:0; }
+  }
+
+  .split{ display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line); }
+  .split-card{ background:var(--bg); padding:56px 48px; }
+  .split-card .eyebrow{ margin-bottom:20px; display:block; }
+  .split-card h3{ font-family:'Fraunces', serif; font-weight:400; font-size:31px; margin-bottom:22px; line-height:1.18; }
+  .split-list{ list-style:none; margin:28px 0 34px; }
+  .split-list li{ display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line); font-size:14.5px; color:var(--bone-dim); }
+  .split-list li:last-child{ border-bottom:1px solid var(--line); }
+  .split-list li::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--brass); margin-top:7px; flex-shrink:0; }
+  @media (max-width:760px){ .split{ grid-template-columns:1fr; } .split-card{ padding:44px 26px; } }
+
+  .mock-wrap{ display:grid; grid-template-columns:0.9fr 1.1fr; gap:64px; align-items:center; }
+  .mock-card{ background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:28px; }
+  .mock-avatar{
+    width:100%; aspect-ratio:4/3; border-radius:4px;
+    background:linear-gradient(135deg, #3A362F, #221F1B); margin-bottom:20px; position:relative; overflow:hidden;
+  }
+  .mock-avatar::after{ content:''; position:absolute; inset:0; background:repeating-linear-gradient(115deg, transparent 0 18px, rgba(201,162,39,0.05) 18px 19px); }
+  .mock-name{ font-family:'Fraunces', serif; font-size:22px; margin-bottom:4px; }
+  .mock-meta{ font-size:13px; color:var(--bone-dim); margin-bottom:18px; }
+  .mock-tags{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
+  .mock-tag{ font-size:11.5px; border:1px solid var(--line); color:var(--bone-dim); padding:5px 10px; border-radius:20px; }
+  .mock-btn{ background:var(--brass); color:var(--bg); text-align:center; padding:13px; border-radius:3px; font-size:13.5px; font-weight:600; }
+  .mock-copy .eyebrow{ margin-bottom:20px; display:block; }
+  .mock-copy h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(28px,3.6vw,40px); line-height:1.18; margin-bottom:20px; }
+  .mock-copy p{ color:var(--bone-dim); font-size:16px; line-height:1.75; margin-bottom:16px; }
+  @media (max-width:900px){ .mock-wrap{ grid-template-columns:1fr; gap:44px; } }
+
+  .waitlist{ background:var(--bg-alt); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .waitlist-inner{ text-align:center; max-width:640px; margin:0 auto; }
+  .waitlist .eyebrow{ display:block; }
+  .waitlist h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(32px,5vw,52px); line-height:1.1; margin:20px 0 16px; }
+  .waitlist h2 em{ font-style:italic; color:var(--brass); }
+  .waitlist p{ color:var(--bone-dim); font-size:16px; margin-bottom:40px; }
+
+  .toggle{ display:inline-flex; border:1px solid var(--line); border-radius:24px; padding:4px; margin-bottom:28px; }
+  .toggle button{
+    background:none; border:none; color:var(--bone-dim); font-family:'Inter', sans-serif; font-size:13px;
+    font-weight:500; padding:9px 20px; border-radius:20px; cursor:pointer; transition:all .2s ease;
+  }
+  .toggle button.active{ background:var(--brass); color:var(--bg); }
+
+  .waitlist-form{ display:flex; gap:10px; max-width:440px; margin:0 auto; }
+  .waitlist-form input{
+    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--bone);
+    padding:15px 18px; border-radius:3px; font-size:14px; font-family:'Inter', sans-serif;
+  }
+  .waitlist-form input::placeholder{ color:#6B675E; }
+  .waitlist-form input:focus{ outline:none; border-color:var(--brass); }
+  .waitlist-form button{
+    background:var(--brass); color:var(--bg); border:none; padding:0 26px; border-radius:3px;
+    font-size:14px; font-weight:600; cursor:pointer; transition:background .18s ease; white-space:nowrap;
+  }
+  .waitlist-form button:hover{ background:var(--brass-soft); }
+  .form-note{ font-size:12.5px; color:#6B675E; margin-top:16px; }
+  .form-success{ display:none; color:var(--brass); font-size:14.5px; font-family:'Fraunces', serif; font-style:italic; }
+  @media (max-width:520px){ .waitlist-form{ flex-direction:column; } }
+
+  footer{ padding:56px 0 40px; }
+  footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
+  footer .logo{ font-size:18px; }
+  footer .foot-links{ display:flex; gap:28px; font-size:13px; color:var(--bone-dim); }
+  footer .foot-copy{ font-size:12.5px; color:#6B675E; margin-top:24px; }
+
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">ust<em>a</em>ra</div>
+    <div class="nav-links">
+      <a href="#loop" data-i18n="nav_how">How it works</a>
+      <a href="#barbers" data-i18n="nav_barbers">For barbers</a>
+      <a href="#clients" data-i18n="nav_clients">For clients</a>
+    </div>
+    <div class="nav-right">
+      <div class="lang-switch" id="langSwitch">
+        <button type="button" data-lang="en" class="active">EN</button>
+        <button type="button" data-lang="uz">UZ</button>
+        <button type="button" data-lang="ru">RU</button>
+      </div>
+      <a href="#waitlist" class="nav-cta" data-i18n="nav_cta">Join waitlist</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-top">
+    <span class="launch-pill"><span class="dot"></span><span data-i18n="launch_pill">Launching soon in Tashkent</span></span>
+    <h1 data-i18n="hero_title">Find your <em>barber.</em><br>Not just a shop.</h1>
+    <div class="hero-line razor-line"></div>
+    <p class="lede" data-i18n="hero_lede">Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.</p>
+
+    <form class="hero-capture" id="heroCaptureForm">
+      <div class="field">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="heroCaptureInput" data-i18n-ph="capture_ph" placeholder="Phone number or email — get notified" required>
+      </div>
+      <button type="submit"><span data-i18n="capture_btn">Join waitlist</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+    </form>
+  </div>
+
+  <div class="hero-stage">
+    <canvas id="heroCanvas"></canvas>
+  </div>
+</header>
+
+<div class="strip">
+  <div class="strip-track" id="stripTrack"></div>
+</div>
+
+<section id="loop">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="loop_eyebrow">The loop</span>
+      <h2 data-i18n="loop_h2">One relationship. Not one visit.</h2>
+      <p data-i18n="loop_p">Most booking apps end at checkout. Ustara is built around what happens after — the next cut, the next referral, the next five years.</p>
+    </div>
+    <div class="loop">
+      <div class="loop-step reveal">
+        <div class="loop-dot"></div>
+        <h3 data-i18n="loop1_h">Discover</h3>
+        <p data-i18n="loop1_p">Browse barbers by portfolio and style — not a random list of nearby shops.</p>
+      </div>
+      <div class="loop-step reveal">
+        <div class="loop-dot"></div>
+        <h3 data-i18n="loop2_h">Book</h3>
+        <p data-i18n="loop2_p">Pick a slot, confirm instantly. No calls, no back-and-forth on Instagram DMs.</p>
+      </div>
+      <div class="loop-step reveal">
+        <div class="loop-dot"></div>
+        <h3 data-i18n="loop3_h">Sit</h3>
+        <p data-i18n="loop3_p">Check in, get the cut, pay in the app. Simple, on time, no surprises.</p>
+      </div>
+      <div class="loop-step reveal">
+        <div class="loop-dot"></div>
+        <h3 data-i18n="loop4_h">Return</h3>
+        <p data-i18n="loop4_p">Your barber's profile stays with you — even if they move shops.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0;">
+  <div class="wrap mock-wrap reveal">
+    <div class="mock-card">
+      <div class="mock-avatar"></div>
+      <div class="mock-name">Jasur A.</div>
+      <div class="mock-meta" data-i18n="mock_meta">Fade specialist · 6 yrs · Yunusabad</div>
+      <div class="mock-tags">
+        <span class="mock-tag" data-i18n="mock_tag1">Skin fade</span>
+        <span class="mock-tag" data-i18n="mock_tag2">Beard shaping</span>
+        <span class="mock-tag" data-i18n="mock_tag3">Classic cuts</span>
+      </div>
+      <div class="mock-btn" data-i18n="mock_btn">Book with Jasur</div>
+    </div>
+    <div class="mock-copy">
+      <span class="eyebrow" data-i18n="mock_eyebrow">The professional profile</span>
+      <h2 data-i18n="mock_h2">A portfolio that's actually theirs.</h2>
+      <p data-i18n="mock_p1">Every barber gets a real profile — before &amp; afters, specialties, reviews, availability. It's built once and it travels with them for their entire career.</p>
+      <p data-i18n="mock_p2">Salons get the tools to run a business. Barbers get an identity that outlasts any one shop.</p>
+    </div>
+  </div>
+</section>
+
+<section id="barbers" style="padding-bottom:0;">
+  <div class="wrap reveal">
+    <div class="split">
+      <div class="split-card" id="clients">
+        <span class="eyebrow" data-i18n="cl_eyebrow">For clients</span>
+        <h3 data-i18n="cl_h3">Find your barber.<br>Not just a shop.</h3>
+        <ul class="split-list">
+          <li data-i18n="cl_li1">Search by style, not by pin on a map</li>
+          <li data-i18n="cl_li2">See real before &amp; after work before you book</li>
+          <li data-i18n="cl_li3">Book in seconds, no phone calls</li>
+          <li data-i18n="cl_li4">Your barber's profile follows them if they move</li>
+        </ul>
+        <a href="#waitlist" class="btn-ghost" data-i18n="cl_btn">Join as a client</a>
+      </div>
+      <div class="split-card">
+        <span class="eyebrow" data-i18n="br_eyebrow">For barbers</span>
+        <h3 data-i18n="br_h3">Build a reputation<br>that's yours to keep.</h3>
+        <ul class="split-list">
+          <li data-i18n="br_li1">A profile that belongs to you, not the salon</li>
+          <li data-i18n="br_li2">Fill your chair without chasing DMs</li>
+          <li data-i18n="br_li3">Manage your own schedule and pricing</li>
+          <li data-i18n="br_li4">Get paid inside the app, no cash chasing</li>
+        </ul>
+        <a href="#waitlist" class="btn-ghost" data-i18n="br_btn">Join as a barber</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="waitlist" id="waitlist">
+  <div class="wrap">
+    <div class="waitlist-inner reveal">
+      <span class="eyebrow" data-i18n="wl_eyebrow">Launching in Tashkent</span>
+      <h2 data-i18n="wl_h2">Be first to the <em>chair</em>.</h2>
+      <p data-i18n="wl_p">We're onboarding the first barbers and clients before public launch. Leave your contact — no spam, one message when we're live.</p>
+
+      <div class="toggle">
+        <button type="button" class="active" data-role="client" data-i18n="wl_toggle_client">I'm a client</button>
+        <button type="button" data-role="barber" data-i18n="wl_toggle_barber">I'm a barber</button>
+      </div>
+
+      <form class="waitlist-form" id="waitlistForm">
+        <input type="text" id="waitlistInput" data-i18n-ph="wl_input_ph" placeholder="Phone number or email" required>
+        <button type="submit" data-i18n="wl_submit">Join</button>
+      </form>
+      <div class="form-success" id="formSuccess" data-i18n="wl_success">You're on the list — welcome to Ustara.</div>
+      <p class="form-note" data-i18n="wl_note">By joining, you agree to be contacted about Ustara's launch in Tashkent.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="logo">ust<em>a</em>ra</div>
+      <div class="foot-copy" data-i18n="foot_copy">© 2026 Ustara. Tashkent, Uzbekistan.</div>
+    </div>
+    <div class="foot-links">
+      <a href="#loop" data-i18n="nav_how">How it works</a>
+      <a href="#barbers" data-i18n="nav_barbers">For barbers</a>
+      <a href="#clients" data-i18n="nav_clients">For clients</a>
+      <a href="client-auth.html" data-i18n="foot_client_login">Client login</a>
+      <a href="barber-login.html" data-i18n="foot_barber_login">Barber login</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ============ i18n ============ */
+const STRIP_DISTRICTS = {
+  en: ["Chorsu","Yunusabad","Mirzo Ulugbek","Yakkasaray","Sergeli","Shayxontohur"],
+  uz: ["Chorsu","Yunusobod","Mirzo Ulug'bek","Yakkasaroy","Sergeli","Shayxontohur"],
+  ru: ["Чорсу","Юнусабад","Мирзо Улугбек","Яккасарай","Сергели","Шайхантахур"]
+};
+
+const I18N = {
+  en:{
+    nav_how:"How it works", nav_barbers:"For barbers", nav_clients:"For clients", nav_cta:"Join waitlist",
+    launch_pill:"Launching soon in Tashkent",
+    hero_title:'Find your <em>barber.</em><br>Not just a shop.',
+    hero_lede:"Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.",
+    capture_ph:"Phone number or email — get notified", capture_btn:"Join waitlist",
+    loop_eyebrow:"The loop", loop_h2:"One relationship. Not one visit.",
+    loop_p:"Most booking apps end at checkout. Ustara is built around what happens after — the next cut, the next referral, the next five years.",
+    loop1_h:"Discover", loop1_p:"Browse barbers by portfolio and style — not a random list of nearby shops.",
+    loop2_h:"Book", loop2_p:"Pick a slot, confirm instantly. No calls, no back-and-forth on Instagram DMs.",
+    loop3_h:"Sit", loop3_p:"Check in, get the cut, pay in the app. Simple, on time, no surprises.",
+    loop4_h:"Return", loop4_p:"Your barber's profile stays with you — even if they move shops.",
+    mock_eyebrow:"The professional profile", mock_h2:"A portfolio that's actually theirs.",
+    mock_p1:"Every barber gets a real profile — before & afters, specialties, reviews, availability. It's built once and it travels with them for their entire career.",
+    mock_p2:"Salons get the tools to run a business. Barbers get an identity that outlasts any one shop.",
+    mock_meta:"Fade specialist · 6 yrs · Yunusabad",
+    mock_tag1:"Skin fade", mock_tag2:"Beard shaping", mock_tag3:"Classic cuts", mock_btn:"Book with Jasur",
+    cl_eyebrow:"For clients", cl_h3:"Find your barber.<br>Not just a shop.",
+    cl_li1:"Search by style, not by pin on a map", cl_li2:"See real before & after work before you book",
+    cl_li3:"Book in seconds, no phone calls", cl_li4:"Your barber's profile follows them if they move",
+    cl_btn:"Join as a client",
+    br_eyebrow:"For barbers", br_h3:"Build a reputation<br>that's yours to keep.",
+    br_li1:"A profile that belongs to you, not the salon", br_li2:"Fill your chair without chasing DMs",
+    br_li3:"Manage your own schedule and pricing", br_li4:"Get paid inside the app, no cash chasing",
+    br_btn:"Join as a barber",
+    wl_eyebrow:"Launching in Tashkent", wl_h2:'Be first to the <em>chair</em>.',
+    wl_p:"We're onboarding the first barbers and clients before public launch. Leave your contact — no spam, one message when we're live.",
+    wl_toggle_client:"I'm a client", wl_toggle_barber:"I'm a barber",
+    wl_input_ph:"Phone number or email", wl_submit:"Join",
+    wl_success:"You're on the list — welcome to Ustara.",
+    wl_note:"By joining, you agree to be contacted about Ustara's launch in Tashkent.",
+    foot_client_login:"Client login", foot_barber_login:"Barber login",
+    foot_copy:"© 2026 Ustara. Tashkent, Uzbekistan."
+  },
+  uz:{
+    nav_how:"Qanday ishlaydi", nav_barbers:"Sartaroshlar uchun", nav_clients:"Mijozlar uchun", nav_cta:"Ro'yxatga yozilish",
+    launch_pill:"Tez orada Toshkentda",
+    hero_title:"O'z sartaroshingizni toping.<br>Do'kon emas, <em>usta.</em>",
+    hero_lede:"Ustara — sartaroshning obro'si unga tegishli bo'lgan platforma: portfolio, mijozlar va bandlar u qayerda bo'lsa ham u bilan boradi.",
+    capture_ph:"Telefon raqami yoki email — xabardor bo'ling", capture_btn:"Ro'yxatga yozilish",
+    loop_eyebrow:"Halqa", loop_h2:"Bitta munosabat. Bitta tashrif emas.",
+    loop_p:"Ko'p bron qilish ilovalari to'lovda tugaydi. Ustara esa undan keyingi voqealar uchun qurilgan — keyingi soch olish, keyingi tavsiya, keyingi besh yil.",
+    loop1_h:"Toping", loop1_p:"Sartaroshlarni portfolio va uslubi bo'yicha ko'ring — yaqin do'konlarning tasodifiy ro'yxati emas.",
+    loop2_h:"Band qiling", loop2_p:"Vaqtni tanlang, darhol tasdiqlang. Qo'ng'iroqlar yo'q, Instagram DM'da tortishuvlar yo'q.",
+    loop3_h:"O'tiring", loop3_p:"Ro'yxatdan o'ting, soch oldiring, ilovada to'lang. Oddiy, vaqtida, hech qanday sarson-sargardonlik yo'q.",
+    loop4_h:"Qayting", loop4_p:"Sartaroshingizning profili siz bilan qoladi — u do'kon almashtirsa ham.",
+    mock_eyebrow:"Professional profil", mock_h2:"Chinakam o'ziga tegishli portfolio.",
+    mock_p1:"Har bir sartarosh haqiqiy profilga ega bo'ladi — oldin va keyin, mutaxassisliklar, sharhlar, bandlik. Bir marta yaratiladi va butun karyerasi davomida u bilan boradi.",
+    mock_p2:"Salonlar biznes yuritish uchun vositalarga ega bo'ladi. Sartaroshlar esa har qanday do'kondan uzoqroq yashaydigan shaxsiyatga ega bo'ladi.",
+    mock_meta:"Feyd mutaxassisi · 6 yil · Yunusobod",
+    mock_tag1:"Skin feyd", mock_tag2:"Soqol shakllantirish", mock_tag3:"Klassik soch olish", mock_btn:"Jasur bilan band qiling",
+    cl_eyebrow:"Mijozlar uchun", cl_h3:"O'z sartaroshingizni toping.<br>Do'kon emas, usta.",
+    cl_li1:"Xaritadagi nuqta emas, uslub bo'yicha qidiring", cl_li2:"Band qilishdan oldin haqiqiy oldin/keyin ishlarni ko'ring",
+    cl_li3:"Soniyalarda band qiling, qo'ng'iroqsiz", cl_li4:"Sartaroshingiz do'kon almashtirsa ham profili siz bilan qoladi",
+    cl_btn:"Mijoz sifatida qo'shiling",
+    br_eyebrow:"Sartaroshlar uchun", br_h3:"O'zingizga tegishli obro'<br>quring.",
+    br_li1:"Salonga emas, sizga tegishli profil", br_li2:"DM'larni ta'qib qilmasdan stulingizni to'ldiring",
+    br_li3:"O'z jadvalingiz va narxlaringizni boshqaring", br_li4:"Ilova ichida to'lov oling, naqd pul yig'ishsiz",
+    br_btn:"Sartarosh sifatida qo'shiling",
+    wl_eyebrow:"Toshkentda ishga tushmoqda", wl_h2:"Birinchi bo'lib <em>stulga</em> o'tiring.",
+    wl_p:"Ommaviy ishga tushishdan oldin birinchi sartaroshlar va mijozlarni qabul qilyapmiz. Aloqangizni qoldiring — spam yo'q, ishga tushganimizda bitta xabar.",
+    wl_toggle_client:"Men mijozman", wl_toggle_barber:"Men sartaroshman",
+    wl_input_ph:"Telefon raqami yoki email", wl_submit:"Qo'shilish",
+    wl_success:"Siz ro'yxatdasiz — Ustara'ga xush kelibsiz.",
+    wl_note:"Qo'shilish orqali Ustara'ning Toshkentdagi ishga tushishi haqida bog'lanishga rozilik bildirasiz.",
+    foot_client_login:"Mijoz sifatida kirish", foot_barber_login:"Sartarosh sifatida kirish",
+    foot_copy:"© 2026 Ustara. Toshkent, O'zbekiston."
+  },
+  ru:{
+    nav_how:"Как это работает", nav_barbers:"Барберам", nav_clients:"Клиентам", nav_cta:"Записаться в лист ожидания",
+    launch_pill:"Скоро запуск в Ташкенте",
+    hero_title:"Найдите своего барбера.<br>Не просто <em>салон.</em>",
+    hero_lede:"Ustara — платформа, где репутация барбера принадлежит ему самому: портфолио, клиенты и записи следуют за ним, где бы ни было его кресло.",
+    capture_ph:"Телефон или email — получить уведомление", capture_btn:"В лист ожидания",
+    loop_eyebrow:"Цикл", loop_h2:"Отношения, а не разовый визит.",
+    loop_p:"Большинство приложений для записи заканчиваются на оплате. Ustara создана для того, что происходит после — следующая стрижка, следующая рекомендация, следующие пять лет.",
+    loop1_h:"Найти", loop1_p:"Смотрите барберов по портфолио и стилю — а не случайный список ближайших салонов.",
+    loop2_h:"Записаться", loop2_p:"Выберите время, подтвердите мгновенно. Без звонков и переписок в Instagram.",
+    loop3_h:"Постричься", loop3_p:"Отметьтесь, получите стрижку, оплатите в приложении. Просто, вовремя, без сюрпризов.",
+    loop4_h:"Вернуться", loop4_p:"Профиль вашего барбера остаётся с вами — даже если он сменит салон.",
+    mock_eyebrow:"Профессиональный профиль", mock_h2:"Портфолио, которое действительно принадлежит ему.",
+    mock_p1:"У каждого барбера есть настоящий профиль — фото до/после, специализации, отзывы, расписание. Создаётся один раз и остаётся с ним всю карьеру.",
+    mock_p2:"Салоны получают инструменты для бизнеса. Барберы получают репутацию, которая переживёт любой салон.",
+    mock_meta:"Специалист по фейдам · 6 лет · Юнусабад",
+    mock_tag1:"Skin fade", mock_tag2:"Оформление бороды", mock_tag3:"Классические стрижки", mock_btn:"Записаться к Джасуру",
+    cl_eyebrow:"Клиентам", cl_h3:"Найдите своего барбера.<br>Не просто салон.",
+    cl_li1:"Ищите по стилю, а не по точке на карте", cl_li2:"Смотрите реальные работы до/после перед записью",
+    cl_li3:"Записывайтесь за секунды, без звонков", cl_li4:"Профиль барбера следует за ним при смене салона",
+    cl_btn:"Присоединиться как клиент",
+    br_eyebrow:"Барберам", br_h3:"Постройте репутацию,<br>которая останется с вами.",
+    br_li1:"Профиль принадлежит вам, а не салону", br_li2:"Заполняйте кресло без переписок в директе",
+    br_li3:"Управляйте своим расписанием и ценами", br_li4:"Получайте оплату в приложении, без наличных",
+    br_btn:"Присоединиться как барбер",
+    wl_eyebrow:"Запуск в Ташкенте", wl_h2:"Будьте первым в <em>кресле</em>.",
+    wl_p:"Мы набираем первых барберов и клиентов до публичного запуска. Оставьте контакт — без спама, одно сообщение при запуске.",
+    wl_toggle_client:"Я клиент", wl_toggle_barber:"Я барбер",
+    wl_input_ph:"Телефон или email", wl_submit:"Записаться",
+    wl_success:"Вы в списке — добро пожаловать в Ustara.",
+    wl_note:"Присоединяясь, вы соглашаетесь на связь по поводу запуска Ustara в Ташкенте.",
+    foot_client_login:"Вход для клиентов", foot_barber_login:"Вход для барберов",
+    foot_copy:"© 2026 Ustara. Ташкент, Узбекистан."
+  }
+};
+
+/* ============ Supabase ============ */
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentLang = 'en';
+
+function applyLang(lang){
+  currentLang = lang;
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    if(dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.dataset.i18nPh;
+    if(dict[key] !== undefined) el.placeholder = dict[key];
+  });
+  document.querySelectorAll('#langSwitch button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  document.getElementById('htmlRoot').lang = lang;
+
+  const track = document.getElementById('stripTrack');
+  const districts = STRIP_DISTRICTS[lang];
+  const doubled = districts.concat(districts);
+  track.innerHTML = doubled.map(d=>`<span>${d}</span>`).join('');
+}
+
+document.getElementById('langSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-lang]');
+  if(btn) applyLang(btn.dataset.lang);
+});
+
+applyLang('en');
+
+async function submitToWaitlist(contact, role){
+  const { error } = await supabaseClient
+    .from('waitlist')
+    .insert([{ contact: contact, role: role, lang: currentLang }]);
+  if(error && error.code !== '23505') {
+    console.error('Waitlist insert error:', error);
+    return { ok:false };
+  }
+  return { ok:true };
+}
+
+const NEXT_STEP_COPY = {
+  en: {
+    client: { text: "Want to look around now?", link: "Browse barbers", href: "browse.html" },
+    barber: { text: "Want to set up now instead of waiting?", link: "Create your barber profile", href: "barber-signup.html" }
+  },
+  uz: {
+    client: { text: "Hozir ko'rib chiqmoqchimisiz?", link: "Sartaroshlarni ko'rish", href: "browse.html" },
+    barber: { text: "Kutish o'rniga hozir sozlamoqchimisiz?", link: "Sartarosh profilini yaratish", href: "barber-signup.html" }
+  },
+  ru: {
+    client: { text: "Хотите посмотреть уже сейчас?", link: "Смотреть барберов", href: "browse.html" },
+    barber: { text: "Хотите настроить профиль уже сейчас?", link: "Создать профиль барбера", href: "barber-signup.html" }
+  }
+};
+
+function appendNextStep(container, role){
+  const copy = NEXT_STEP_COPY[currentLang][role];
+  const p = document.createElement('p');
+  p.style.marginTop = '14px';
+  p.style.fontSize = '13.5px';
+  p.style.color = 'var(--bone-dim)';
+  p.innerHTML = `${copy.text} <a href="${copy.href}" style="color:var(--brass); font-weight:600;">${copy.link} →</a>`;
+  container.appendChild(p);
+}
+
+document.getElementById('heroCaptureForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = this;
+  const input = document.getElementById('heroCaptureInput');
+  const btn = form.querySelector('button[type="submit"]');
+  const contact = input.value.trim();
+  if(!contact) return;
+
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  const result = await submitToWaitlist(contact, 'client');
+
+  btn.disabled = false;
+  btn.innerHTML = originalHTML;
+
+  if(!result.ok){
+    input.style.borderColor = '#c0392b';
+    return;
+  }
+
+  form.style.display = 'none';
+  const msg = document.createElement('div');
+  msg.className = 'form-success';
+  msg.style.display = 'block';
+  msg.style.textAlign = 'center';
+  msg.style.marginTop = '4px';
+  msg.textContent = I18N[currentLang].wl_success;
+  form.parentNode.appendChild(msg);
+  appendNextStep(form.parentNode, 'client');
+});
+
+let selectedRole = 'client';
+document.querySelectorAll('.toggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedRole = btn.dataset.role;
+  });
+});
+
+document.getElementById('waitlistForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = this;
+  const input = document.getElementById('waitlistInput');
+  const success = document.getElementById('formSuccess');
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const contact = input.value.trim();
+  if(!contact) return;
+
+  const originalBtnText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '...';
+
+  const result = await submitToWaitlist(contact, selectedRole);
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = originalBtnText;
+
+  if(!result.ok){
+    input.style.borderColor = '#c0392b';
+    input.placeholder = 'Something went wrong — try again';
+    return;
+  }
+
+  form.style.display = 'none';
+  success.style.display = 'block';
+  appendNextStep(success.parentNode, selectedRole);
+});
+
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){ entry.target.classList.add('in'); io.unobserve(entry.target); }
+  });
+}, { threshold:0.15 });
+revealEls.forEach(el=>io.observe(el));
+
+(function(){
+  const canvas = document.getElementById('heroCanvas');
+  const stage = document.querySelector('.hero-stage');
+  if(!window.THREE || !canvas) return;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, stage.clientWidth/stage.clientHeight, 0.1, 100);
+  camera.position.set(0, 0.3, 8.5);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+
+  function buildEnvTexture(){
+    const c = document.createElement('canvas');
+    c.width = 1024; c.height = 512;
+    const ctx = c.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,512);
+    grad.addColorStop(0, '#3a3226');
+    grad.addColorStop(0.35, '#171614');
+    grad.addColorStop(0.65, '#0e0d0c');
+    grad.addColorStop(1, '#241f16');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,1024,512);
+
+    function softRect(x,y,w,h,color,blur){
+      ctx.save();
+      ctx.filter = `blur(${blur}px)`;
+      ctx.fillStyle = color;
+      ctx.fillRect(x,y,w,h);
+      ctx.restore();
+    }
+    softRect(120, 90, 260, 90, 'rgba(228,194,90,0.9)', 40);
+    softRect(620, 60, 300, 60, 'rgba(242,237,228,0.55)', 45);
+    softRect(300, 340, 420, 50, 'rgba(201,162,39,0.4)', 55);
+    softRect(780, 300, 180, 160, 'rgba(107,114,128,0.35)', 60);
+    softRect(40, 380, 180, 40, 'rgba(242,237,228,0.3)', 40);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    return tex;
+  }
+
+  const envTex = buildEnvTexture();
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+  const envMap = pmrem.fromEquirectangular(envTex).texture;
+  scene.environment = envMap;
+  envTex.dispose();
+
+  scene.add(new THREE.AmbientLight(0x1a1712, 0.6));
+  const key = new THREE.DirectionalLight(0xE4C25A, 1.4);
+  key.position.set(4, 5, 6);
+  scene.add(key);
+  const rim = new THREE.PointLight(0xF2EDE4, 0.8, 20);
+  rim.position.set(-4, 2, -4);
+  scene.add(rim);
+
+  const chromeMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, metalness:1, roughness:0.06,
+    envMap: envMap, envMapIntensity:1.6, clearcoat:0.6, clearcoatRoughness:0.15
+  });
+  const brassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xC9A227, metalness:1, roughness:0.18,
+    envMap: envMap, envMapIntensity:1.3, clearcoat:0.4
+  });
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const knotGeo = new THREE.TorusKnotGeometry(1.55, 0.36, 220, 32, 2, 3);
+  const knot = new THREE.Mesh(knotGeo, chromeMat);
+  group.add(knot);
+
+  const ringGeo = new THREE.TorusGeometry(2.7, 0.035, 16, 120);
+  const ring = new THREE.Mesh(ringGeo, brassMat);
+  ring.rotation.x = Math.PI/2.4;
+  group.add(ring);
+
+  const ring2 = new THREE.Mesh(ringGeo.clone(), chromeMat);
+  ring2.rotation.x = Math.PI/1.7;
+  ring2.rotation.y = 0.6;
+  ring2.scale.setScalar(0.72);
+  group.add(ring2);
+
+  let t = 0;
+  let px = 0, py = 0;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  window.addEventListener('pointermove', (e)=>{
+    px = (e.clientX / window.innerWidth - 0.5) * 2;
+    py = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  function animate(){
+    requestAnimationFrame(animate);
+    if(!reduced){
+      t += 0.0028;
+      group.rotation.y = t * 0.7 + px * 0.25;
+      group.rotation.x = Math.sin(t*0.5) * 0.15 + py * 0.12;
+      ring.rotation.z = -t * 0.4;
+      ring2.rotation.z = t * 0.55;
+      group.position.y = Math.sin(t*1.1) * 0.08;
+    }
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', ()=>{
+    const w = stage.clientWidth, h = stage.clientHeight;
+    camera.aspect = w/h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+</script>
+
+</body>
+</html>

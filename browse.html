@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Find your barber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#171614; --bg-alt:#1D1B18; --surface:#221F1B; --line:#34302A;
+    --bone:#F2EDE4; --bone-dim:#A39A8B; --brass:#C9A227; --brass-soft:#E4C25A;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background:var(--bg); color:var(--bone); font-family:'Inter', sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
+  @media (max-width:640px){ .wrap{ padding:0 22px; } }
+
+  nav{
+    position:sticky; top:0; z-index:20; border-bottom:1px solid var(--line);
+    background:rgba(23,22,20,0.9); backdrop-filter:blur(10px);
+  }
+  nav .wrap{ height:68px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .logo{ font-family:'Fraunces', serif; font-size:19px; flex-shrink:0; }
+  .logo em{ font-style:italic; color:var(--brass); }
+  .nav-right{ display:flex; align-items:center; gap:14px; }
+  .nav-link{ font-size:13.5px; color:var(--bone-dim); white-space:nowrap; }
+  .nav-link:hover{ color:var(--bone); }
+  .lang-switch{ display:flex; border:1px solid var(--line); border-radius:20px; padding:3px; flex-shrink:0; }
+  .lang-switch button{
+    background:none; border:none; color:var(--bone-dim); font-family:'Inter', sans-serif;
+    font-size:12px; font-weight:600; padding:6px 11px; border-radius:16px; cursor:pointer;
+  }
+  .lang-switch button.active{ background:var(--brass); color:var(--bg); }
+  @media (max-width:640px){ .nav-link{ display:none; } }
+
+  .page-head{ padding:56px 0 36px; }
+  .eyebrow{ font-size:11.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brass); font-weight:600; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(30px,4.5vw,44px); margin:14px 0 10px; }
+  .sub{ color:var(--bone-dim); font-size:15.5px; max-width:520px; }
+
+  /* filters */
+  .filters{
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+    padding:20px 0 36px; border-bottom:1px solid var(--line); margin-bottom:40px;
+  }
+  .search-field{
+    display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line);
+    border-radius:24px; padding:11px 18px; flex:1; min-width:220px;
+  }
+  .search-field svg{ opacity:0.5; flex-shrink:0; }
+  .search-field input{ background:none; border:none; outline:none; color:var(--bone); font-size:14px; width:100%; font-family:'Inter', sans-serif; }
+  .search-field input::placeholder{ color:#6B675E; }
+  select.filter-select{
+    background:var(--surface); border:1px solid var(--line); color:var(--bone); padding:11px 16px;
+    border-radius:24px; font-size:13.5px; font-family:'Inter', sans-serif; cursor:pointer;
+    appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23A39A8B' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+  }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{
+    border:1px solid var(--line); color:var(--bone-dim); padding:9px 15px; border-radius:20px;
+    font-size:13px; cursor:pointer; transition:all .15s ease; background:var(--surface); white-space:nowrap;
+  }
+  .chip.selected{ background:var(--brass); border-color:var(--brass); color:var(--bg); font-weight:600; }
+
+  /* grid */
+  .grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:24px; padding-bottom:100px; }
+  @media (max-width:900px){ .grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:620px){ .grid{ grid-template-columns:1fr; } }
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px;
+    cursor:pointer; transition:border-color .18s ease, transform .18s ease;
+  }
+  .card:hover{ border-color:var(--brass); transform:translateY(-2px); }
+  .card-avatar{
+    width:100%; aspect-ratio:4/3.2; border-radius:5px; margin-bottom:16px;
+    background:linear-gradient(135deg, #3A362F, #221F1B); position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-size:32px; color:var(--brass); font-style:italic;
+  }
+  .card-avatar::after{ content:''; position:absolute; inset:0; background:repeating-linear-gradient(115deg, transparent 0 18px, rgba(201,162,39,0.05) 18px 19px); }
+  .card-name{ font-family:'Fraunces', serif; font-size:19px; margin-bottom:4px; }
+  .card-meta{ font-size:12.5px; color:var(--bone-dim); margin-bottom:14px; }
+  .card-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .card-tag{ font-size:11px; border:1px solid var(--line); color:var(--bone-dim); padding:4px 9px; border-radius:20px; }
+
+  /* empty state */
+  .empty{ text-align:center; padding:80px 20px; border:1px dashed var(--line); border-radius:10px; }
+  .empty .icon{ font-size:40px; margin-bottom:20px; }
+  .empty h3{ font-family:'Fraunces', serif; font-weight:500; font-size:24px; margin-bottom:10px; }
+  .empty p{ color:var(--bone-dim); font-size:14.5px; max-width:380px; margin:0 auto 26px; }
+  .empty .btn{
+    display:inline-block; background:var(--brass); color:var(--bg); padding:13px 24px;
+    border-radius:3px; font-size:13.5px; font-weight:600;
+  }
+
+  .loading{ text-align:center; padding:80px 20px; color:var(--bone-dim); font-size:14px; }
+
+  /* modal */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(10,9,8,0.78); backdrop-filter:blur(4px);
+    z-index:100; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-backdrop.active{ display:flex; }
+  .modal{
+    background:var(--bg-alt); border:1px solid var(--line); border-radius:10px; max-width:480px; width:100%;
+    padding:32px; max-height:88vh; overflow-y:auto; position:relative;
+  }
+  .modal-close{
+    position:absolute; top:20px; right:20px; background:none; border:none; color:var(--bone-dim);
+    font-size:20px; cursor:pointer; line-height:1;
+  }
+  .modal-avatar{
+    width:88px; height:88px; border-radius:50%; margin-bottom:18px;
+    background:linear-gradient(135deg, #3A362F, #221F1B);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-size:30px; color:var(--brass); font-style:italic;
+  }
+  .modal h2{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; margin-bottom:4px; }
+  .modal .m-meta{ font-size:13.5px; color:var(--bone-dim); margin-bottom:18px; }
+  .modal .m-bio{ font-size:14.5px; line-height:1.7; color:var(--bone); margin-bottom:20px; }
+  .modal .card-tags{ margin-bottom:26px; }
+  .modal .btn-book{
+    display:block; text-align:center; background:var(--brass); color:var(--bg); padding:15px;
+    border-radius:4px; font-size:14px; font-weight:700; width:100%; border:none; cursor:pointer;
+  }
+
+  .booking-section{ border-top:1px solid var(--line); margin-top:24px; padding-top:22px; }
+  .booking-section h4{ font-family:'Fraunces', serif; font-weight:500; font-size:16px; margin-bottom:14px; }
+  .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px; }
+  .day-tab{
+    flex-shrink:0; background:var(--surface); border:1px solid var(--line); color:var(--bone-dim);
+    padding:8px 12px; border-radius:6px; font-size:12px; cursor:pointer; text-align:center; min-width:52px;
+  }
+  .day-tab.active{ background:var(--brass); border-color:var(--brass); color:var(--bg); font-weight:600; }
+  .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .slot-btn{
+    background:var(--surface); border:1px solid var(--line); color:var(--bone); padding:10px 6px;
+    border-radius:5px; font-size:13px; cursor:pointer; text-align:center;
+  }
+  .slot-btn:hover{ border-color:var(--brass); }
+  .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .slot-btn.taken:hover{ border-color:var(--line); }
+  .no-slots-msg{ color:var(--bone-dim); font-size:13.5px; text-align:center; padding:16px 0; }
+  .login-prompt{ text-align:center; padding:14px; background:var(--surface); border-radius:6px; font-size:13px; color:var(--bone-dim); }
+  .login-prompt a{ color:var(--brass); font-weight:600; }
+  .booking-toast{ text-align:center; font-size:13.5px; color:var(--brass); padding:10px; font-family:'Fraunces', serif; font-style:italic; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="index.html" class="logo">ust<em>a</em>ra</a>
+    <div class="nav-right">
+      <a href="client-auth.html" class="nav-link" data-i18n="nav_login">Log in</a>
+      <a href="barber-signup.html" class="nav-link" data-i18n="nav_barber_link">Are you a barber?</a>
+      <div class="lang-switch" id="langSwitch">
+        <button type="button" data-lang="en" class="active">EN</button>
+        <button type="button" data-lang="uz">UZ</button>
+        <button type="button" data-lang="ru">RU</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-head wrap">
+  <span class="eyebrow" data-i18n="eyebrow">Browse barbers</span>
+  <h1 data-i18n="title">Find your barber</h1>
+  <p class="sub" data-i18n="subtitle">Search by style and district — every profile here is the barber's own, built and kept by them.</p>
+</div>
+
+<div class="wrap">
+  <div class="filters">
+    <div class="search-field">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="searchInput" data-i18n-ph="search_ph" placeholder="Search by name...">
+    </div>
+    <select class="filter-select" id="districtFilter">
+      <option value="" data-i18n="all_districts">All districts</option>
+      <option value="Chorsu">Chorsu</option>
+      <option value="Yunusabad">Yunusabad</option>
+      <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
+      <option value="Yakkasaray">Yakkasaray</option>
+      <option value="Sergeli">Sergeli</option>
+      <option value="Shayxontohur">Shayxontohur</option>
+    </select>
+    <div class="chip-row" id="specialtyChips"></div>
+  </div>
+
+  <div id="resultsArea">
+    <div class="loading" id="loadingMsg" data-i18n="loading">Loading barbers...</div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
+const SPECIALTIES_LOCAL = {
+  en: SPECIALTIES_EN,
+  uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
+  ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
+};
+
+const I18N = {
+  en:{
+    nav_barber_link:"Are you a barber?", nav_login:"Log in", eyebrow:"Browse barbers", title:"Find your barber",
+    subtitle:"Search by style and district — every profile here is the barber's own, built and kept by them.",
+    search_ph:"Search by name...", all_districts:"All districts", loading:"Loading barbers...",
+    empty_h:"No barbers here yet", empty_p:"Ustara is opening in Tashkent soon. Be the first barber on the platform.",
+    empty_btn:"Join as a barber", years:"yrs", book_btn:"Get notified when booking opens",
+    booking_title:"Book an appointment", no_slots:"No availability set yet", login_prompt:"Log in to book this slot",
+    login_btn:"Log in or sign up", booking_confirmed:"Booked! You'll see it in your dashboard.",
+    booking_failed:"That slot was just taken — pick another."
+  },
+  uz:{
+    nav_barber_link:"Sartaroshmisiz?", nav_login:"Kirish", eyebrow:"Sartaroshlarni ko'rish", title:"O'z sartaroshingizni toping",
+    subtitle:"Uslub va tuman bo'yicha qidiring — bu yerdagi har bir profil sartaroshning o'zi tomonidan yaratilgan va saqlanadi.",
+    search_ph:"Ism bo'yicha qidirish...", all_districts:"Barcha tumanlar", loading:"Sartaroshlar yuklanmoqda...",
+    empty_h:"Hozircha sartaroshlar yo'q", empty_p:"Ustara tez orada Toshkentda ochiladi. Platformadagi birinchi sartarosh bo'ling.",
+    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", book_btn:"Bandlash ochilganda xabar bering",
+    booking_title:"Uchrashuvni band qiling", no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring",
+    login_btn:"Kirish yoki ro'yxatdan o'tish", booking_confirmed:"Band qilindi! Uni boshqaruv panelingizda ko'rasiz.",
+    booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang."
+  },
+  ru:{
+    nav_barber_link:"Вы барбер?", nav_login:"Войти", eyebrow:"Барберы", title:"Найдите своего барбера",
+    subtitle:"Ищите по стилю и району — каждый профиль здесь создан и поддерживается самим барбером.",
+    search_ph:"Поиск по имени...", all_districts:"Все районы", loading:"Загрузка барберов...",
+    empty_h:"Барберов пока нет", empty_p:"Ustara скоро откроется в Ташкенте. Станьте первым барбером на платформе.",
+    empty_btn:"Присоединиться как барбер", years:"лет", book_btn:"Сообщить об открытии записи",
+    booking_title:"Записаться на приём", no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться на это время",
+    login_btn:"Войти или зарегистрироваться", booking_confirmed:"Записано! Вы увидите это в личном кабинете.",
+    booking_failed:"Это время только что заняли — выберите другое."
+  }
+};
+
+let currentLang = 'en';
+let allBarbers = [];
+let selectedSpecialtyFilters = [];
+let currentUser = null;
+let currentClientProfile = null;
+const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function applyLang(lang){
+  currentLang = lang;
+  const dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(dict[el.dataset.i18n] !== undefined) el.textContent = dict[el.dataset.i18n];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    if(dict[el.dataset.i18nPh] !== undefined) el.placeholder = dict[el.dataset.i18nPh];
+  });
+  document.querySelectorAll('#langSwitch button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  document.getElementById('htmlRoot').lang = lang;
+  renderSpecialtyChips();
+  renderResults();
+}
+
+document.getElementById('langSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-lang]');
+  if(btn) applyLang(btn.dataset.lang);
+});
+
+function renderSpecialtyChips(){
+  const row = document.getElementById('specialtyChips');
+  row.innerHTML = '';
+  SPECIALTIES_LOCAL[currentLang].forEach((label, i)=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (selectedSpecialtyFilters.includes(i) ? ' selected' : '');
+    chip.textContent = label;
+    chip.addEventListener('click', ()=>{
+      if(selectedSpecialtyFilters.includes(i)) selectedSpecialtyFilters = selectedSpecialtyFilters.filter(x=>x!==i);
+      else selectedSpecialtyFilters.push(i);
+      renderSpecialtyChips();
+      renderResults();
+    });
+    row.appendChild(chip);
+  });
+}
+
+function localizeSpecialty(enTag){
+  const idx = SPECIALTIES_EN.indexOf(enTag);
+  if(idx === -1) return enTag;
+  return SPECIALTIES_LOCAL[currentLang][idx];
+}
+
+function initials(name){
+  return (name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+function renderResults(){
+  const area = document.getElementById('resultsArea');
+  const dict = I18N[currentLang];
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const district = document.getElementById('districtFilter').value;
+  const activeSpecEn = selectedSpecialtyFilters.map(i => SPECIALTIES_EN[i]);
+
+  let filtered = allBarbers.filter(b=>{
+    if(search && !(b.full_name || '').toLowerCase().includes(search)) return false;
+    if(district && b.district !== district) return false;
+    if(activeSpecEn.length){
+      const specs = b.specialties || [];
+      if(!activeSpecEn.every(s => specs.includes(s))) return false;
+    }
+    return true;
+  });
+
+  if(allBarbers.length === 0){
+    area.innerHTML = `
+      <div class="empty">
+        <div class="icon">✂️</div>
+        <h3>${dict.empty_h}</h3>
+        <p>${dict.empty_p}</p>
+        <a href="barber-signup.html" class="btn">${dict.empty_btn}</a>
+      </div>`;
+    return;
+  }
+
+  if(filtered.length === 0){
+    area.innerHTML = `
+      <div class="empty">
+        <div class="icon">🔍</div>
+        <h3>${dict.empty_h}</h3>
+        <p>${dict.empty_p}</p>
+      </div>`;
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  filtered.forEach(b=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    const specs = (b.specialties || []).slice(0,3).map(s=>`<span class="card-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
+    card.innerHTML = `
+      <div class="card-avatar">${initials(b.full_name)}</div>
+      <div class="card-name">${escapeHtml(b.full_name)}</div>
+      <div class="card-meta">${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + dict.years : ''}</div>
+      <div class="card-tags">${specs}</div>
+    `;
+    card.addEventListener('click', ()=> openModal(b));
+    grid.appendChild(card);
+  });
+  area.innerHTML = '';
+  area.appendChild(grid);
+}
+
+function generateSlotsForDate(barber, dateObj, bookedIsoSet){
+  const dayKey = JS_DAY_TO_KEY[dateObj.getDay()];
+  if(!(barber.work_days || []).includes(dayKey)) return [];
+
+  const [startH, startM] = (barber.work_start || '09:00').split(':').map(Number);
+  const [endH, endM] = (barber.work_end || '20:00').split(':').map(Number);
+  const duration = barber.slot_duration_minutes || 30;
+
+  const slots = [];
+  const now = new Date();
+  let cursor = new Date(dateObj);
+  cursor.setHours(startH, startM, 0, 0);
+  const end = new Date(dateObj);
+  end.setHours(endH, endM, 0, 0);
+
+  while(cursor < end){
+    if(cursor > now){
+      const iso = cursor.toISOString();
+      slots.push({
+        label: cursor.toLocaleTimeString(currentLang === 'en' ? 'en-US' : currentLang, { hour:'2-digit', minute:'2-digit' }),
+        iso,
+        taken: bookedIsoSet.has(iso)
+      });
+    }
+    cursor = new Date(cursor.getTime() + duration * 60000);
+  }
+  return slots;
+}
+
+async function openModal(b){
+  const dict = I18N[currentLang];
+  const specs = (b.specialties || []).map(s=>`<span class="card-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <button class="modal-close" id="modalCloseBtn">&times;</button>
+    <div class="modal-avatar">${initials(b.full_name)}</div>
+    <h2>${escapeHtml(b.full_name)}</h2>
+    <div class="m-meta">${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + dict.years : ''}</div>
+    ${b.bio ? `<div class="m-bio">${escapeHtml(b.bio)}</div>` : ''}
+    <div class="card-tags">${specs}</div>
+    <div class="booking-section" id="bookingSection">
+      <h4>${dict.booking_title}</h4>
+      <div id="bookingBody">${dict.no_slots}</div>
+    </div>
+  `;
+  document.getElementById('modalBackdrop').classList.add('active');
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+
+  if(!b.work_days || b.work_days.length === 0){
+    return; // no availability configured yet, leave the "no_slots" message
+  }
+
+  const rangeStart = new Date();
+  const rangeEnd = new Date();
+  rangeEnd.setDate(rangeEnd.getDate() + 7);
+  const { data: existingBookings } = await supabaseClient
+    .from('bookings')
+    .select('start_time')
+    .eq('barber_id', b.id)
+    .in('status', ['pending','confirmed'])
+    .gte('start_time', rangeStart.toISOString())
+    .lte('start_time', rangeEnd.toISOString());
+  const bookedIsoSet = new Set((existingBookings || []).map(x => new Date(x.start_time).toISOString()));
+
+  const days = [];
+  for(let i = 0; i < 7; i++){
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const dayKey = JS_DAY_TO_KEY[d.getDay()];
+    if(b.work_days.includes(dayKey)) days.push(d);
+  }
+
+  if(days.length === 0){
+    document.getElementById('bookingBody').textContent = dict.no_slots;
+    return;
+  }
+
+  const body = document.getElementById('bookingBody');
+  body.innerHTML = `<div class="day-tabs" id="dayTabs"></div><div class="slot-grid" id="slotGrid"></div>`;
+  const dayTabs = document.getElementById('dayTabs');
+  const slotGrid = document.getElementById('slotGrid');
+
+  function selectDay(idx){
+    document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i === idx));
+    const slots = generateSlotsForDate(b, days[idx], bookedIsoSet);
+    if(slots.length === 0){
+      slotGrid.innerHTML = `<div class="no-slots-msg" style="grid-column:1/-1;">${dict.no_slots}</div>`;
+      return;
+    }
+    slotGrid.innerHTML = slots.map(s =>
+      `<div class="slot-btn ${s.taken ? 'taken' : ''}" data-iso="${s.iso}">${s.label}</div>`
+    ).join('');
+    if(!currentUser){
+      slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
+        el.addEventListener('click', ()=>{
+          slotGrid.innerHTML = `<div class="login-prompt" style="grid-column:1/-1;">${dict.login_prompt}<br><a href="client-auth.html">${dict.login_btn} →</a></div>`;
+        });
+      });
+    } else {
+      slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
+        el.addEventListener('click', async ()=>{
+          const iso = el.dataset.iso;
+          el.style.opacity = '0.5';
+          const { error } = await supabaseClient.from('bookings').insert([{
+            barber_id: b.id,
+            client_id: currentUser.id,
+            client_name: currentClientProfile.full_name,
+            client_phone: currentClientProfile.phone,
+            start_time: iso,
+            status: 'pending'
+          }]);
+          if(error){
+            slotGrid.innerHTML = `<div class="no-slots-msg" style="grid-column:1/-1;">${dict.booking_failed}</div>`;
+            return;
+          }
+          bookedIsoSet.add(iso);
+          slotGrid.innerHTML = `<div class="booking-toast" style="grid-column:1/-1;">${dict.booking_confirmed}</div>`;
+        });
+      });
+    }
+  }
+
+  dayTabs.innerHTML = days.map((d,i) =>
+    `<div class="day-tab">${d.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang, { weekday:'short', day:'numeric' })}</div>`
+  ).join('');
+  Array.from(dayTabs.children).forEach((el, i)=> el.addEventListener('click', ()=> selectDay(i)));
+  selectDay(0);
+}
+function closeModal(){ document.getElementById('modalBackdrop').classList.remove('active'); }
+document.getElementById('modalBackdrop').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalBackdrop') closeModal();
+});
+
+document.getElementById('searchInput').addEventListener('input', renderResults);
+document.getElementById('districtFilter').addEventListener('change', renderResults);
+
+/* ---------- fetch published barbers ---------- */
+async function loadBarbers(){
+  const { data, error } = await supabaseClient
+    .from('barbers')
+    .select('*')
+    .eq('is_published', true)
+    .order('created_at', { ascending:false });
+
+  if(error){
+    console.error('Failed to load barbers:', error);
+    allBarbers = [];
+  } else {
+    allBarbers = data || [];
+  }
+  applyLang(currentLang);
+}
+
+async function checkAuth(){
+  const { data } = await supabaseClient.auth.getSession();
+  if(data.session){
+    currentUser = data.session.user;
+    const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
+    currentClientProfile = client;
+  }
+}
+
+loadBarbers();
+checkAuth();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Barber login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{ --bg:#171614; --surface:#221F1B; --line:#34302A; --bone:#F2EDE4; --bone-dim:#A39A8B; --brass:#C9A227; --brass-soft:#E4C25A; --err:#c0392b; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--bone); font-family:'Inter', sans-serif; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  a{ color:inherit; text-decoration:none; }
+  .card{ width:100%; max-width:400px; }
+  .logo{ font-family:'Fraunces', serif; font-size:22px; text-align:center; margin-bottom:36px; display:block; }
+  .logo em{ font-style:italic; color:var(--brass); }
+  .eyebrow{ font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brass); font-weight:600; display:block; text-align:center; margin-bottom:10px; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; text-align:center; margin-bottom:32px; }
+  .field-group{ margin-bottom:18px; }
+  label{ display:block; font-size:13px; color:var(--bone-dim); margin-bottom:7px; }
+  input{ width:100%; background:var(--surface); border:1px solid var(--line); color:var(--bone); padding:13px 15px; border-radius:4px; font-size:14.5px; font-family:'Inter', sans-serif; }
+  input:focus{ outline:none; border-color:var(--brass); }
+  input.err{ border-color:var(--err); }
+  .error-text{ font-size:12.5px; color:var(--err); margin-top:14px; display:none; text-align:center; }
+  .btn{ width:100%; background:var(--brass); color:var(--bg); border:none; padding:14px; border-radius:4px; font-size:14px; font-weight:700; cursor:pointer; margin-top:8px; }
+  .btn:hover{ background:var(--brass-soft); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .foot-link{ text-align:center; font-size:13.5px; color:var(--bone-dim); margin-top:26px; }
+  .foot-link a{ color:var(--brass); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="card">
+  <a href="index.html" class="logo">ust<em>a</em>ra</a>
+  <span class="eyebrow" data-i18n="eyebrow">For barbers</span>
+  <h1 data-i18n="title">Log in to your dashboard</h1>
+  <form id="loginForm">
+    <div class="field-group">
+      <label data-i18n="l_email">Email</label>
+      <input type="email" id="email" required>
+    </div>
+    <div class="field-group">
+      <label data-i18n="l_password">Password</label>
+      <input type="password" id="password" required>
+    </div>
+    <div class="error-text" id="errorMsg" data-i18n="err_generic">Incorrect email or password.</div>
+    <button type="submit" class="btn" id="submitBtn" data-i18n="submit">Log in</button>
+  </form>
+  <div class="foot-link" data-i18n-html="foot">New here? <a href="barber-signup.html">Create your profile</a></div>
+</div>
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const I18N = {
+  en:{ eyebrow:"For barbers", title:"Log in to your dashboard", l_email:"Email", l_password:"Password",
+       err_generic:"Incorrect email or password.", submit:"Log in",
+       foot:'New here? <a href="barber-signup.html">Create your profile</a>' },
+  uz:{ eyebrow:"Sartaroshlar uchun", title:"Boshqaruv paneliga kiring", l_email:"Email", l_password:"Parol",
+       err_generic:"Email yoki parol noto'g'ri.", submit:"Kirish",
+       foot:'Yangimisiz? <a href="barber-signup.html">Profil yarating</a>' },
+  ru:{ eyebrow:"Барберам", title:"Войти в личный кабинет", l_email:"Email", l_password:"Пароль",
+       err_generic:"Неверный email или пароль.", submit:"Войти",
+       foot:'Впервые? <a href="barber-signup.html">Создайте профиль</a>' }
+};
+const lang = (navigator.language || 'en').slice(0,2);
+const currentLang = I18N[lang] ? lang : 'en';
+document.querySelectorAll('[data-i18n]').forEach(el=>{
+  el.textContent = I18N[currentLang][el.dataset.i18n];
+});
+document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+  el.innerHTML = I18N[currentLang][el.dataset.i18nHtml];
+});
+
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  errorMsg.style.display = 'none';
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = '...';
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value
+  });
+
+  btn.disabled = false;
+  btn.textContent = original;
+
+  if(error){
+    errorMsg.style.display = 'block';
+    return;
+  }
+  window.location.href = 'barber-dashboard.html';
+});
+
+// already logged in? skip straight to dashboard
+supabaseClient.auth.getSession().then(({ data })=>{
+  if(data.session) window.location.href = 'barber-dashboard.html';
+});
+</script>
+</body>
+</html>
