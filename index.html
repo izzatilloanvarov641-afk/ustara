@@ -73,6 +73,12 @@
   .nav-links a:hover{ color:var(--ink); }
   .nav-right{ display:flex; align-items:center; gap:18px; }
 
+  .nav-login{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); white-space:nowrap; }
+  .nav-login a:hover{ color:var(--brass); }
+  .nav-login .sep{ opacity:0.5; }
+  @media (max-width:560px){ .nav-login .client-login{ display:none; } .nav-login .sep{ display:none; } }
+  @media (max-width:400px){ .nav-login{ display:none; } }
+
   .lang-switch{
     display:flex; border:1px solid var(--line); border-radius:20px; padding:3px;
   }
@@ -293,6 +299,11 @@
       <a href="#clients" data-i18n="nav_clients">For clients</a>
     </div>
     <div class="nav-right">
+      <div class="nav-login">
+        <a href="client-auth.html" class="client-login" data-i18n="foot_client_login">Client login</a>
+        <span class="sep">/</span>
+        <a href="barber-login.html" data-i18n="foot_barber_login">Barber login</a>
+      </div>
       <div class="lang-switch" id="langSwitch">
         <button type="button" data-lang="en" class="active">EN</button>
         <button type="button" data-lang="uz">UZ</button>
