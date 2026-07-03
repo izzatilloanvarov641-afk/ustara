@@ -104,6 +104,10 @@
     <h1 data-i18n="title">Pending barbers</h1>
     <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
     <div id="pendingArea"></div>
+
+    <h1 data-i18n="loc_title" style="margin-top:52px;">Pending location verification</h1>
+    <p class="sub" data-i18n="loc_sub">Confirm a barber's pin is a real, findable shop before it appears on the public map.</p>
+    <div id="pendingLocationArea"></div>
   </div>
 </main>
 
@@ -129,7 +133,9 @@ const I18N = {
     title:"Pending barbers", sub:"Review new barber profiles before they go live.",
     empty_pending:"No barbers waiting for review right now.",
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"yrs",
-    approve:"Approve", reject:"Reject", not_set:"—" },
+    approve:"Approve", reject:"Reject", not_set:"—",
+    loc_title:"Pending location verification", loc_sub:"Confirm a barber's pin is a real, findable shop before it appears on the public map.",
+    empty_location:"No locations waiting for verification.", view_map:"View on map ↗", verify_location:"Verify location" },
   uz:{ logout:"Chiqish", login_title:"Admin kirish", l_email:"Email", l_password:"Parol",
     err_generic:"Email yoki parol noto'g'ri.", login_btn:"Kirish", signup_btn:"Hisob yaratish",
     toggle_signup:'Birinchi marta? <span>Admin hisobini yarating</span>', toggle_login:'Hisobingiz bormi? <span>Kirish</span>',
@@ -137,7 +143,9 @@ const I18N = {
     title:"Kutilayotgan sartaroshlar", sub:"Yangi sartarosh profillarini faollashtirishdan oldin ko'rib chiqing.",
     empty_pending:"Hozircha ko'rib chiqish uchun sartaroshlar yo'q.",
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
-    approve:"Tasdiqlash", reject:"Rad etish", not_set:"—" },
+    approve:"Tasdiqlash", reject:"Rad etish", not_set:"—",
+    loc_title:"Joylashuvni tekshirish kutilmoqda", loc_sub:"Ochiq xaritada ko'rsatishdan oldin sartaroshning belgisi haqiqiy do'kon ekanini tasdiqlang.",
+    empty_location:"Hozircha tekshirish uchun joylashuvlar yo'q.", view_map:"Xaritada ko'rish ↗", verify_location:"Joylashuvni tasdiqlash" },
   ru:{ logout:"Выйти", login_title:"Вход для админа", l_email:"Email", l_password:"Пароль",
     err_generic:"Неверный email или пароль.", login_btn:"Войти", signup_btn:"Создать аккаунт",
     toggle_signup:'Первый раз? <span>Создать аккаунт админа</span>', toggle_login:'Уже есть аккаунт? <span>Войти</span>',
@@ -145,7 +153,9 @@ const I18N = {
     title:"Барберы на рассмотрении", sub:"Проверяйте новые профили барберов перед публикацией.",
     empty_pending:"Пока никто не ждёт проверки.",
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
-    approve:"Одобрить", reject:"Отклонить", not_set:"—" }
+    approve:"Одобрить", reject:"Отклонить", not_set:"—",
+    loc_title:"Локации на проверке", loc_sub:"Подтвердите, что метка барбера — реальный, находимый салон, прежде чем она появится на публичной карте.",
+    empty_location:"Пока нет локаций, ожидающих проверки.", view_map:"Посмотреть на карте ↗", verify_location:"Подтвердить локацию" }
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
@@ -215,6 +225,7 @@ async function checkAuthorizedAndEnter(user){
   document.getElementById('logoutBtn').style.display = 'inline-block';
   document.getElementById('adminMain').style.display = 'block';
   loadPending();
+  loadPendingLocations();
 }
 
 async function loadPending(){
@@ -258,6 +269,43 @@ async function loadPending(){
       btn.disabled = true;
       await supabaseClient.from('barbers').update({ is_published: false }).eq('id', btn.dataset.reject);
       loadPending();
+    });
+  });
+}
+
+async function loadPendingLocations(){
+  const area = document.getElementById('pendingLocationArea');
+  const { data, error } = await supabaseClient
+    .from('barbers')
+    .select('*')
+    .not('latitude', 'is', null)
+    .eq('is_location_verified', false)
+    .order('created_at', { ascending:true });
+
+  if(error || !data || data.length === 0){
+    area.innerHTML = `<div class="empty-pending">${t('empty_location')}</div>`;
+    return;
+  }
+
+  area.innerHTML = data.map(b => {
+    const mapUrl = `https://www.openstreetmap.org/?mlat=${b.latitude}&mlon=${b.longitude}#map=17/${b.latitude}/${b.longitude}`;
+    return `
+      <div class="review-card">
+        <h3>${escapeHtml(b.full_name)}</h3>
+        <div class="review-meta">${escapeHtml(b.shop_name || t('not_set'))}${b.district ? ' · ' + escapeHtml(b.district) : ''}</div>
+        <div class="review-meta"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--brass); font-weight:600;">${t('view_map')}</a></div>
+        <div class="review-actions">
+          <button class="btn btn-approve" data-verify="${b.id}">${t('verify_location')}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  area.querySelectorAll('[data-verify]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      await supabaseClient.from('barbers').update({ is_location_verified: true }).eq('id', btn.dataset.verify);
+      loadPendingLocations();
     });
   });
 }
