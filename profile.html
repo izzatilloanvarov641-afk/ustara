@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Barber profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E2DACB;
+    --ink:#1C1A17; --ink-dim:#7A7264; --brass:#A67C1A; --brass-soft:#C79A2E;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.5; }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width:640px; margin:0 auto; padding:0 20px; }
+
+  nav{ border-bottom:1px solid var(--line); padding:16px 0; background:var(--surface); }
+  .logo{ font-family:'Fraunces', serif; font-size:19px; }
+  .logo em{ font-style:italic; color:var(--brass); }
+
+  .loading, .error-state{ text-align:center; padding:100px 20px; color:var(--ink-dim); }
+
+  .hero{ padding:32px 0 20px; text-align:center; }
+  .avatar{
+    width:100px; height:100px; border-radius:50%; margin:0 auto 16px; background:var(--surface-alt);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    font-family:'Fraunces', serif; font-size:34px; color:var(--brass); font-style:italic;
+    border:3px solid var(--surface); box-shadow:0 2px 12px rgba(0,0,0,0.08);
+  }
+  .avatar img{ width:100%; height:100%; object-fit:cover; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; }
+  .meta{ font-size:13.5px; color:var(--ink-dim); margin-top:4px; }
+  .tags{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:14px; }
+  .tag{ font-size:11.5px; border:1px solid var(--line); color:var(--ink-dim); padding:5px 12px; border-radius:20px; background:var(--surface); }
+  .bio{ font-size:14.5px; line-height:1.7; text-align:center; max-width:480px; margin:18px auto 0; }
+
+  .section-title{ font-family:'Fraunces', serif; font-size:17px; font-weight:500; margin:32px 0 14px; }
+
+  .portfolio-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .portfolio-grid img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; }
+
+  .service-option{
+    display:flex; justify-content:space-between; align-items:center; padding:14px 16px;
+    border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; font-size:14px;
+    background:var(--surface);
+  }
+  .service-option:hover, .service-option.selected{ border-color:var(--brass); background:#FBF7EE; }
+  .svc-price{ font-weight:700; color:var(--brass); }
+
+  .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin:14px 0; }
+  .day-tab{ flex-shrink:0; background:var(--surface); border:1px solid var(--line); color:var(--ink-dim); padding:8px 12px; border-radius:8px; font-size:12px; cursor:pointer; min-width:52px; text-align:center; }
+  .day-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
+  .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .slot-btn{ background:var(--surface); border:1px solid var(--line); color:var(--ink); padding:10px 6px; border-radius:8px; font-size:13px; cursor:pointer; text-align:center; }
+  .slot-btn:hover{ border-color:var(--brass); }
+  .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:13px; }
+  .login-prompt a{ color:var(--brass); font-weight:600; }
+  .booking-toast{ grid-column:1/-1; text-align:center; font-size:14px; color:var(--brass); padding:10px; font-family:'Fraunces', serif; font-style:italic; }
+  .back-link{ font-size:12.5px; color:var(--ink-dim); cursor:pointer; margin-bottom:10px; display:inline-block; }
+
+  #locationMapEl{ height:220px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  footer{ padding:40px 0 60px; text-align:center; }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap"><a href="index.html" class="logo">ust<em>a</em>ra</a></div></nav>
+
+<div class="wrap" id="content">
+  <div class="loading" id="loadingMsg">Loading...</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
+const SPECIALTIES_LOCAL = {
+  en: SPECIALTIES_EN,
+  uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
+  ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
+};
+const SERVICES_LOCAL = {
+  en: { haircut:"Haircut", beard_trim:"Beard trim", haircut_beard:"Haircut + Beard", kids_haircut:"Kids' haircut", lineup:"Line-up", coloring:"Hair coloring" },
+  uz: { haircut:"Soch olish", beard_trim:"Soqol olish", haircut_beard:"Soch + Soqol", kids_haircut:"Bolalar uchun", lineup:"Line-up", coloring:"Soch bo'yash" },
+  ru: { haircut:"Стрижка", beard_trim:"Оформление бороды", haircut_beard:"Стрижка + Борода", kids_haircut:"Детская стрижка", lineup:"Line-up", coloring:"Окрашивание" }
+};
+const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+const T = {
+  en:{ not_found:"This barber profile doesn't exist or isn't available right now.", years:"yrs",
+       portfolio:"Their work", book_title:"Book an appointment", choose_service:"Choose a service",
+       no_slots:"No availability set yet", login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
+       booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
+       back:"Back", location:"Location", min:"min" },
+  uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
+       portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
+       no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
+       booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
+       back:"Orqaga", location:"Joylashuv", min:"daq" },
+  ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
+       portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
+       no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
+       booking_confirmed:"Записано!", booking_failed:"Это время только что заняли — выберите другое.",
+       back:"Назад", location:"Локация", min:"мин" }
+};
+const browserLang = (navigator.language || 'en').slice(0,2);
+const lang = T[browserLang] ? browserLang : 'en';
+function t(k){ return T[lang][k]; }
+function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : ''; }
+function localizeSpecialty(s){ const i = SPECIALTIES_EN.indexOf(s); return i === -1 ? s : SPECIALTIES_LOCAL[lang][i]; }
+function initials(name){ return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+let currentUser = null, currentClientProfile = null, barberData = null, servicesData = [];
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const barberId = params.get('id');
+  const content = document.getElementById('content');
+  if(!barberId){ content.innerHTML = `<div class="error-state">${t('not_found')}</div>`; return; }
+
+  const { data: barber, error } = await supabaseClient.from('barbers').select('*')
+    .eq('id', barberId).eq('is_published', true).eq('is_approved', true).single();
+  if(error || !barber){ content.innerHTML = `<div class="error-state">${t('not_found')}</div>`; return; }
+  barberData = barber;
+
+  const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', barberId).eq('is_active', true);
+  servicesData = services || [];
+
+  const { data: photosData } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', barberId).order('position', { ascending:true });
+  const portfolioPhotos = photosData || [];
+
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  if(sessionData.session){
+    currentUser = sessionData.session.user;
+    const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
+    currentClientProfile = client;
+  }
+
+  render(portfolioPhotos);
+}
+
+function portfolioPublicUrl(imagePath){
+  const { data } = supabaseClient.storage.from('barber-media').getPublicUrl(imagePath);
+  return data.publicUrl;
+}
+
+function render(portfolioPhotos){
+  const b = barberData;
+  const specs = (b.specialties || []).map(s => `<span class="tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
+  const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials(b.full_name);
+
+  document.title = `${b.full_name} — Ustara`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="hero">
+      <div class="avatar">${avatar}</div>
+      <h1>${escapeHtml(b.full_name)}</h1>
+      <div class="meta">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
+      <div class="tags">${specs}</div>
+      ${b.bio ? `<div class="bio">${escapeHtml(b.bio)}</div>` : ''}
+    </div>
+
+    ${portfolioPhotos.length > 0 ? `
+      <div class="section-title">${t('portfolio')}</div>
+      <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(portfolioPublicUrl(p.image_path))}" alt="">`).join('')}</div>
+    ` : ''}
+
+    ${b.latitude && b.longitude && b.is_location_verified ? `
+      <div class="section-title">${t('location')}</div>
+      <div id="locationMapEl"></div>
+    ` : ''}
+
+    <div class="section-title">${t('book_title')}</div>
+    <div id="bookingArea"></div>
+  `;
+
+  if(b.latitude && b.longitude && b.is_location_verified){
+    const m = L.map('locationMapEl').setView([b.latitude, b.longitude], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors', maxZoom:19 }).addTo(m);
+    L.marker([b.latitude, b.longitude]).addTo(m).bindPopup(escapeHtml(b.shop_name || b.full_name));
+  }
+
+  renderServiceChoices();
+}
+
+function renderServiceChoices(){
+  const area = document.getElementById('bookingArea');
+  if(servicesData.length === 0){
+    area.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`;
+    return;
+  }
+  area.innerHTML = servicesData.map(s => `
+    <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}">
+      <span>${SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+      <span class="svc-price">${formatPrice(s.price)}</span>
+    </div>
+  `).join('');
+  area.querySelectorAll('.service-option').forEach(opt=>{
+    opt.addEventListener('click', ()=> showDayPicker(opt.dataset.key, parseInt(opt.dataset.duration)));
+  });
+}
+
+function generateSlotsForDate(dateObj, duration, bookedIsoSet){
+  const dayKey = JS_DAY_TO_KEY[dateObj.getDay()];
+  if(!(barberData.work_days || []).includes(dayKey)) return [];
+  const [startH, startM] = (barberData.work_start || '09:00').split(':').map(Number);
+  const [endH, endM] = (barberData.work_end || '20:00').split(':').map(Number);
+  const slots = []; const now = new Date();
+  let cursor = new Date(dateObj); cursor.setHours(startH, startM, 0, 0);
+  const end = new Date(dateObj); end.setHours(endH, endM, 0, 0);
+  while(cursor < end){
+    if(cursor > now){
+      const iso = cursor.toISOString();
+      slots.push({ label: cursor.toLocaleTimeString(lang==='en'?'en-US':lang, { hour:'2-digit', minute:'2-digit' }), iso, taken: bookedIsoSet.has(iso) });
+    }
+    cursor = new Date(cursor.getTime() + duration*60000);
+  }
+  return slots;
+}
+
+async function showDayPicker(serviceKey, duration){
+  const area = document.getElementById('bookingArea');
+  const rangeStart = new Date(); const rangeEnd = new Date(); rangeEnd.setDate(rangeEnd.getDate()+7);
+  const { data: existing } = await supabaseClient.from('bookings').select('start_time').eq('barber_id', barberData.id)
+    .in('status', ['pending','confirmed']).gte('start_time', rangeStart.toISOString()).lte('start_time', rangeEnd.toISOString());
+  const bookedIsoSet = new Set((existing || []).map(x => new Date(x.start_time).toISOString()));
+
+  const days = [];
+  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if((barberData.work_days||[]).includes(JS_DAY_TO_KEY[d.getDay()])) days.push(d); }
+
+  area.innerHTML = `
+    <span class="back-link" id="backBtn">← ${t('back')}</span>
+    ${days.length === 0 ? `<div class="no-slots-msg">${t('no_slots')}</div>` : `<div class="day-tabs" id="dayTabs"></div><div class="slot-grid" id="slotGrid"></div>`}
+  `;
+  document.getElementById('backBtn').addEventListener('click', renderServiceChoices);
+  if(days.length === 0) return;
+
+  const dayTabs = document.getElementById('dayTabs');
+  const slotGrid = document.getElementById('slotGrid');
+
+  function selectDay(idx){
+    document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
+    const slots = generateSlotsForDate(days[idx], duration, bookedIsoSet);
+    if(slots.length === 0){ slotGrid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
+    slotGrid.innerHTML = slots.map(s => `<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('');
+    slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        if(!currentUser){
+          slotGrid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
+          return;
+        }
+        const iso = el.dataset.iso;
+        el.style.opacity = '0.5';
+        const { error } = await supabaseClient.from('bookings').insert([{
+          barber_id: barberData.id, client_id: currentUser.id,
+          client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
+          start_time: iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration
+        }]);
+        if(error){ slotGrid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}</div>`; return; }
+        bookedIsoSet.add(iso);
+        slotGrid.innerHTML = `<div class="booking-toast">${t('booking_confirmed')}</div>`;
+      });
+    });
+  }
+  dayTabs.innerHTML = days.map(d => `<div class="day-tab">${d.toLocaleDateString(lang==='en'?'en-US':lang,{weekday:'short',day:'numeric'})}</div>`).join('');
+  Array.from(dayTabs.children).forEach((el,i)=> el.addEventListener('click', ()=> selectDay(i)));
+  selectDay(0);
+}
+
+init();
+</script>
+</body>
+</html>

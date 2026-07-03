@@ -6,6 +6,8 @@
 <title>Ustara — Barber dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
@@ -225,6 +227,10 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
         <span data-i18n="nav_hours">Working hours</span>
       </button>
+      <button class="nav-item" data-view="location">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span data-i18n="nav_location">Location</span>
+      </button>
       <button class="nav-item" data-view="services">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 9-9M3 15l4 4L21 5"/></svg>
         <span data-i18n="nav_services">Services</span>
@@ -284,6 +290,12 @@
     <div class="view" data-view="profile">
       <h1 data-i18n="nav_profile">Profile</h1>
       <p class="page-sub" data-i18n="profile_sub">This is what clients see when they find you.</p>
+
+      <div class="section-title"><span data-i18n="profile_link_title">Your public profile</span></div>
+      <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <span id="profileLinkPreview" style="font-size:13px; color:var(--ink-dim); word-break:break-all;"></span>
+        <button class="btn btn-secondary" id="copyLinkBtn" data-i18n="copy_link">Copy my profile link</button>
+      </div>
 
       <div class="section-title">
         <span data-i18n="nav_profile">Profile</span>
@@ -352,6 +364,24 @@
       </div>
     </div>
 
+    <!-- ============ LOCATION ============ -->
+    <div class="view" data-view="location">
+      <h1 data-i18n="nav_location">Location</h1>
+      <p class="page-sub" data-i18n="location_sub">Click on the map to place a pin exactly where your shop is. Clients use this to find and navigate to you.</p>
+      <div class="card">
+        <div class="field-group">
+          <label data-i18n="l_shopname">Shop name (optional)</label>
+          <input type="text" id="editShopName" placeholder="e.g. Reyes Cutz">
+        </div>
+        <div id="locationStatusMsg" style="font-size:13px; margin-bottom:12px; color:var(--ink-dim);"></div>
+        <div id="locationMapEl" style="height:340px; border-radius:10px; overflow:hidden; border:1px solid var(--line);"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveLocationBtn" data-i18n="save">Save changes</button>
+        </div>
+        <div class="save-msg" id="saveLocationMsg" data-i18n="saved">Saved.</div>
+      </div>
+    </div>
+
     <!-- ============ SERVICES ============ -->
     <div class="view" data-view="services">
       <h1 data-i18n="nav_services">Services</h1>
@@ -408,10 +438,11 @@
 
 <script>
 /* ============================================================
-   Schema verified live against Supabase on 2026-07-03:
+   Schema verified live against Supabase:
    - barbers: id, full_name, district, bio, specialties[],
      years_experience, avatar_url, is_published, is_approved,
-     work_days[], work_start, work_end
+     work_days[], work_start, work_end, latitude, longitude,
+     shop_name, is_location_verified
    - services: id, barber_id, service_key, duration_minutes,
      price, is_active — unique(barber_id, service_key) confirmed,
      upsert onConflict below works as written.
@@ -459,6 +490,10 @@ const I18N = {
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"years",
     hours_sub:"Which days and times you're open. Each service's own length controls how slots are spaced.",
     l_days:"Working days", l_start:"Opens at", l_end:"Closes at",
+    nav_location:"Location", location_sub:"Click on the map to place a pin exactly where your shop is. Clients use this to find and navigate to you.",
+    l_shopname:"Shop name (optional)", location_not_set:"No location set yet — click the map to place a pin.",
+    location_placed:"Pin placed. Save to confirm — your location will need a quick check before it shows to clients.",
+    profile_link_title:"Your public profile", copy_link:"Copy my profile link", link_copied:"Link copied!",
     services_sub:"Turn on what you offer, set your own duration and price for each.",
     photos_sub:"A clear photo of you, plus examples of your work (optional).",
     photo_profile_title:"Your photo", photo_portfolio_title:"Your work (optional)",
@@ -485,6 +520,10 @@ const I18N = {
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
     hours_sub:"Qaysi kunlari va soatlarda ochiqsiz. Har bir xizmatning davomiyligi bo'sh joylarni belgilaydi.",
     l_days:"Ish kunlari", l_start:"Ochilish vaqti", l_end:"Yopilish vaqti",
+    nav_location:"Joylashuv", location_sub:"Do'koningiz aniq qayerda joylashganini belgilash uchun xaritani bosing. Mijozlar sizni topish va yo'l topish uchun shundan foydalanadi.",
+    l_shopname:"Do'kon nomi (ixtiyoriy)", location_not_set:"Hali joylashuv belgilanmagan — pin qo'yish uchun xaritani bosing.",
+    location_placed:"Pin qo'yildi. Tasdiqlash uchun saqlang — joylashuvingiz mijozlarga ko'rsatilishidan oldin tekshiriladi.",
+    profile_link_title:"Sizning ochiq profilingiz", copy_link:"Profil havolamni nusxalash", link_copied:"Havola nusxalandi!",
     services_sub:"Nima taklif qilishingizni yoqing, har biriga davomiylik va narx belgilang.",
     photos_sub:"Sizning aniq suratingiz va ishlaringiz namunalari (ixtiyoriy).",
     photo_profile_title:"Sizning suratingiz", photo_portfolio_title:"Ishlaringiz (ixtiyoriy)",
@@ -511,6 +550,10 @@ const I18N = {
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
     hours_sub:"В какие дни и часы вы открыты. Длительность каждой услуги определяет интервалы записи.",
     l_days:"Рабочие дни", l_start:"Открытие", l_end:"Закрытие",
+    nav_location:"Локация", location_sub:"Нажмите на карту, чтобы отметить точное расположение вашего салона. Клиенты используют это, чтобы найти вас.",
+    l_shopname:"Название салона (необязательно)", location_not_set:"Локация ещё не указана — нажмите на карту, чтобы поставить метку.",
+    location_placed:"Метка поставлена. Сохраните для подтверждения — локация будет проверена перед показом клиентам.",
+    profile_link_title:"Ваш публичный профиль", copy_link:"Скопировать ссылку на профиль", link_copied:"Ссылка скопирована!",
     services_sub:"Включите то, что предлагаете, задайте длительность и цену для каждой.",
     photos_sub:"Ваше чёткое фото и примеры работ (необязательно).",
     photo_profile_title:"Ваше фото", photo_portfolio_title:"Ваши работы (необязательно)",
@@ -576,6 +619,8 @@ async function init(){
   renderEditChips();
   renderDayChips();
   renderAvatar();
+  setupProfileLink();
+  setupLocationPicker();
 
   const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', userId);
   servicesData = services || [];
@@ -957,6 +1002,118 @@ document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
 });
 
 /* ---------- logout ---------- */
+/* ---------- profile link ---------- */
+function setupProfileLink(){
+  const url = `${window.location.origin}/profile.html?id=${barberData.id}`;
+  document.getElementById('profileLinkPreview').textContent = url;
+  document.getElementById('copyLinkBtn').addEventListener('click', ()=>{
+    navigator.clipboard.writeText(url).then(()=>{
+      const btn = document.getElementById('copyLinkBtn');
+      const original = btn.textContent;
+      btn.textContent = t('link_copied');
+      setTimeout(()=> btn.textContent = original, 1500);
+    });
+  });
+}
+
+/* ---------- location picker ---------- */
+let locationMap = null;
+let locationMarker = null;
+let locationMapInitialized = false;
+let pendingLat = null, pendingLng = null;
+
+function setupLocationPicker(){
+  document.getElementById('editShopName').value = barberData.shop_name || '';
+  updateLocationStatusMsg();
+
+  const initLocationMap = () => {
+    const el = document.getElementById('locationMapEl');
+    if(el.offsetWidth === 0){ requestAnimationFrame(initLocationMap); return; }
+    if(locationMapInitialized) { locationMap.invalidateSize(); return; }
+
+    const startLat = barberData.latitude || 41.2995;
+    const startLng = barberData.longitude || 69.2401;
+    locationMap = L.map('locationMapEl').setView([startLat, startLng], barberData.latitude ? 16 : 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+    }).addTo(locationMap);
+
+    if(barberData.latitude && barberData.longitude){
+      locationMarker = L.marker([barberData.latitude, barberData.longitude], { draggable:true }).addTo(locationMap);
+      pendingLat = barberData.latitude; pendingLng = barberData.longitude;
+      locationMarker.on('dragend', (e)=>{
+        const pos = e.target.getLatLng();
+        pendingLat = pos.lat; pendingLng = pos.lng;
+        updateLocationStatusMsg(true);
+      });
+    }
+
+    locationMap.on('click', (e)=>{
+      pendingLat = e.latlng.lat; pendingLng = e.latlng.lng;
+      if(locationMarker){
+        locationMarker.setLatLng(e.latlng);
+      } else {
+        locationMarker = L.marker(e.latlng, { draggable:true }).addTo(locationMap);
+        locationMarker.on('dragend', (ev)=>{
+          const pos = ev.target.getLatLng();
+          pendingLat = pos.lat; pendingLng = pos.lng;
+          updateLocationStatusMsg(true);
+        });
+      }
+      updateLocationStatusMsg(true);
+    });
+
+    locationMapInitialized = true;
+  };
+
+  const locationNavBtn = document.querySelector('.nav-item[data-view="location"]');
+  if(document.querySelector('.view[data-view="location"]').classList.contains('active')){
+    initLocationMap();
+  } else {
+    locationNavBtn.addEventListener('click', initLocationMap, { once:true });
+  }
+}
+
+function updateLocationStatusMsg(justPlaced){
+  const el = document.getElementById('locationStatusMsg');
+  if(justPlaced){ el.textContent = t('location_placed'); el.style.color = 'var(--brass)'; }
+  else if(!barberData.latitude){ el.textContent = t('location_not_set'); el.style.color = 'var(--ink-dim)'; }
+  else { el.textContent = ''; }
+}
+
+document.getElementById('saveLocationBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveLocationBtn');
+  const msg = document.getElementById('saveLocationMsg');
+  if(pendingLat === null || pendingLng === null){
+    msg.style.color = 'var(--err)';
+    msg.textContent = t('location_not_set');
+    msg.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  const updates = {
+    latitude: pendingLat,
+    longitude: pendingLng,
+    shop_name: document.getElementById('editShopName').value.trim() || null,
+    is_location_verified: false // any location change requires re-verification via admin
+  };
+  const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
+  btn.disabled = false;
+  if(!error){
+    Object.assign(barberData, updates);
+    updateLocationStatusMsg();
+    msg.style.color = 'var(--ok)';
+    msg.textContent = t('saved');
+    msg.style.display = 'block';
+    setTimeout(()=> msg.style.display = 'none', 1500);
+  } else {
+    console.error('Location save error:', error);
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
+    msg.style.display = 'block';
+  }
+});
+
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
   window.location.href = 'index.html';
