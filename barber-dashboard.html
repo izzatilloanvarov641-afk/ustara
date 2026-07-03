@@ -598,6 +598,7 @@ function renderStatusBanner(){
   const sub = document.getElementById('statusSub');
   const toggleWrap = document.getElementById('publishToggleWrap');
   const toggle = document.getElementById('publishToggle');
+
   if(!barberData.is_approved){
     banner.className = 'status-banner pending';
     headline.textContent = t('status_pending_h');
@@ -704,16 +705,23 @@ document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
   };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
+  const msg = document.getElementById('saveProfileMsg');
   if(!error){
     Object.assign(barberData, updates);
     renderProfileView();
-    const msg = document.getElementById('saveProfileMsg');
+    msg.style.color = 'var(--ok)';
+    msg.textContent = t('saved');
     msg.style.display = 'block';
     setTimeout(()=>{
       msg.style.display = 'none';
       document.getElementById('profileView').classList.remove('hidden');
       document.getElementById('profileEdit').classList.remove('active');
     }, 800);
+  } else {
+    console.error('Profile save error:', error);
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
+    msg.style.display = 'block';
   }
 });
 
@@ -745,11 +753,18 @@ document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
   };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
+  const msg = document.getElementById('saveHoursMsg');
   if(!error){
     Object.assign(barberData, updates);
-    const msg = document.getElementById('saveHoursMsg');
+    msg.style.color = 'var(--ok)';
+    msg.textContent = t('saved');
     msg.style.display = 'block';
-    setTimeout(()=> msg.style.display = 'none', 1200);
+    setTimeout(()=> msg.style.display = 'none', 1500);
+  } else {
+    console.error('Hours save error:', error);
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
+    msg.style.display = 'block';
   }
 });
 
@@ -787,15 +802,20 @@ document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
   });
   const { error } = await supabaseClient.from('services').upsert(upserts, { onConflict: 'barber_id,service_key' });
   btn.disabled = false;
+  const msg = document.getElementById('saveServicesMsg');
   if(!error){
     const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', barberData.id);
     servicesData = services || [];
     renderOverviewStats();
-    const msg = document.getElementById('saveServicesMsg');
+    msg.style.color = 'var(--ok)';
+    msg.textContent = t('saved');
     msg.style.display = 'block';
-    setTimeout(()=> msg.style.display = 'none', 1200);
+    setTimeout(()=> msg.style.display = 'none', 1500);
   } else {
-    console.error('Services upsert error (check unique constraint exists on barber_id+service_key):', error);
+    console.error('Services upsert error:', error);
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Save failed — ' + (error.message || 'please try again or contact support.');
+    msg.style.display = 'block';
   }
 });
 
@@ -841,8 +861,8 @@ function renderPortfolio(photos){
   });
   grid.querySelectorAll('.remove-btn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
-      await supabaseClient.storage.from('barber-media').remove([btn.dataset.path]);
       await supabaseClient.from('portfolio_photos').delete().eq('id', btn.dataset.id);
+      await supabaseClient.storage.from('barber-media').remove([btn.dataset.path]);
       btn.closest('.portfolio-item').remove();
     });
   });
@@ -866,8 +886,8 @@ document.getElementById('portfolioInput').addEventListener('change', async (e)=>
     item.innerHTML = `<img src="${escapeHtml(portfolioPublicUrl(inserted.image_path))}" alt=""><button class="remove-btn" data-id="${inserted.id}" data-path="${escapeHtml(inserted.image_path)}">&times;</button>`;
     grid.insertBefore(item, addBtn);
     item.querySelector('.remove-btn').addEventListener('click', async ()=>{
-      await supabaseClient.storage.from('barber-media').remove([inserted.image_path]);
       await supabaseClient.from('portfolio_photos').delete().eq('id', inserted.id);
+      await supabaseClient.storage.from('barber-media').remove([inserted.image_path]);
       item.remove();
     });
   } else {
