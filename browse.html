@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ustara — Find your barber</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --bg-alt:#F1ECE2; --surface:#FFFFFF; --line:#E4DBCB;
-    --ink:#1C1A17; --ink-dim:#6E6656; --brass:#A67C1A; --brass-soft:#C9A227; --ok:#4a7c59;
+    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E2DACB;
+    --ink:#1C1A17; --ink-dim:#7A7264; --brass:#A67C1A; --brass-soft:#C79A2E;
+    --err:#B3432B; --ok:#4a7c59;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
   body{
@@ -19,199 +21,169 @@
     line-height:1.5; -webkit-font-smoothing:antialiased;
   }
   a{ color:inherit; text-decoration:none; }
-  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
-  @media (max-width:640px){ .wrap{ padding:0 22px; } }
 
   nav{
-    position:sticky; top:0; z-index:20; border-bottom:1px solid var(--line);
-    background:rgba(247,244,239,0.86); backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:30; border-bottom:1px solid var(--line);
+    background:rgba(247,244,239,0.92); backdrop-filter:blur(10px);
   }
-  nav .wrap{ height:68px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .nav-inner{
+    max-width:1320px; margin:0 auto; padding:0 28px; height:66px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
   .logo{ font-family:'Fraunces', serif; font-size:19px; flex-shrink:0; }
   .logo em{ font-style:italic; color:var(--brass); }
-  .nav-right{ display:flex; align-items:center; gap:14px; }
+  .nav-right{ display:flex; align-items:center; gap:16px; }
   .nav-link{ font-size:13.5px; color:var(--ink-dim); white-space:nowrap; }
   .nav-link:hover{ color:var(--ink); }
-  .lang-switch{ display:flex; border:1px solid var(--line); border-radius:20px; padding:3px; flex-shrink:0; }
+  .lang-switch{ display:flex; border:1px solid var(--line); border-radius:20px; padding:3px; }
   .lang-switch button{
     background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif;
     font-size:12px; font-weight:600; padding:6px 11px; border-radius:16px; cursor:pointer;
   }
-  .lang-switch button.active{ background:var(--brass); color:var(--bg); }
-  @media (max-width:640px){ .nav-link{ display:none; } }
+  .lang-switch button.active{ background:var(--brass); color:#fff; }
+  @media (max-width:700px){ .nav-link{ display:none; } }
 
-  .page-head{ padding:56px 0 36px; }
+  .page-head{ max-width:1320px; margin:0 auto; padding:26px 28px 18px; }
   .eyebrow{ font-size:11.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brass); font-weight:600; }
-  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(30px,4.5vw,44px); margin:14px 0 10px; }
-  .sub{ color:var(--ink-dim); font-size:15.5px; max-width:520px; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(24px,3.6vw,32px); margin:10px 0 4px; }
+  .results-count{ font-size:13.5px; color:var(--ink-dim); }
 
-  /* filters */
   .filters{
-    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
-    padding:20px 0 24px; border-bottom:1px solid var(--line); margin-bottom:20px;
+    max-width:1320px; margin:0 auto; padding:0 28px 20px;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
   }
   .search-field{
     display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--line);
-    border-radius:24px; padding:11px 18px; flex:1; min-width:220px;
+    border-radius:22px; padding:10px 16px; flex:1; min-width:200px;
   }
   .search-field svg{ opacity:0.5; flex-shrink:0; }
-  .search-field input{ background:none; border:none; outline:none; color:var(--ink); font-size:14px; width:100%; font-family:'Inter', sans-serif; }
-  .search-field input::placeholder{ color:var(--ink-dim); opacity:0.7; }
+  .search-field input{ background:none; border:none; outline:none; color:var(--ink); font-size:13.5px; width:100%; font-family:'Inter', sans-serif; }
   select.filter-select{
-    background:var(--surface); border:1px solid var(--line); color:var(--ink); padding:11px 16px;
-    border-radius:24px; font-size:13.5px; font-family:'Inter', sans-serif; cursor:pointer;
-    appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%236E6656' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+    background:var(--surface); border:1px solid var(--line); color:var(--ink); padding:10px 14px;
+    border-radius:22px; font-size:13px; font-family:'Inter', sans-serif; cursor:pointer;
+    appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%237A7264' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:32px;
   }
   .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
   .chip{
-    border:1px solid var(--line); color:var(--ink-dim); padding:9px 15px; border-radius:20px;
-    font-size:13px; cursor:pointer; transition:all .15s ease; background:var(--surface); white-space:nowrap;
+    border:1px solid var(--line); color:var(--ink-dim); padding:8px 14px; border-radius:20px;
+    font-size:12.5px; cursor:pointer; background:var(--surface); white-space:nowrap;
   }
-  .chip.selected{ background:var(--brass); border-color:var(--brass); color:var(--bg); font-weight:600; }
+  .chip.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
 
-  .results-count{ font-size:13.5px; color:var(--ink-dim); margin-bottom:20px; letter-spacing:0.02em; }
-  .results-count strong{ color:var(--ink); font-weight:600; }
-
-  /* mobile view toggle */
-  .view-toggle{ display:none; gap:8px; margin-bottom:16px; }
-  .view-toggle button{
-    flex:1; background:var(--surface); border:1px solid var(--line); color:var(--ink-dim);
-    padding:11px; border-radius:24px; font-size:13px; font-weight:600; cursor:pointer; font-family:'Inter', sans-serif;
+  /* mobile list/map toggle */
+  .view-toggle{ display:none; }
+  @media (max-width:900px){
+    .view-toggle{
+      display:flex; max-width:1320px; margin:0 auto; padding:0 28px 16px; gap:8px;
+    }
+    .view-toggle button{
+      flex:1; padding:11px; border-radius:20px; border:1px solid var(--line); background:var(--surface);
+      color:var(--ink-dim); font-size:13px; font-weight:600; cursor:pointer;
+    }
+    .view-toggle button.active{ background:var(--brass); border-color:var(--brass); color:#fff; }
   }
-  .view-toggle button.active{ background:var(--brass); border-color:var(--brass); color:var(--bg); }
-  @media (max-width:900px){ .view-toggle{ display:flex; } }
 
-  /* list + map layout */
-  .browse-layout{ display:grid; grid-template-columns:420px 1fr; gap:24px; align-items:start; padding-bottom:100px; }
-  @media (max-width:900px){ .browse-layout{ grid-template-columns:1fr; } }
-
-  .list-col{ display:flex; flex-direction:column; gap:14px; max-height:calc(100vh - 220px); overflow-y:auto; padding-right:4px; scroll-behavior:smooth; }
-  @media (max-width:900px){ .list-col{ max-height:none; overflow-y:visible; } }
-  @media (max-width:900px){ .list-col.view-hidden{ display:none; } }
-
-  .map-col{ position:sticky; top:88px; }
-  @media (max-width:900px){ .map-col{ position:static; } }
-  @media (max-width:900px){ .map-col.view-hidden{ display:none; } }
-  .map-container{ width:100%; height:640px; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--surface); }
-  @media (max-width:900px){ .map-container{ height:480px; } }
-
-  .list-card{
-    display:flex; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:10px;
-    padding:16px; cursor:pointer; transition:border-color .18s ease, box-shadow .18s ease;
+  .split{
+    display:grid; grid-template-columns:1fr 1fr; gap:0; max-width:1320px; margin:0 auto;
+    height:calc(100vh - 230px); min-height:520px; border-top:1px solid var(--line);
   }
-  .list-card:hover{ border-color:var(--brass); }
-  .list-card.card-highlight{ border-color:var(--brass); box-shadow:0 0 0 3px rgba(166,124,26,0.16); }
-  .list-card-avatar{
-    width:56px; height:56px; border-radius:50%; flex-shrink:0; border:1px solid var(--line);
-    background:var(--bg-alt);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-size:18px; color:var(--brass); font-style:italic;
+  @media (max-width:900px){
+    .split{ grid-template-columns:1fr; height:auto; }
+    .split.showing-map .list-panel{ display:none; }
+    .split:not(.showing-map) .map-panel{ display:none; }
   }
-  .list-card-body{ flex:1; min-width:0; }
-  .list-card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-  .list-card-name{ font-family:'Fraunces', serif; font-size:17px; }
-  .list-card-price{ font-size:12.5px; font-weight:700; color:var(--brass); white-space:nowrap; flex-shrink:0; }
-  .list-card-meta{ font-size:12px; color:var(--ink-dim); margin:3px 0 8px; }
+
+  .list-panel{ overflow-y:auto; padding:20px 28px 60px; }
+  .map-panel{ position:sticky; top:66px; height:calc(100vh - 66px); }
+  @media (max-width:900px){ .map-panel{ height:60vh; position:relative; top:0; } }
+  #mapEl{ width:100%; height:100%; }
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px;
+    display:flex; gap:14px; margin-bottom:12px; cursor:pointer; transition:border-color .15s ease, transform .15s ease;
+  }
+  .card:hover, .card.highlighted{ border-color:var(--brass); transform:translateY(-1px); }
+  .card-avatar{
+    width:64px; height:64px; border-radius:10px; background:var(--surface-alt); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    font-family:'Fraunces', serif; font-size:20px; color:var(--brass); font-style:italic;
+  }
+  .card-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .card-body{ flex:1; min-width:0; }
+  .card-top{ display:flex; justify-content:space-between; gap:10px; }
+  .card-name{ font-family:'Fraunces', serif; font-size:16px; font-weight:500; }
+  .card-price{ font-size:13px; font-weight:700; color:var(--brass); white-space:nowrap; }
+  .card-meta{ font-size:12.5px; color:var(--ink-dim); margin:2px 0 8px; }
   .card-tags{ display:flex; flex-wrap:wrap; gap:6px; }
-  .list-card-tags{ margin-bottom:10px; }
-  .card-tag{ font-size:11px; border:1px solid var(--line); color:var(--ink-dim); padding:4px 9px; border-radius:20px; }
-  .list-card-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .list-card-available{ font-size:12px; color:var(--ok); }
-  .book-btn{
-    background:var(--brass); color:var(--bg); border:none; padding:8px 16px; border-radius:20px;
-    font-size:12.5px; font-weight:700; cursor:pointer; flex-shrink:0; font-family:'Inter', sans-serif;
-  }
-  .book-btn:hover{ background:var(--brass-soft); }
+  .card-tag{ font-size:10.5px; border:1px solid var(--line); color:var(--ink-dim); padding:3px 8px; border-radius:20px; }
 
-  /* map pins */
-  .map-pin{ cursor:pointer; transform:translate(-50%,-100%); transition:transform .15s ease; }
-  .map-pin-tag{
-    background:var(--brass); color:var(--bg); font-size:11.5px; font-weight:700; white-space:nowrap;
-    padding:6px 11px; border-radius:14px; box-shadow:0 4px 10px rgba(28,26,23,0.28);
-    font-family:'Inter', sans-serif; position:relative;
-  }
-  .map-pin-tag::after{
-    content:''; position:absolute; left:50%; bottom:-5px; transform:translateX(-50%);
-    width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent;
-    border-top:6px solid var(--brass);
-  }
-  .map-pin.pin-highlight{ transform:translate(-50%,-100%) scale(1.16); z-index:10; }
-  .map-pin.pin-highlight .map-pin-tag{ background:var(--ink); }
-  .map-pin.pin-highlight .map-pin-tag::after{ border-top-color:var(--ink); }
+  .empty{ text-align:center; padding:70px 20px; border:1px dashed var(--line); border-radius:12px; }
+  .empty .icon{ font-size:36px; margin-bottom:16px; }
+  .empty h3{ font-family:'Fraunces', serif; font-weight:500; font-size:21px; margin-bottom:8px; }
+  .empty p{ color:var(--ink-dim); font-size:13.5px; max-width:340px; margin:0 auto 22px; }
+  .empty .btn{ display:inline-block; background:var(--brass); color:#fff; padding:12px 22px; border-radius:20px; font-size:13px; font-weight:600; }
+  .loading{ text-align:center; padding:70px 20px; color:var(--ink-dim); font-size:13.5px; }
 
-  /* empty state */
-  .empty{ text-align:center; padding:80px 20px; border:1px dashed var(--line); border-radius:10px; }
-  .empty .icon{ font-size:40px; margin-bottom:20px; }
-  .empty h3{ font-family:'Fraunces', serif; font-weight:500; font-size:24px; margin-bottom:10px; }
-  .empty p{ color:var(--ink-dim); font-size:14.5px; max-width:380px; margin:0 auto 26px; }
-  .empty .btn{
-    display:inline-block; background:var(--brass); color:var(--bg); padding:13px 24px;
-    border-radius:3px; font-size:13.5px; font-weight:600;
+  /* leaflet pin styling */
+  .price-pin{
+    background:var(--ink); color:#fff; font-size:11.5px; font-weight:700; padding:6px 10px;
+    border-radius:14px; white-space:nowrap; box-shadow:0 2px 6px rgba(0,0,0,0.25); border:2px solid #fff;
   }
-  .empty-inline{ text-align:center; padding:48px 20px; color:var(--ink-dim); font-size:14px; }
-
-  .loading{ text-align:center; padding:80px 20px; color:var(--ink-dim); font-size:14px; }
+  .price-pin.active{ background:var(--brass); transform:scale(1.12); }
 
   /* modal */
   .modal-backdrop{
-    display:none; position:fixed; inset:0; background:rgba(28,26,23,0.55); backdrop-filter:blur(4px);
+    display:none; position:fixed; inset:0; background:rgba(28,26,23,0.5); backdrop-filter:blur(3px);
     z-index:100; align-items:center; justify-content:center; padding:20px;
   }
   .modal-backdrop.active{ display:flex; }
   .modal{
-    background:var(--surface); border:1px solid var(--line); border-radius:10px; max-width:480px; width:100%;
-    padding:32px; max-height:88vh; overflow-y:auto; position:relative;
-    box-shadow:0 40px 80px -32px rgba(28,26,23,0.35);
+    background:var(--surface); border-radius:16px; max-width:460px; width:100%;
+    padding:28px; max-height:88vh; overflow-y:auto; position:relative;
   }
-  .modal-close{
-    position:absolute; top:20px; right:20px; background:none; border:none; color:var(--ink-dim);
-    font-size:20px; cursor:pointer; line-height:1;
-  }
+  .modal-close{ position:absolute; top:18px; right:18px; background:none; border:none; color:var(--ink-dim); font-size:20px; cursor:pointer; }
   .modal-avatar{
-    width:80px; height:80px; border-radius:50%; margin-bottom:18px; border:1px solid var(--line);
-    background:var(--bg-alt);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-size:28px; color:var(--brass); font-style:italic;
+    width:76px; height:76px; border-radius:16px; margin-bottom:16px; background:var(--surface-alt);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    font-family:'Fraunces', serif; font-size:26px; color:var(--brass); font-style:italic;
   }
-  .modal h2{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; margin-bottom:4px; }
-  .modal .m-meta{ font-size:13.5px; color:var(--ink-dim); margin-bottom:18px; }
-  .modal .m-bio{ font-size:14.5px; line-height:1.7; color:var(--ink); margin-bottom:20px; }
-  .modal .card-tags{ margin-bottom:26px; }
-  .modal .btn-book{
-    display:block; text-align:center; background:var(--brass); color:var(--bg); padding:15px;
-    border-radius:4px; font-size:14px; font-weight:700; width:100%; border:none; cursor:pointer;
-  }
+  .modal-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .modal h2{ font-family:'Fraunces', serif; font-weight:500; font-size:22px; margin-bottom:4px; }
+  .m-meta{ font-size:13px; color:var(--ink-dim); margin-bottom:14px; }
+  .m-bio{ font-size:14px; line-height:1.65; margin-bottom:16px; }
 
-  .booking-section{ border-top:1px solid var(--line); margin-top:24px; padding-top:22px; }
-  .booking-section h4{ font-family:'Fraunces', serif; font-weight:500; font-size:16px; margin-bottom:14px; }
-  .service-option{ display:flex; justify-content:space-between; align-items:center; background:var(--bg-alt); border:1px solid var(--line); padding:12px 14px; border-radius:6px; margin-bottom:8px; cursor:pointer; font-size:13.5px; }
-  .service-option:hover{ border-color:var(--brass); }
-  .service-option .dur{ color:var(--ink-dim); font-size:12px; flex-shrink:0; text-align:right; }
-  .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:14px; }
-  .day-tab{
-    flex-shrink:0; background:var(--bg-alt); border:1px solid var(--line); color:var(--ink-dim);
-    padding:8px 12px; border-radius:6px; font-size:12px; cursor:pointer; text-align:center; min-width:52px;
+  .booking-section{ border-top:1px solid var(--line); margin-top:18px; padding-top:18px; }
+  .booking-section h4{ font-family:'Fraunces', serif; font-weight:500; font-size:15px; margin-bottom:12px; }
+  .service-option{
+    display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
+    border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; font-size:13.5px;
   }
-  .day-tab.active{ background:var(--brass); border-color:var(--brass); color:var(--bg); font-weight:600; }
+  .service-option:hover, .service-option.selected{ border-color:var(--brass); background:#FBF7EE; }
+  .service-option .svc-price{ font-weight:700; color:var(--brass); }
+  .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin:14px 0; }
+  .day-tab{
+    flex-shrink:0; background:var(--bg); border:1px solid var(--line); color:var(--ink-dim);
+    padding:8px 12px; border-radius:8px; font-size:12px; cursor:pointer; text-align:center; min-width:52px;
+  }
+  .day-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
   .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
   .slot-btn{
-    background:var(--bg-alt); border:1px solid var(--line); color:var(--ink); padding:10px 6px;
-    border-radius:5px; font-size:13px; cursor:pointer; text-align:center;
+    background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:10px 6px;
+    border-radius:8px; font-size:13px; cursor:pointer; text-align:center;
   }
   .slot-btn:hover{ border-color:var(--brass); }
-  .slot-btn.taken{ opacity:0.4; cursor:not-allowed; text-decoration:line-through; }
-  .slot-btn.taken:hover{ border-color:var(--line); }
-  .no-slots-msg{ color:var(--ink-dim); font-size:13.5px; text-align:center; padding:16px 0; }
-  .login-prompt{ text-align:center; padding:14px; background:var(--bg-alt); border-radius:6px; font-size:13px; color:var(--ink-dim); }
+  .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:13px; }
   .login-prompt a{ color:var(--brass); font-weight:600; }
-  .booking-toast{ text-align:center; font-size:13.5px; color:var(--brass); padding:10px; font-family:'Fraunces', serif; font-style:italic; }
+  .booking-toast{ grid-column:1/-1; text-align:center; font-size:14px; color:var(--brass); padding:10px; font-family:'Fraunces', serif; font-style:italic; }
+  .back-link{ font-size:12.5px; color:var(--ink-dim); cursor:pointer; margin-bottom:12px; display:inline-block; }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="wrap">
+  <div class="nav-inner">
     <a href="index.html" class="logo">ust<em>a</em>ra</a>
     <div class="nav-right">
       <a href="auth.html" class="nav-link" data-i18n="nav_login">Log in</a>
@@ -225,32 +197,40 @@
   </div>
 </nav>
 
-<div class="page-head wrap">
+<div class="page-head">
   <span class="eyebrow" data-i18n="eyebrow">Browse barbers</span>
   <h1 data-i18n="title">Find your barber</h1>
-  <p class="sub" data-i18n="subtitle">Search by style and district — every profile here is the barber's own, built and kept by them.</p>
+  <div class="results-count" id="resultsCount"></div>
 </div>
 
-<div class="wrap">
-  <div class="filters">
-    <div class="search-field">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="text" id="searchInput" data-i18n-ph="search_ph" placeholder="Search by name...">
-    </div>
-    <select class="filter-select" id="districtFilter">
-      <option value="" data-i18n="all_districts">All districts</option>
-      <option value="Chorsu">Chorsu</option>
-      <option value="Yunusabad">Yunusabad</option>
-      <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
-      <option value="Yakkasaray">Yakkasaray</option>
-      <option value="Sergeli">Sergeli</option>
-      <option value="Shayxontohur">Shayxontohur</option>
-    </select>
-    <div class="chip-row" id="specialtyChips"></div>
+<div class="filters">
+  <div class="search-field">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input type="text" id="searchInput" data-i18n-ph="search_ph" placeholder="Search by name...">
   </div>
+  <select class="filter-select" id="districtFilter">
+    <option value="" data-i18n="all_districts">All districts</option>
+    <option value="Chorsu">Chorsu</option>
+    <option value="Yunusabad">Yunusabad</option>
+    <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
+    <option value="Yakkasaray">Yakkasaray</option>
+    <option value="Sergeli">Sergeli</option>
+    <option value="Shayxontohur">Shayxontohur</option>
+  </select>
+  <div class="chip-row" id="specialtyChips"></div>
+</div>
 
-  <div id="resultsArea">
-    <div class="loading" id="loadingMsg" data-i18n="loading">Loading barbers...</div>
+<div class="view-toggle" id="viewToggle">
+  <button class="active" data-view="list" data-i18n="view_list">List</button>
+  <button data-view="map" data-i18n="view_map">Map</button>
+</div>
+
+<div class="split" id="splitView">
+  <div class="list-panel">
+    <div id="resultsArea"><div class="loading" id="loadingMsg" data-i18n="loading">Loading barbers...</div></div>
+  </div>
+  <div class="map-panel">
+    <div id="mapEl"></div>
   </div>
 </div>
 
@@ -259,31 +239,22 @@
 </div>
 
 <script>
+/* ============================================================
+   SCHEMA ASSUMPTIONS — verify against real DB before relying on this:
+   - barbers: latitude, longitude, shop_name, is_location_verified 
+     (added earlier for the map feature)
+   - services: barber_id, service_key, duration_minutes, price, is_active
+   - bookings: barber_id, client_id, client_name, client_phone, 
+     start_time, status, service_key, service_duration_minutes
+   Barbers without latitude/longitude set (or is_location_verified = 
+   false) are shown in the list but simply don't get a map pin —
+   verify that's the intended behavior, or add a "no location yet" 
+   note if not.
+   ============================================================ */
+
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const YANDEX_MAPS_API_KEY = '17f97aa1-a3a1-4d93-b0df-ec23e92d2874';
-// Yandex Maps JS API v3 uses [longitude, latitude] order (GeoJSON-style),
-// the opposite of the v2 API and of how we store/read lat/long from Postgres.
-const TASHKENT_CENTER_LONLAT = [69.240562, 41.311081];
-
-function loadYandexMaps(){
-  return new Promise((resolve, reject)=>{
-    if(window.ymaps3){ window.ymaps3.ready.then(resolve); return; }
-    const script = document.createElement('script');
-    script.src = `https://api-maps.yandex.ru/v3/?apikey=${YANDEX_MAPS_API_KEY}&lang=en_US`;
-    script.onload = () => {
-      if(window.ymaps3 && window.ymaps3.ready){
-        window.ymaps3.ready.then(resolve).catch(reject);
-      } else {
-        reject(new Error('Yandex Maps failed to initialize (invalid key or service unavailable)'));
-      }
-    };
-    script.onerror = () => reject(new Error('Failed to load Yandex Maps script'));
-    document.head.appendChild(script);
-  });
-}
 
 const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
 const SPECIALTIES_LOCAL = {
@@ -291,97 +262,95 @@ const SPECIALTIES_LOCAL = {
   uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
   ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
 };
-
-const SERVICE_KEYS = ["haircut","beard_trim","haircut_beard","kids_haircut","lineup","coloring"];
 const SERVICES_LOCAL = {
-  en: ["Haircut","Beard trim","Haircut + beard","Kids' haircut","Line-up","Coloring"],
-  uz: ["Soch olish","Soqol olish","Soch + soqol","Bolalar uchun soch olish","Line-up","Soch bo'yash"],
-  ru: ["Стрижка","Оформление бороды","Стрижка + борода","Детская стрижка","Line-up","Окрашивание"]
+  en: { haircut:"Haircut", beard_trim:"Beard trim", haircut_beard:"Haircut + Beard", kids_haircut:"Kids' haircut", lineup:"Line-up", coloring:"Hair coloring" },
+  uz: { haircut:"Soch olish", beard_trim:"Soqol olish", haircut_beard:"Soch + Soqol", kids_haircut:"Bolalar uchun", lineup:"Line-up", coloring:"Soch bo'yash" },
+  ru: { haircut:"Стрижка", beard_trim:"Оформление бороды", haircut_beard:"Стрижка + Борода", kids_haircut:"Детская стрижка", lineup:"Line-up", coloring:"Окрашивание" }
 };
+const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 const I18N = {
   en:{
-    nav_barber_link:"Are you a barber?", nav_login:"Log in", eyebrow:"Browse barbers", title:"Find your barber",
-    subtitle:"Search by style and district — every profile here is the barber's own, built and kept by them.",
+    nav_login:"Log in", nav_barber_link:"Are you a barber?", eyebrow:"Browse barbers", title:"Find your barber",
     search_ph:"Search by name...", all_districts:"All districts", loading:"Loading barbers...",
+    view_list:"List", view_map:"Map",
     empty_h:"No barbers here yet", empty_p:"Ustara is opening in Tashkent soon. Be the first barber on the platform.",
-    empty_btn:"Join as a barber", years:"yrs", book_btn:"Book",
-    booking_title:"Book an appointment", no_slots:"No availability set yet", login_prompt:"Log in to book this slot",
-    login_btn:"Log in or sign up", booking_confirmed:"Booked! You'll see it in your dashboard.",
-    booking_failed:"That slot was just taken — pick another.",
-    choose_service:"Choose a service", no_services:"No services set up yet", min_short:"min",
-    currency:"so'm", from_label:"From", next_label:"Next:", today:"Today", tomorrow:"Tomorrow",
-    results_count_one:"barber found", results_count_other:"barbers found", results_count_zero:"No matches",
-    view_list:"List", view_map:"Map", no_match_h:"No barbers match those filters", no_match_p:"Try a different district or specialty.",
+    empty_btn:"Join as a barber", years:"yrs", from:"from",
+    booking_title:"Book an appointment", choose_service:"Choose a service", no_slots:"No availability set yet",
+    login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
+    booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
+    back:"Back", results_count:"barbers found", min:"min",
     map_unavailable:"Map is temporarily unavailable. You can still browse and book from the list."
   },
   uz:{
-    nav_barber_link:"Sartaroshmisiz?", nav_login:"Kirish", eyebrow:"Sartaroshlarni ko'rish", title:"O'z sartaroshingizni toping",
-    subtitle:"Uslub va tuman bo'yicha qidiring — bu yerdagi har bir profil sartaroshning o'zi tomonidan yaratilgan va saqlanadi.",
+    nav_login:"Kirish", nav_barber_link:"Sartaroshmisiz?", eyebrow:"Sartaroshlarni ko'rish", title:"O'z sartaroshingizni toping",
     search_ph:"Ism bo'yicha qidirish...", all_districts:"Barcha tumanlar", loading:"Sartaroshlar yuklanmoqda...",
+    view_list:"Ro'yxat", view_map:"Xarita",
     empty_h:"Hozircha sartaroshlar yo'q", empty_p:"Ustara tez orada Toshkentda ochiladi. Platformadagi birinchi sartarosh bo'ling.",
-    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", book_btn:"Band qilish",
-    booking_title:"Uchrashuvni band qiling", no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring",
-    login_btn:"Kirish yoki ro'yxatdan o'tish", booking_confirmed:"Band qilindi! Uni boshqaruv panelingizda ko'rasiz.",
-    booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
-    choose_service:"Xizmatni tanlang", no_services:"Hali xizmatlar sozlanmagan", min_short:"daq",
-    currency:"so'm", from_label:"Dan", next_label:"Keyingi:", today:"Bugun", tomorrow:"Ertaga",
-    results_count_one:"sartarosh topildi", results_count_other:"sartarosh topildi", results_count_zero:"Mos kelmadi",
-    view_list:"Ro'yxat", view_map:"Xarita", no_match_h:"Bu filtrlarga mos sartarosh yo'q", no_match_p:"Boshqa tuman yoki mutaxassislikni sinab ko'ring.",
+    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", from:"dan",
+    booking_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang", no_slots:"Hali ish vaqti sozlanmagan",
+    login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
+    booking_confirmed:"Band qilindi! Uni boshqaruv panelingizda ko'rasiz.", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
+    back:"Orqaga", results_count:"sartarosh topildi", min:"daq",
     map_unavailable:"Xarita vaqtincha ishlamayapti. Ro'yxatdan ko'rib, band qilishingiz mumkin."
   },
   ru:{
-    nav_barber_link:"Вы барбер?", nav_login:"Войти", eyebrow:"Барберы", title:"Найдите своего барбера",
-    subtitle:"Ищите по стилю и району — каждый профиль здесь создан и поддерживается самим барбером.",
+    nav_login:"Войти", nav_barber_link:"Вы барбер?", eyebrow:"Барберы", title:"Найдите своего барбера",
     search_ph:"Поиск по имени...", all_districts:"Все районы", loading:"Загрузка барберов...",
+    view_list:"Список", view_map:"Карта",
     empty_h:"Барберов пока нет", empty_p:"Ustara скоро откроется в Ташкенте. Станьте первым барбером на платформе.",
-    empty_btn:"Присоединиться как барбер", years:"лет", book_btn:"Записаться",
-    booking_title:"Записаться на приём", no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться на это время",
-    login_btn:"Войти или зарегистрироваться", booking_confirmed:"Записано! Вы увидите это в личном кабинете.",
-    booking_failed:"Это время только что заняли — выберите другое.",
-    choose_service:"Выберите услугу", no_services:"Услуги ещё не настроены", min_short:"мин",
-    currency:"сум", from_label:"От", next_label:"Далее:", today:"Сегодня", tomorrow:"Завтра",
-    results_count_one:"барбер найден", results_count_other:"барберов найдено", results_count_zero:"Совпадений нет",
-    view_list:"Список", view_map:"Карта", no_match_h:"Нет барберов по этим фильтрам", no_match_p:"Попробуйте другой район или специализацию.",
+    empty_btn:"Присоединиться как барбер", years:"лет", from:"от",
+    booking_title:"Записаться на приём", choose_service:"Выберите услугу", no_slots:"Рабочие часы ещё не настроены",
+    login_prompt:"Войдите, чтобы записаться на это время", login_btn:"Войти или зарегистрироваться",
+    booking_confirmed:"Записано! Вы увидите это в личном кабинете.", booking_failed:"Это время только что заняли — выберите другое.",
+    back:"Назад", results_count:"барберов найдено", min:"мин",
     map_unavailable:"Карта временно недоступна. Вы можете смотреть и записываться из списка."
   }
 };
 
 let currentLang = 'en';
 let allBarbers = [];
+let servicesByBarber = {};
 let selectedSpecialtyFilters = [];
 let currentUser = null;
 let currentClientProfile = null;
-let barberServicesByBarber = {};
-let ymapInstance = null;
-let markersByBarberId = {};
-let cardElsByBarberId = {};
-let layoutBuilt = false;
-let mobileView = 'list';
-const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let map, markersById = {};
+
+function t(key){ return I18N[currentLang][key]; }
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : ''; }
+function localizeSpecialty(enTag){ const i = SPECIALTIES_EN.indexOf(enTag); return i === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][i]; }
+function initials(name){ return (name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 
 function applyLang(lang){
   currentLang = lang;
-  const dict = I18N[lang];
   document.querySelectorAll('[data-i18n]').forEach(el=>{
-    if(dict[el.dataset.i18n] !== undefined) el.textContent = dict[el.dataset.i18n];
+    if(I18N[lang][el.dataset.i18n] !== undefined) el.textContent = I18N[lang][el.dataset.i18n];
   });
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
-    if(dict[el.dataset.i18nPh] !== undefined) el.placeholder = dict[el.dataset.i18nPh];
+    if(I18N[lang][el.dataset.i18nPh] !== undefined) el.placeholder = I18N[lang][el.dataset.i18nPh];
   });
-  document.querySelectorAll('#langSwitch button').forEach(b=>{
-    b.classList.toggle('active', b.dataset.lang === lang);
-  });
+  document.querySelectorAll('#langSwitch button').forEach(b=> b.classList.toggle('active', b.dataset.lang === lang));
   document.getElementById('htmlRoot').lang = lang;
   renderSpecialtyChips();
   renderResults();
 }
-
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
   const btn = e.target.closest('button[data-lang]');
   if(btn) applyLang(btn.dataset.lang);
 });
 
+/* ---------- mobile list/map toggle ---------- */
+document.getElementById('viewToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-view]');
+  if(!btn) return;
+  document.querySelectorAll('#viewToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('splitView').classList.toggle('showing-map', btn.dataset.view === 'map');
+  setTimeout(()=> map && map.invalidateSize(), 200);
+});
+
+/* ---------- specialty filter chips ---------- */
 function renderSpecialtyChips(){
   const row = document.getElementById('specialtyChips');
   row.innerHTML = '';
@@ -399,112 +368,75 @@ function renderSpecialtyChips(){
   });
 }
 
-function localizeSpecialty(enTag){
-  const idx = SPECIALTIES_EN.indexOf(enTag);
-  if(idx === -1) return enTag;
-  return SPECIALTIES_LOCAL[currentLang][idx];
-}
-
-function localizeService(key){
-  const idx = SERVICE_KEYS.indexOf(key);
-  return idx === -1 ? key : SERVICES_LOCAL[currentLang][idx];
-}
-
-function initials(name){
-  return (name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
-}
-
-function formatPriceNumber(n){
-  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-}
-function formatPriceFull(n){
-  return formatPriceNumber(n) + ' ' + I18N[currentLang].currency;
-}
-
-function cheapestPrice(barberId){
-  const services = barberServicesByBarber[barberId] || [];
-  const prices = services.filter(s => s.price != null).map(s => s.price);
-  return prices.length ? Math.min(...prices) : null;
-}
-
-function nextAvailableLabel(barber){
-  if(!barber.work_days || barber.work_days.length === 0) return null;
-  const dict = I18N[currentLang];
-  const today = new Date();
-  for(let i = 0; i < 7; i++){
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    const dayKey = JS_DAY_TO_KEY[d.getDay()];
-    if(barber.work_days.includes(dayKey)){
-      if(i === 0) return dict.today;
-      if(i === 1) return dict.tomorrow;
-      return d.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang, { weekday:'long' });
-    }
+/* ---------- map setup ---------- */
+function initMap(){
+  const container = document.getElementById('mapEl');
+  if(typeof L === 'undefined'){
+    console.error('Leaflet failed to load');
+    if(container) container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; padding:24px; text-align:center; color:var(--ink-dim); font-size:13.5px;">${t('map_unavailable')}</div>`;
+    return;
   }
-  return null;
+  try{
+    map = L.map('mapEl', { zoomControl:true }).setView([41.2995, 69.2401], 12); // Tashkent center
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+  } catch(err){
+    console.error('Failed to initialize map:', err);
+    map = null;
+    if(container) container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; padding:24px; text-align:center; color:var(--ink-dim); font-size:13.5px;">${t('map_unavailable')}</div>`;
+  }
 }
 
-function resultsCountLabel(n){
-  const dict = I18N[currentLang];
-  if(n === 0) return dict.results_count_zero;
-  const word = n === 1 ? dict.results_count_one : dict.results_count_other;
-  return `<strong>${n}</strong> ${word}`;
-}
-
-function setMobileView(view){
-  mobileView = view;
-  document.querySelectorAll('.view-toggle button').forEach(b=> b.classList.toggle('active', b.dataset.view === view));
-  const listCol = document.getElementById('listCol');
-  const mapCol = document.getElementById('mapColOuter');
-  if(listCol) listCol.classList.toggle('view-hidden', view !== 'list');
-  if(mapCol) mapCol.classList.toggle('view-hidden', view !== 'map');
-}
-
-function ensureLayoutShell(){
-  if(layoutBuilt) return;
-  const area = document.getElementById('resultsArea');
-  area.innerHTML = `
-    <div class="results-count" id="resultsCount"></div>
-    <div class="view-toggle" id="viewToggle">
-      <button type="button" data-view="list" class="active" data-i18n="view_list">List</button>
-      <button type="button" data-view="map" data-i18n="view_map">Map</button>
-    </div>
-    <div class="browse-layout">
-      <div class="list-col" id="listCol"></div>
-      <div class="map-col" id="mapColOuter"><div class="map-container" id="mapContainer"></div></div>
-    </div>
-  `;
-  document.getElementById('viewToggle').addEventListener('click', (e)=>{
-    const btn = e.target.closest('button[data-view]');
-    if(btn) setMobileView(btn.dataset.view);
+function priceIcon(price, active){
+  return L.divIcon({
+    className: '',
+    html: `<div class="price-pin${active ? ' active' : ''}">${formatPrice(price)}</div>`,
+    iconSize: null
   });
-  setMobileView('list');
-  layoutBuilt = true;
 }
 
+function lowestPrice(barberId){
+  const svcs = (servicesByBarber[barberId] || []).filter(s => s.is_active);
+  if(svcs.length === 0) return null;
+  return Math.min(...svcs.map(s => s.price || Infinity));
+}
+
+function renderMapPins(barbers){
+  if(!map) return;
+  Object.values(markersById).forEach(m => map.removeLayer(m));
+  markersById = {};
+  const bounds = [];
+  barbers.forEach(b => {
+    if(!b.latitude || !b.longitude || !b.is_location_verified) return;
+    const price = lowestPrice(b.id);
+    if(price === null) return;
+    const marker = L.marker([b.latitude, b.longitude], { icon: priceIcon(price, false) }).addTo(map);
+    marker.on('click', ()=> highlightBarber(b.id));
+    markersById[b.id] = marker;
+    bounds.push([b.latitude, b.longitude]);
+  });
+  if(bounds.length > 0) map.fitBounds(bounds, { padding:[40,40], maxZoom:14 });
+}
+
+function highlightBarber(barberId){
+  Object.entries(markersById).forEach(([id, marker])=>{
+    marker.setIcon(priceIcon(lowestPrice(id), id === barberId));
+  });
+  document.querySelectorAll('.card').forEach(c => c.classList.toggle('highlighted', c.dataset.id === barberId));
+  const card = document.querySelector(`.card[data-id="${barberId}"]`);
+  if(card) card.scrollIntoView({ behavior:'smooth', block:'center' });
+  if(markersById[barberId]) map.panTo(markersById[barberId].getLatLng());
+}
+
+/* ---------- results rendering ---------- */
 function renderResults(){
+  const area = document.getElementById('resultsArea');
   const dict = I18N[currentLang];
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
   const district = document.getElementById('districtFilter').value;
   const activeSpecEn = selectedSpecialtyFilters.map(i => SPECIALTIES_EN[i]);
-
-  if(allBarbers.length === 0){
-    layoutBuilt = false;
-    document.getElementById('resultsArea').innerHTML = `
-      <div class="empty">
-        <div class="icon">✂️</div>
-        <h3>${dict.empty_h}</h3>
-        <p>${dict.empty_p}</p>
-        <a href="auth.html?role=barber&tab=signup" class="btn">${dict.empty_btn}</a>
-      </div>`;
-    return;
-  }
 
   let filtered = allBarbers.filter(b=>{
     if(search && !(b.full_name || '').toLowerCase().includes(search)) return false;
@@ -516,136 +448,65 @@ function renderResults(){
     return true;
   });
 
-  ensureLayoutShell();
-  document.getElementById('resultsCount').innerHTML = resultsCountLabel(filtered.length);
+  document.getElementById('resultsCount').textContent = filtered.length + ' ' + t('results_count');
 
-  const listCol = document.getElementById('listCol');
-  cardElsByBarberId = {};
-
+  if(allBarbers.length === 0){
+    area.innerHTML = `<div class="empty"><div class="icon">✂️</div><h3>${dict.empty_h}</h3><p>${dict.empty_p}</p><a href="auth.html?role=barber&tab=signup" class="btn">${dict.empty_btn}</a></div>`;
+    renderMapPins([]);
+    return;
+  }
   if(filtered.length === 0){
-    listCol.innerHTML = `<div class="empty-inline"><strong>${dict.no_match_h}</strong><br>${dict.no_match_p}</div>`;
-    updateMapPins([]);
+    area.innerHTML = `<div class="empty"><div class="icon">🔍</div><h3>${dict.empty_h}</h3><p>${dict.empty_p}</p></div>`;
+    renderMapPins([]);
     return;
   }
 
-  listCol.innerHTML = '';
-  filtered.forEach(b=>{
-    const card = document.createElement('div');
-    card.className = 'list-card';
-    card.dataset.barberId = b.id;
+  area.innerHTML = filtered.map(b => {
     const specs = (b.specialties || []).slice(0,3).map(s=>`<span class="card-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
-    const price = cheapestPrice(b.id);
-    const available = nextAvailableLabel(b);
-    card.innerHTML = `
-      <div class="list-card-avatar">${initials(b.full_name)}</div>
-      <div class="list-card-body">
-        <div class="list-card-top">
-          <div class="list-card-name">${escapeHtml(b.full_name)}</div>
-          ${price ? `<div class="list-card-price">${dict.from_label} ${formatPriceFull(price)}</div>` : ''}
-        </div>
-        <div class="list-card-meta">${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + dict.years : ''}</div>
-        <div class="list-card-tags card-tags">${specs}</div>
-        <div class="list-card-bottom">
-          ${available ? `<div class="list-card-available">${dict.next_label} ${available}</div>` : '<div></div>'}
-          <button type="button" class="book-btn" data-book="${b.id}">${dict.book_btn}</button>
+    const price = lowestPrice(b.id);
+    const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials(b.full_name);
+    return `
+      <div class="card" data-id="${b.id}">
+        <div class="card-avatar">${avatar}</div>
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-name">${escapeHtml(b.full_name)}</div>
+            ${price !== null ? `<div class="card-price">${t('from')} ${formatPrice(price)}</div>` : ''}
+          </div>
+          <div class="card-meta">${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + dict.years : ''}</div>
+          <div class="card-tags">${specs}</div>
         </div>
       </div>
     `;
-    card.addEventListener('click', ()=> openModal(b));
-    card.addEventListener('mouseenter', ()=> setPinHighlight(b.id, true));
-    card.addEventListener('mouseleave', ()=> setPinHighlight(b.id, false));
-    card.querySelector('[data-book]').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      openModal(b);
-    });
-    listCol.appendChild(card);
-    cardElsByBarberId[b.id] = card;
+  }).join('');
+
+  area.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('click', ()=> openModal(allBarbers.find(b => b.id === card.dataset.id)));
+    card.addEventListener('mouseenter', ()=> highlightBarber(card.dataset.id));
   });
 
-  updateMapPins(filtered);
+  renderMapPins(filtered);
 }
 
-let mapLoadFailed = false;
+document.getElementById('searchInput').addEventListener('input', renderResults);
+document.getElementById('districtFilter').addEventListener('change', renderResults);
 
-async function ensureMap(){
-  if(ymapInstance || mapLoadFailed) return;
-  const container = document.getElementById('mapContainer');
-  try{
-    await loadYandexMaps();
-    if(!container) return;
-    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapControls, YMapZoomControl } = ymaps3;
-    ymapInstance = new YMap(container, { location: { center: TASHKENT_CENTER_LONLAT, zoom: 12 } });
-    ymapInstance.addChild(new YMapDefaultSchemeLayer());
-    ymapInstance.addChild(new YMapDefaultFeaturesLayer());
-    ymapInstance.addChild(new YMapControls({ position: 'right' }).addChild(new YMapZoomControl()));
-  } catch(err){
-    console.error('Yandex Maps failed to load:', err);
-    mapLoadFailed = true;
-    if(container){
-      container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; padding:24px; text-align:center; color:var(--ink-dim); font-size:13.5px;">${I18N[currentLang].map_unavailable}</div>`;
-    }
-  }
-}
-
-function setPinHighlight(barberId, on){
-  const entry = markersByBarberId[barberId];
-  if(entry) entry.el.classList.toggle('pin-highlight', on);
-}
-
-function setCardHighlightAndScroll(barberId){
-  const card = cardElsByBarberId[barberId];
-  if(!card) return;
-  if(mobileView === 'map' && window.innerWidth <= 900) setMobileView('list');
-  card.scrollIntoView({ behavior:'smooth', block:'center' });
-  card.classList.add('card-highlight');
-  setTimeout(()=> card.classList.remove('card-highlight'), 1600);
-}
-
-async function updateMapPins(barbersList){
-  await ensureMap();
-  if(!ymapInstance) return;
-  const { YMapMarker } = ymaps3;
-  Object.values(markersByBarberId).forEach(entry => ymapInstance.removeChild(entry.marker));
-  markersByBarberId = {};
-  barbersList.forEach(b=>{
-    if(b.latitude == null || b.longitude == null || !b.is_location_verified) return;
-    const price = cheapestPrice(b.id);
-    const caption = price ? formatPriceNumber(price) : '—';
-    const el = document.createElement('div');
-    el.className = 'map-pin';
-    el.innerHTML = `<div class="map-pin-tag">${escapeHtml(caption)}</div>`;
-    el.addEventListener('click', ()=> setCardHighlightAndScroll(b.id));
-    const marker = new YMapMarker({ coordinates: [b.longitude, b.latitude] }, el);
-    ymapInstance.addChild(marker);
-    markersByBarberId[b.id] = { marker, el };
-  });
-}
-
-function generateSlotsForDate(barber, dateObj, bookedIsoSet, durationMinutes){
+/* ---------- booking modal ---------- */
+function generateSlotsForDate(barber, dateObj, durationMinutes, bookedIsoSet){
   const dayKey = JS_DAY_TO_KEY[dateObj.getDay()];
   if(!(barber.work_days || []).includes(dayKey)) return [];
-
   const [startH, startM] = (barber.work_start || '09:00').split(':').map(Number);
   const [endH, endM] = (barber.work_end || '20:00').split(':').map(Number);
-  const duration = durationMinutes || 30;
-
   const slots = [];
   const now = new Date();
-  let cursor = new Date(dateObj);
-  cursor.setHours(startH, startM, 0, 0);
-  const end = new Date(dateObj);
-  end.setHours(endH, endM, 0, 0);
-
+  let cursor = new Date(dateObj); cursor.setHours(startH, startM, 0, 0);
+  const end = new Date(dateObj); end.setHours(endH, endM, 0, 0);
   while(cursor < end){
     if(cursor > now){
       const iso = cursor.toISOString();
-      slots.push({
-        label: cursor.toLocaleTimeString(currentLang === 'en' ? 'en-US' : currentLang, { hour:'2-digit', minute:'2-digit' }),
-        iso,
-        taken: bookedIsoSet.has(iso)
-      });
+      slots.push({ label: cursor.toLocaleTimeString(currentLang === 'en' ? 'en-US' : currentLang, { hour:'2-digit', minute:'2-digit' }), iso, taken: bookedIsoSet.has(iso) });
     }
-    cursor = new Date(cursor.getTime() + duration * 60000);
+    cursor = new Date(cursor.getTime() + durationMinutes * 60000);
   }
   return slots;
 }
@@ -653,173 +514,108 @@ function generateSlotsForDate(barber, dateObj, bookedIsoSet, durationMinutes){
 async function openModal(b){
   const dict = I18N[currentLang];
   const specs = (b.specialties || []).map(s=>`<span class="card-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
+  const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials(b.full_name);
   const content = document.getElementById('modalContent');
   content.innerHTML = `
     <button class="modal-close" id="modalCloseBtn">&times;</button>
-    <div class="modal-avatar">${initials(b.full_name)}</div>
+    <div class="modal-avatar">${avatar}</div>
     <h2>${escapeHtml(b.full_name)}</h2>
     <div class="m-meta">${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + dict.years : ''}</div>
     ${b.bio ? `<div class="m-bio">${escapeHtml(b.bio)}</div>` : ''}
     <div class="card-tags">${specs}</div>
     <div class="booking-section" id="bookingSection">
-      <h4>${dict.booking_title}</h4>
-      <div id="bookingBody">${dict.no_slots}</div>
+      <h4>${dict.choose_service}</h4>
+      <div id="serviceList"></div>
     </div>
   `;
   document.getElementById('modalBackdrop').classList.add('active');
   document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
 
-  if(!b.work_days || b.work_days.length === 0){
-    return; // no availability configured yet, leave the "no_slots" message
-  }
-
-  const { data: servicesData } = await supabaseClient
-    .from('services')
-    .select('*')
-    .eq('barber_id', b.id)
-    .eq('is_active', true);
-  const services = servicesData || [];
-
-  if(services.length === 0){
-    document.getElementById('bookingBody').textContent = dict.no_services;
+  const activeServices = (servicesByBarber[b.id] || []).filter(s => s.is_active);
+  const serviceListEl = document.getElementById('serviceList');
+  if(activeServices.length === 0){
+    serviceListEl.innerHTML = `<div class="no-slots-msg">${dict.no_slots}</div>`;
     return;
   }
-
-  const bookingBody = document.getElementById('bookingBody');
-  bookingBody.innerHTML = `<div class="booking-section-label" style="font-size:13px; color:var(--ink-dim); margin-bottom:10px;">${dict.choose_service}</div><div id="serviceSelect"></div>`;
-  const serviceSelect = document.getElementById('serviceSelect');
-  serviceSelect.innerHTML = services.map(s => `
+  serviceListEl.innerHTML = activeServices.map(s => `
     <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}">
-      <span>${escapeHtml(localizeService(s.service_key))}</span>
-      <span class="dur">${s.duration_minutes} ${dict.min_short}${s.price ? ' · ' + formatPriceFull(s.price) : ''}</span>
+      <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${dict.min}</span>
+      <span class="svc-price">${formatPrice(s.price)}</span>
     </div>
   `).join('');
-  serviceSelect.querySelectorAll('.service-option').forEach(el=>{
-    el.addEventListener('click', ()=> selectService(b, el.dataset.key, parseInt(el.dataset.duration)));
+
+  serviceListEl.querySelectorAll('.service-option').forEach(opt=>{
+    opt.addEventListener('click', async ()=>{
+      await showDayPicker(b, opt.dataset.key, parseInt(opt.dataset.duration));
+    });
   });
 }
 
-async function selectService(b, serviceKey, durationMinutes){
+async function showDayPicker(b, serviceKey, duration){
   const dict = I18N[currentLang];
+  const section = document.getElementById('bookingSection');
 
   const rangeStart = new Date();
-  const rangeEnd = new Date();
-  rangeEnd.setDate(rangeEnd.getDate() + 7);
+  const rangeEnd = new Date(); rangeEnd.setDate(rangeEnd.getDate() + 7);
   const { data: existingBookings } = await supabaseClient
-    .from('bookings')
-    .select('start_time')
-    .eq('barber_id', b.id)
+    .from('bookings').select('start_time').eq('barber_id', b.id)
     .in('status', ['pending','confirmed'])
-    .gte('start_time', rangeStart.toISOString())
-    .lte('start_time', rangeEnd.toISOString());
+    .gte('start_time', rangeStart.toISOString()).lte('start_time', rangeEnd.toISOString());
   const bookedIsoSet = new Set((existingBookings || []).map(x => new Date(x.start_time).toISOString()));
 
   const days = [];
-  for(let i = 0; i < 7; i++){
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    const dayKey = JS_DAY_TO_KEY[d.getDay()];
-    if(b.work_days.includes(dayKey)) days.push(d);
+  for(let i=0; i<7; i++){
+    const d = new Date(); d.setDate(d.getDate()+i);
+    if((b.work_days || []).includes(JS_DAY_TO_KEY[d.getDay()])) days.push(d);
   }
 
-  const body = document.getElementById('bookingBody');
-  if(days.length === 0){
-    body.textContent = dict.no_slots;
-    return;
-  }
+  section.innerHTML = `
+    <span class="back-link" id="backToServices">← ${dict.back}</span>
+    <h4>${dict.booking_title}</h4>
+    ${days.length === 0 ? `<div class="no-slots-msg">${dict.no_slots}</div>` : `
+      <div class="day-tabs" id="dayTabs"></div>
+      <div class="slot-grid" id="slotGrid"></div>
+    `}
+  `;
+  document.getElementById('backToServices').addEventListener('click', ()=> openModal(b));
+  if(days.length === 0) return;
 
-  body.innerHTML = `<div class="day-tabs" id="dayTabs"></div><div class="slot-grid" id="slotGrid"></div>`;
   const dayTabs = document.getElementById('dayTabs');
   const slotGrid = document.getElementById('slotGrid');
 
   function selectDay(idx){
-    document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i === idx));
-    const slots = generateSlotsForDate(b, days[idx], bookedIsoSet, durationMinutes);
-    if(slots.length === 0){
-      slotGrid.innerHTML = `<div class="no-slots-msg" style="grid-column:1/-1;">${dict.no_slots}</div>`;
-      return;
-    }
-    slotGrid.innerHTML = slots.map(s =>
-      `<div class="slot-btn ${s.taken ? 'taken' : ''}" data-iso="${s.iso}">${s.label}</div>`
-    ).join('');
-    if(!currentUser){
-      slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
-        el.addEventListener('click', ()=>{
-          slotGrid.innerHTML = `<div class="login-prompt" style="grid-column:1/-1;">${dict.login_prompt}<br><a href="auth.html">${dict.login_btn} →</a></div>`;
-        });
+    document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
+    const slots = generateSlotsForDate(b, days[idx], duration, bookedIsoSet);
+    if(slots.length === 0){ slotGrid.innerHTML = `<div class="no-slots-msg">${dict.no_slots}</div>`; return; }
+    slotGrid.innerHTML = slots.map(s => `<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('');
+    slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        if(!currentUser){
+          slotGrid.innerHTML = `<div class="login-prompt">${dict.login_prompt}<br><a href="auth.html">${dict.login_btn} →</a></div>`;
+          return;
+        }
+        const iso = el.dataset.iso;
+        el.style.opacity = '0.5';
+        const { error } = await supabaseClient.from('bookings').insert([{
+          barber_id: b.id, client_id: currentUser.id,
+          client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
+          start_time: iso, status: 'pending', service_key: serviceKey, service_duration_minutes: duration
+        }]);
+        if(error){ slotGrid.innerHTML = `<div class="no-slots-msg">${dict.booking_failed}</div>`; return; }
+        bookedIsoSet.add(iso);
+        slotGrid.innerHTML = `<div class="booking-toast">${dict.booking_confirmed}</div>`;
       });
-    } else {
-      slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
-        el.addEventListener('click', async ()=>{
-          const iso = el.dataset.iso;
-          el.style.opacity = '0.5';
-          const { error } = await supabaseClient.from('bookings').insert([{
-            barber_id: b.id,
-            client_id: currentUser.id,
-            client_name: currentClientProfile.full_name,
-            client_phone: currentClientProfile.phone,
-            start_time: iso,
-            status: 'pending',
-            service_key: serviceKey,
-            service_duration_minutes: durationMinutes
-          }]);
-          if(error){
-            slotGrid.innerHTML = `<div class="no-slots-msg" style="grid-column:1/-1;">${dict.booking_failed}</div>`;
-            return;
-          }
-          bookedIsoSet.add(iso);
-          slotGrid.innerHTML = `<div class="booking-toast" style="grid-column:1/-1;">${dict.booking_confirmed}</div>`;
-        });
-      });
-    }
-  }
-
-  dayTabs.innerHTML = days.map((d,i) =>
-    `<div class="day-tab">${d.toLocaleDateString(currentLang === 'en' ? 'en-US' : currentLang, { weekday:'short', day:'numeric' })}</div>`
-  ).join('');
-  Array.from(dayTabs.children).forEach((el, i)=> el.addEventListener('click', ()=> selectDay(i)));
-  selectDay(0);
-}
-function closeModal(){ document.getElementById('modalBackdrop').classList.remove('active'); }
-document.getElementById('modalBackdrop').addEventListener('click', (e)=>{
-  if(e.target.id === 'modalBackdrop') closeModal();
-});
-
-document.getElementById('searchInput').addEventListener('input', renderResults);
-document.getElementById('districtFilter').addEventListener('change', renderResults);
-
-/* ---------- fetch published barbers ---------- */
-async function loadBarbers(){
-  const { data, error } = await supabaseClient
-    .from('barbers')
-    .select('*')
-    .eq('is_published', true)
-    .eq('is_approved', true)
-    .order('created_at', { ascending:false });
-
-  if(error){
-    console.error('Failed to load barbers:', error);
-    allBarbers = [];
-  } else {
-    allBarbers = data || [];
-  }
-
-  if(allBarbers.length > 0){
-    const { data: servicesData } = await supabaseClient
-      .from('services')
-      .select('*')
-      .in('barber_id', allBarbers.map(b => b.id))
-      .eq('is_active', true);
-    barberServicesByBarber = {};
-    (servicesData || []).forEach(s=>{
-      if(!barberServicesByBarber[s.barber_id]) barberServicesByBarber[s.barber_id] = [];
-      barberServicesByBarber[s.barber_id].push(s);
     });
   }
-
-  applyLang(currentLang);
+  dayTabs.innerHTML = days.map(d => `<div class="day-tab">${d.toLocaleDateString(currentLang==='en'?'en-US':currentLang,{weekday:'short',day:'numeric'})}</div>`).join('');
+  Array.from(dayTabs.children).forEach((el,i)=> el.addEventListener('click', ()=> selectDay(i)));
+  selectDay(0);
 }
 
+function closeModal(){ document.getElementById('modalBackdrop').classList.remove('active'); }
+document.getElementById('modalBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); });
+
+/* ---------- auth check ---------- */
 async function checkAuth(){
   const { data } = await supabaseClient.auth.getSession();
   if(data.session){
@@ -827,6 +623,30 @@ async function checkAuth(){
     const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
     currentClientProfile = client;
   }
+}
+
+/* ---------- load data ---------- */
+async function loadBarbers(){
+  initMap();
+  const { data: barbers, error } = await supabaseClient
+    .from('barbers').select('*')
+    .eq('is_published', true).eq('is_approved', true)
+    .order('created_at', { ascending:false });
+
+  if(error){ console.error('Failed to load barbers:', error); allBarbers = []; }
+  else allBarbers = barbers || [];
+
+  if(allBarbers.length > 0){
+    const ids = allBarbers.map(b => b.id);
+    const { data: services } = await supabaseClient.from('services').select('*').in('barber_id', ids);
+    servicesByBarber = {};
+    (services || []).forEach(s => {
+      if(!servicesByBarber[s.barber_id]) servicesByBarber[s.barber_id] = [];
+      servicesByBarber[s.barber_id].push(s);
+    });
+  }
+
+  applyLang(currentLang);
 }
 
 loadBarbers();

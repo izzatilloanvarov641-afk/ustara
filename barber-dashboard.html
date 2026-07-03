@@ -251,10 +251,14 @@
 
       <div class="status-banner" id="statusBanner">
         <div class="status-dot"></div>
-        <div>
+        <div style="flex:1;">
           <strong id="statusHeadline"></strong>
           <span id="statusSub"></span>
         </div>
+        <label class="toggle-switch" id="publishToggleWrap" style="display:none;">
+          <input type="checkbox" id="publishToggle">
+          <span class="toggle-slider"></span>
+        </label>
       </div>
 
       <div class="stat-row">
@@ -448,7 +452,7 @@ const I18N = {
     ov_next:"Next up",
     status_live_h:"You're live", status_live_s:"Clients can find and book you.",
     status_pending_h:"Pending review", status_pending_s:"We'll notify you once the founder approves your profile.",
-    status_unpublished_h:"Not visible yet", status_unpublished_s:"Turn on \"Live\" in your profile once you're ready.",
+    status_unpublished_h:"You're approved — one step left", status_unpublished_s:"Turn on \"Live\" below to become visible to clients.",
     profile_sub:"This is what clients see when they find you.",
     edit:"Edit", l_district:"District", l_experience:"Years of experience", l_specialties:"Specialties",
     l_bio:"Short bio", save:"Save changes", cancel:"Cancel", saved:"Saved.",
@@ -592,20 +596,41 @@ function renderStatusBanner(){
   const banner = document.getElementById('statusBanner');
   const headline = document.getElementById('statusHeadline');
   const sub = document.getElementById('statusSub');
+  const toggleWrap = document.getElementById('publishToggleWrap');
+  const toggle = document.getElementById('publishToggle');
   if(!barberData.is_approved){
     banner.className = 'status-banner pending';
     headline.textContent = t('status_pending_h');
     sub.textContent = t('status_pending_s');
-  } else if(barberData.is_published){
-    banner.className = 'status-banner live';
-    headline.textContent = t('status_live_h');
-    sub.textContent = t('status_live_s');
+    toggleWrap.style.display = 'none';
   } else {
-    banner.className = 'status-banner pending';
-    headline.textContent = t('status_unpublished_h');
-    sub.textContent = t('status_unpublished_s');
+    toggleWrap.style.display = 'block';
+    toggle.checked = !!barberData.is_published;
+    if(barberData.is_published){
+      banner.className = 'status-banner live';
+      headline.textContent = t('status_live_h');
+      sub.textContent = t('status_live_s');
+    } else {
+      banner.className = 'status-banner pending';
+      headline.textContent = t('status_unpublished_h');
+      sub.textContent = t('status_unpublished_s');
+    }
   }
 }
+
+document.getElementById('publishToggle').addEventListener('change', async function(){
+  const newVal = this.checked;
+  this.disabled = true;
+  const { error } = await supabaseClient.from('barbers').update({ is_published: newVal }).eq('id', barberData.id);
+  this.disabled = false;
+  if(!error){
+    barberData.is_published = newVal;
+    renderStatusBanner();
+  } else {
+    this.checked = !newVal;
+    console.error('Failed to update is_published:', error);
+  }
+});
 
 function renderOverviewStats(){
   const now = new Date();
