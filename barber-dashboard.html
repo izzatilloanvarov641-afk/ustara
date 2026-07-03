@@ -802,15 +802,23 @@ function renderDayChips(){
 }
 document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('saveHoursBtn');
+  const msg = document.getElementById('saveHoursMsg');
+  const startVal = document.getElementById('editWorkStart').value;
+  const endVal = document.getElementById('editWorkEnd').value;
+  if(startVal && endVal && endVal <= startVal){
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Closing time must be after opening time.';
+    msg.style.display = 'block';
+    return;
+  }
   btn.disabled = true;
   const updates = {
     work_days: selectedDays,
-    work_start: document.getElementById('editWorkStart').value,
-    work_end: document.getElementById('editWorkEnd').value
+    work_start: startVal,
+    work_end: endVal
   };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
-  const msg = document.getElementById('saveHoursMsg');
   if(!error){
     Object.assign(barberData, updates);
     msg.style.color = 'var(--ok)';
