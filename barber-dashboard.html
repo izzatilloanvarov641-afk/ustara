@@ -9,233 +9,324 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --bg-alt:#F1ECE2; --surface:#FFFFFF; --line:#E4DBCB;
-    --ink:#1C1A17; --ink-dim:#6E6656; --brass:#A67C1A; --brass-soft:#C9A227; --err:#c0392b; --ok:#4a7c59;
+    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E2DACB;
+    --ink:#1C1A17; --ink-dim:#7A7264; --brass:#A67C1A; --brass-soft:#C79A2E;
+    --err:#B3432B; --ok:#4a7c59;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
-  body{ background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif;
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
   a{ color:inherit; text-decoration:none; }
-  .wrap{ max-width:820px; margin:0 auto; padding:0 24px; }
-  @media (max-width:640px){ .wrap{ padding:0 18px; } }
 
-  nav{ border-bottom:1px solid var(--line); background:rgba(247,244,239,0.86); backdrop-filter:blur(10px); position:sticky; top:0; z-index:10; }
-  nav .inner{ max-width:820px; margin:0 auto; padding:0 24px; height:68px; display:flex; align-items:center; justify-content:space-between; }
-  .logo{ font-family:'Fraunces', serif; font-size:19px; }
-  .logo em{ font-style:italic; color:var(--brass); }
-  .logout-btn{ font-size:13px; color:var(--ink-dim); background:none; border:1px solid var(--line); padding:8px 16px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif; }
+  .app{ display:flex; min-height:100vh; }
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    width:250px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .sidebar-logo{ padding:26px 24px 22px; font-family:'Fraunces', serif; font-size:20px; border-bottom:1px solid var(--line); }
+  .sidebar-logo em{ font-style:italic; color:var(--brass); }
+  .sidebar-nav{ flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:2px; }
+  .nav-item{
+    display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:8px;
+    font-size:14px; color:var(--ink-dim); cursor:pointer; font-weight:500; border:none; background:none;
+    width:100%; text-align:left;
+  }
+  .nav-item:hover{ background:var(--surface-alt); color:var(--ink); }
+  .nav-item.active{ background:var(--brass); color:#fff; }
+  .nav-item svg{ flex-shrink:0; opacity:0.85; }
+  .sidebar-foot{ padding:16px 24px; border-top:1px solid var(--line); }
+  .logout-btn{
+    font-size:13px; color:var(--ink-dim); background:none; border:1px solid var(--line);
+    padding:9px 16px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif; width:100%;
+  }
   .logout-btn:hover{ border-color:var(--ink-dim); color:var(--ink); }
 
-  main{ padding:44px 0 100px; }
-  .gate{ display:none; text-align:center; padding:100px 20px; color:var(--ink-dim); }
-  .gate.active{ display:block; }
+  /* mobile: sidebar becomes a horizontal top strip */
+  .mobile-header{ display:none; }
+  @media (max-width:840px){
+    .app{ flex-direction:column; }
+    .sidebar{
+      width:100%; height:auto; position:sticky; top:0; z-index:20; flex-direction:row;
+      align-items:center; overflow-x:auto;
+    }
+    .sidebar-logo{ display:none; }
+    .sidebar-nav{ flex-direction:row; padding:10px 12px; overflow-x:auto; }
+    .nav-item{ white-space:nowrap; }
+    .sidebar-foot{ display:none; }
+    .mobile-header{
+      display:flex; justify-content:space-between; align-items:center; padding:16px 20px;
+      background:var(--surface); border-bottom:1px solid var(--line);
+    }
+    .mobile-header .logo{ font-family:'Fraunces', serif; font-size:18px; }
+    .mobile-header .logo em{ font-style:italic; color:var(--brass); }
+  }
 
-  .pending-banner{ padding:14px 20px; background:rgba(166,124,26,0.08); border:1px solid rgba(166,124,26,0.28); border-radius:8px; font-size:13.5px; color:var(--brass); margin-bottom:16px; text-align:center; display:none; }
-  .pending-banner.active{ display:block; }
-  .status-row{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:36px; padding:20px 24px; background:var(--surface); border:1px solid var(--line); border-radius:8px; }
-  .status-left{ display:flex; align-items:center; gap:14px; }
-  .status-dot{ width:10px; height:10px; border-radius:50%; background:#C7BFA6; flex-shrink:0; }
-  .status-dot.live{ background:var(--ok); box-shadow:0 0 8px var(--ok); }
-  .status-text strong{ display:block; font-size:14.5px; margin-bottom:2px; }
-  .status-text span{ font-size:12.5px; color:var(--ink-dim); }
+  /* ---------- main content ---------- */
+  main{ flex:1; padding:40px 48px 100px; max-width:920px; }
+  @media (max-width:640px){ main{ padding:24px 20px 80px; } }
 
-  .toggle-switch{ position:relative; width:46px; height:26px; flex-shrink:0; }
-  .toggle-switch input{ opacity:0; width:0; height:0; }
-  .toggle-slider{ position:absolute; inset:0; background:var(--line); border-radius:14px; cursor:pointer; transition:background .2s; }
-  .toggle-slider::before{ content:''; position:absolute; width:20px; height:20px; left:3px; top:3px; background:var(--surface); box-shadow:0 1px 3px rgba(28,26,23,0.25); border-radius:50%; transition:transform .2s; }
-  .toggle-switch input:checked + .toggle-slider{ background:var(--brass); }
-  .toggle-switch input:checked + .toggle-slider::before{ transform:translateX(20px); }
+  .view{ display:none; }
+  .view.active{ display:block; animation:fadein .3s ease; }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
 
-  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(26px,4vw,34px); margin-bottom:4px; }
-  .sub{ color:var(--ink-dim); font-size:14.5px; margin-bottom:32px; }
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(24px,3.4vw,30px); margin-bottom:4px; }
+  .page-sub{ color:var(--ink-dim); font-size:14px; margin-bottom:32px; }
 
-  .section-title{ font-family:'Fraunces', serif; font-size:19px; font-weight:500; margin:44px 0 18px; display:flex; align-items:center; justify-content:space-between; }
+  /* status banner */
+  .status-banner{
+    display:flex; align-items:center; gap:14px; padding:18px 22px; border-radius:10px;
+    margin-bottom:28px; border:1px solid var(--line);
+  }
+  .status-banner.pending{ background:#FBF3E3; border-color:#E8D5A8; }
+  .status-banner.live{ background:#EEF5EE; border-color:#C9E0C9; }
+  .status-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .status-banner.pending .status-dot{ background:#C79A2E; }
+  .status-banner.live .status-dot{ background:var(--ok); }
+  .status-banner strong{ display:block; font-size:14.5px; margin-bottom:2px; }
+  .status-banner span{ font-size:13px; color:var(--ink-dim); }
+
+  /* stat cards */
+  .stat-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:32px; }
+  @media (max-width:640px){ .stat-row{ grid-template-columns:1fr; } }
+  .stat-card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .stat-num{ font-family:'Fraunces', serif; font-size:30px; color:var(--brass); }
+  .stat-label{ font-size:13px; color:var(--ink-dim); margin-top:4px; }
+
+  .section-title{ font-family:'Fraunces', serif; font-size:18px; font-weight:500; margin:36px 0 16px; display:flex; justify-content:space-between; align-items:center; }
+  .section-title:first-of-type{ margin-top:0; }
   .edit-link{ font-size:12.5px; color:var(--brass); font-weight:600; cursor:pointer; }
 
-  .profile-card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:28px; }
-  .profile-view .row{ display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); font-size:14px; gap:16px; }
-  .profile-view .row:last-child{ border-bottom:none; }
-  .profile-view .k{ color:var(--ink-dim); flex-shrink:0; }
-  .profile-view .v{ text-align:right; font-weight:500; max-width:60%; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:26px; }
+
+  /* profile view rows */
+  .info-row{ display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); font-size:14px; gap:16px; }
+  .info-row:last-child{ border-bottom:none; }
+  .info-row .k{ color:var(--ink-dim); flex-shrink:0; }
+  .info-row .v{ text-align:right; font-weight:500; max-width:60%; }
+
+  /* forms */
+  .field-group{ margin-bottom:18px; }
+  label{ display:block; font-size:13px; color:var(--ink-dim); margin-bottom:7px; font-weight:500; }
+  input, textarea, select{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:12px 14px; border-radius:6px; font-size:14px; font-family:'Inter', sans-serif;
+  }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--brass); }
+  textarea{ resize:vertical; min-height:90px; }
+  select{ appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%237A7264' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:520px){ .row2{ grid-template-columns:1fr; } }
+
+  .chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ border:1px solid var(--line); color:var(--ink-dim); padding:9px 15px; border-radius:20px; font-size:13px; cursor:pointer; background:var(--bg); }
+  .chip.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
+
+  .btn{ padding:12px 22px; border-radius:6px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
+  .btn-primary{ background:var(--brass); color:#fff; }
+  .btn-primary:hover{ background:var(--brass-soft); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-secondary{ background:none; border:1px solid var(--line); color:var(--ink); }
+  .btn-row{ display:flex; gap:10px; margin-top:22px; }
+  .save-msg{ font-size:13px; color:var(--ok); margin-top:14px; display:none; }
 
   .profile-edit{ display:none; }
   .profile-edit.active{ display:block; }
   .profile-view.hidden{ display:none; }
 
-  .field-group{ margin-bottom:18px; }
-  label{ display:block; font-size:13px; color:var(--ink-dim); margin-bottom:7px; }
-  input, textarea, select{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:12px 14px; border-radius:4px; font-size:14px; font-family:'Inter', sans-serif; }
-  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--brass); }
-  textarea{ resize:vertical; min-height:90px; }
-  select{ appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%236E6656' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; }
-  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  @media (max-width:480px){ .row2{ grid-template-columns:1fr; } }
+  /* services */
+  .service-row{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:16px 0; border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .service-row:last-child{ border-bottom:none; }
+  .service-name{ font-weight:600; font-size:14.5px; min-width:150px; }
+  .service-inputs{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .service-inputs input{ width:100px; padding:9px 12px; font-size:13px; }
+  .toggle-switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
+  .toggle-switch input{ opacity:0; width:0; height:0; }
+  .toggle-slider{ position:absolute; inset:0; background:var(--line); border-radius:14px; cursor:pointer; transition:background .2s; }
+  .toggle-slider::before{ content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform .2s; box-shadow:0 1px 2px rgba(0,0,0,0.2); }
+  .toggle-switch input:checked + .toggle-slider{ background:var(--brass); }
+  .toggle-switch input:checked + .toggle-slider::before{ transform:translateX(18px); }
 
-  .chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
-  .chip{ border:1px solid var(--line); color:var(--ink-dim); padding:9px 15px; border-radius:20px; font-size:13px; cursor:pointer; background:var(--bg); }
-  .chip.selected{ background:var(--brass); border-color:var(--brass); color:var(--bg); font-weight:600; }
-
-  /* profile photo */
-  .avatar-row{ display:flex; align-items:center; gap:20px; margin-bottom:24px; }
+  /* photos */
+  .profile-photo-row{ display:flex; align-items:center; gap:20px; margin-bottom:8px; }
   .avatar-preview{
-    width:84px; height:84px; border-radius:50%; flex-shrink:0; overflow:hidden;
-    background:var(--bg-alt); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
+    width:88px; height:88px; border-radius:50%; background:var(--surface-alt);
+    display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
     font-family:'Fraunces', serif; font-size:28px; color:var(--brass); font-style:italic;
+    border:2px solid var(--line);
   }
   .avatar-preview img{ width:100%; height:100%; object-fit:cover; }
-  .avatar-actions{ display:flex; flex-direction:column; gap:8px; }
-  .avatar-hint{ font-size:12px; color:var(--ink-dim); }
-  .btn-upload{
-    background:none; border:1px solid var(--line); color:var(--ink); padding:9px 16px;
-    border-radius:20px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter', sans-serif; width:fit-content;
+  .file-btn{
+    display:inline-block; background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:10px 18px; border-radius:6px; font-size:13px; cursor:pointer; font-weight:500;
   }
-  .btn-upload:hover{ border-color:var(--brass); color:var(--brass); }
-  .btn-upload:disabled{ opacity:0.5; cursor:not-allowed; }
+  .file-btn:hover{ border-color:var(--brass); }
+  input[type="file"]{ display:none; }
 
-  /* portfolio */
-  .portfolio-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px; margin-bottom:18px; }
-  .portfolio-item{ position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; border:1px solid var(--line); background:var(--bg-alt); }
-  .portfolio-item img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .portfolio-remove{
+  .portfolio-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px; margin-top:16px; }
+  .portfolio-item{ position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:var(--surface-alt); border:1px solid var(--line); }
+  .portfolio-item img{ width:100%; height:100%; object-fit:cover; }
+  .portfolio-item .remove-btn{
     position:absolute; top:6px; right:6px; width:22px; height:22px; border-radius:50%;
-    background:rgba(28,26,23,0.65); color:#fff; border:none; cursor:pointer; font-size:14px;
-    display:flex; align-items:center; justify-content:center; line-height:1;
+    background:rgba(28,26,23,0.7); color:#fff; border:none; cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center;
   }
-  .portfolio-remove:hover{ background:rgba(28,26,23,0.85); }
-  .portfolio-empty{ color:var(--ink-dim); font-size:13.5px; padding:8px 0 18px; }
-  .portfolio-uploading{ font-size:12.5px; color:var(--ink-dim); margin-bottom:12px; display:none; }
-  .portfolio-uploading.active{ display:block; }
+  .portfolio-add{
+    aspect-ratio:1; border-radius:8px; border:2px dashed var(--line); display:flex;
+    flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer;
+    color:var(--ink-dim); font-size:12px; text-align:center;
+  }
+  .portfolio-add:hover{ border-color:var(--brass); color:var(--brass); }
 
-  .service-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
-  .service-row:last-child{ border-bottom:none; }
-  .service-fields{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-  .service-field{ display:flex; align-items:center; gap:7px; flex-shrink:0; }
-  .service-field input{ width:64px; padding:8px 10px; text-align:center; }
-  .service-field input.price-input{ width:90px; }
-  .service-field span{ font-size:12.5px; color:var(--ink-dim); white-space:nowrap; }
+  /* bookings */
+  .booking-row{
+    display:flex; justify-content:space-between; align-items:center; padding:16px 20px;
+    background:var(--surface); border:1px solid var(--line); border-radius:8px; margin-bottom:10px;
+    font-size:14px; gap:12px; flex-wrap:wrap;
+  }
+  .booking-status{ font-size:11.5px; padding:4px 10px; border-radius:12px; text-transform:capitalize; background:var(--surface-alt); flex-shrink:0; }
+  .booking-actions{ display:flex; gap:8px; }
+  .booking-actions .btn{ padding:8px 14px; font-size:12px; }
+  .empty-state{ text-align:center; padding:44px 20px; border:1px dashed var(--line); border-radius:10px; color:var(--ink-dim); font-size:14px; }
 
-  .map-container{ width:100%; height:320px; border-radius:4px; overflow:hidden; margin-bottom:16px; background:var(--bg); }
-  .location-hint{ color:var(--ink-dim); font-size:12.5px; margin-bottom:18px; }
-
-  .verify-badge{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:20px; }
-  .verify-badge.verified{ background:rgba(74,124,89,0.12); color:var(--ok); }
-  .verify-badge.pending{ background:rgba(166,124,26,0.12); color:var(--brass); }
-  .verify-badge .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
-
-  .btn-row{ display:flex; gap:10px; margin-top:24px; }
-  .btn{ padding:12px 22px; border-radius:4px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
-  .btn-primary{ background:var(--brass); color:var(--bg); }
-  .btn-primary:hover{ background:var(--brass-soft); }
-  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
-  .btn-secondary{ background:none; border:1px solid var(--line); color:var(--ink); }
-  .save-msg{ font-size:13px; color:var(--ok); margin-top:14px; display:none; }
-
-  .empty-bookings{ text-align:center; padding:44px 20px; border:1px dashed var(--line); border-radius:8px; color:var(--ink-dim); font-size:14px; }
-  .booking-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:var(--surface); border:1px solid var(--line); border-radius:6px; margin-bottom:10px; font-size:14px; gap:12px; }
-  .booking-status{ font-size:11.5px; padding:4px 10px; border-radius:12px; text-transform:capitalize; background:var(--bg-alt); flex-shrink:0; }
+  .filter-tabs{ display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .filter-tab{
+    padding:8px 16px; border-radius:20px; font-size:13px; cursor:pointer;
+    border:1px solid var(--line); color:var(--ink-dim); background:var(--surface);
+  }
+  .filter-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="inner">
-    <a href="index.html" class="logo">ust<em>a</em>ra</a>
-    <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
-  </div>
-</nav>
+<div class="mobile-header">
+  <a href="index.html" class="logo">ust<em>a</em>ra</a>
+</div>
 
-<div class="gate" id="gate" data-i18n="gate_msg">Checking your session...</div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="index.html">ust<em>a</em>ra</a></div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <button class="nav-item active" data-view="overview">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span data-i18n="nav_overview">Overview</span>
+      </button>
+      <button class="nav-item" data-view="profile">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+        <span data-i18n="nav_profile">Profile</span>
+      </button>
+      <button class="nav-item" data-view="hours">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span data-i18n="nav_hours">Working hours</span>
+      </button>
+      <button class="nav-item" data-view="services">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 9-9M3 15l4 4L21 5"/></svg>
+        <span data-i18n="nav_services">Services</span>
+      </button>
+      <button class="nav-item" data-view="photos">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span data-i18n="nav_photos">Photos</span>
+      </button>
+      <button class="nav-item" data-view="bookings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+        <span data-i18n="nav_bookings">Bookings</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
+    </div>
+  </aside>
 
-<main id="dashboardMain" style="display:none;">
-  <div class="wrap">
-    <h1 data-i18n="welcome">Welcome back<span id="nameInsert"></span></h1>
-    <p class="sub" data-i18n="sub">Manage your profile and see your bookings.</p>
+  <main>
+    <!-- ============ OVERVIEW ============ -->
+    <div class="view active" data-view="overview">
+      <h1 data-i18n="ov_title">Welcome back<span id="nameInsert"></span></h1>
+      <p class="page-sub" data-i18n="ov_sub">Here's where things stand today.</p>
 
-    <div class="pending-banner" id="pendingBanner" data-i18n="pending_review_msg">Pending review — we'll notify you once approved.</div>
-
-    <div class="status-row">
-      <div class="status-left">
-        <div class="status-dot" id="statusDot"></div>
-        <div class="status-text">
-          <strong id="statusHeadline" data-i18n="status_off">Your profile is hidden</strong>
-          <span id="statusSub" data-i18n="status_off_sub">Turn this on when you're ready for clients to find you.</span>
+      <div class="status-banner" id="statusBanner">
+        <div class="status-dot"></div>
+        <div>
+          <strong id="statusHeadline"></strong>
+          <span id="statusSub"></span>
         </div>
       </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="publishToggle">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
 
-    <div class="section-title">
-      <span data-i18n="profile_title">Your profile</span>
-      <span class="edit-link" id="editLink" data-i18n="edit">Edit</span>
-    </div>
-
-    <div class="profile-card">
-      <div class="avatar-row">
-        <div class="avatar-preview" id="avatarPreview"></div>
-        <div class="avatar-actions">
-          <button type="button" class="btn-upload" id="avatarUploadBtn" data-i18n="change_photo">Change photo</button>
-          <span class="avatar-hint" id="avatarStatus"></span>
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-num" id="statUpcoming">—</div>
+          <div class="stat-label" data-i18n="stat_upcoming">Upcoming bookings</div>
         </div>
-        <input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+        <div class="stat-card">
+          <div class="stat-num" id="statPending">—</div>
+          <div class="stat-label" data-i18n="stat_pending">Awaiting your confirmation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statServices">—</div>
+          <div class="stat-label" data-i18n="stat_services">Active services</div>
+        </div>
       </div>
 
-      <div class="profile-view" id="profileView"></div>
+      <div class="section-title"><span data-i18n="ov_next">Next up</span></div>
+      <div id="overviewBookings"></div>
+    </div>
 
-      <div class="profile-edit" id="profileEdit">
-        <div class="row2">
-          <div class="field-group">
-            <label data-i18n="l_district">District</label>
-            <select id="editDistrict">
-              <option value="Chorsu">Chorsu</option>
-              <option value="Yunusabad">Yunusabad</option>
-              <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
-              <option value="Yakkasaray">Yakkasaray</option>
-              <option value="Sergeli">Sergeli</option>
-              <option value="Shayxontohur">Shayxontohur</option>
-            </select>
+    <!-- ============ PROFILE ============ -->
+    <div class="view" data-view="profile">
+      <h1 data-i18n="nav_profile">Profile</h1>
+      <p class="page-sub" data-i18n="profile_sub">This is what clients see when they find you.</p>
+
+      <div class="section-title">
+        <span data-i18n="nav_profile">Profile</span>
+        <span class="edit-link" id="editProfileLink" data-i18n="edit">Edit</span>
+      </div>
+      <div class="card">
+        <div class="profile-view" id="profileView"></div>
+        <div class="profile-edit" id="profileEdit">
+          <div class="row2">
+            <div class="field-group">
+              <label data-i18n="l_district">District</label>
+              <select id="editDistrict">
+                <option value="Chorsu">Chorsu</option>
+                <option value="Yunusabad">Yunusabad</option>
+                <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
+                <option value="Yakkasaray">Yakkasaray</option>
+                <option value="Sergeli">Sergeli</option>
+                <option value="Shayxontohur">Shayxontohur</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label data-i18n="l_experience">Years of experience</label>
+              <input type="number" id="editExperience" min="0" max="60">
+            </div>
           </div>
           <div class="field-group">
-            <label data-i18n="l_experience">Years of experience</label>
-            <input type="number" id="editExperience" min="0" max="60">
+            <label data-i18n="l_specialties">Specialties</label>
+            <div class="chip-grid" id="editChips"></div>
           </div>
+          <div class="field-group">
+            <label data-i18n="l_bio">Short bio</label>
+            <textarea id="editBio"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="saveProfileBtn" data-i18n="save">Save changes</button>
+            <button class="btn btn-secondary" id="cancelProfileBtn" data-i18n="cancel">Cancel</button>
+          </div>
+          <div class="save-msg" id="saveProfileMsg" data-i18n="saved">Saved.</div>
         </div>
-        <div class="field-group">
-          <label data-i18n="l_specialties">Specialties</label>
-          <div class="chip-grid" id="editChips"></div>
-        </div>
-        <div class="field-group">
-          <label data-i18n="l_bio">Short bio</label>
-          <textarea id="editBio"></textarea>
-        </div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="saveProfileBtn" data-i18n="save">Save changes</button>
-          <button class="btn btn-secondary" id="cancelEditBtn" data-i18n="cancel">Cancel</button>
-        </div>
-        <div class="save-msg" id="saveMsg" data-i18n="saved">Saved.</div>
       </div>
     </div>
 
-    <div class="section-title">
-      <span data-i18n="portfolio_title">Portfolio</span>
-    </div>
-    <div class="profile-card">
-      <div class="portfolio-uploading" id="portfolioUploading" data-i18n="uploading">Uploading...</div>
-      <div class="portfolio-grid" id="portfolioGrid"></div>
-      <div class="portfolio-empty" id="portfolioEmpty" data-i18n="portfolio_empty">No photos yet — add before &amp; after shots of your work.</div>
-      <button type="button" class="btn-upload" id="portfolioAddBtn" data-i18n="add_photos">+ Add photos</button>
-      <input type="file" id="portfolioFileInput" accept="image/*" multiple style="display:none;">
-    </div>
-
-    <div class="section-title">
-      <span data-i18n="availability_title">Working hours</span>
-      <span class="edit-link" id="editAvailLink" data-i18n="edit">Edit</span>
-    </div>
-    <div class="profile-card">
-      <div class="profile-view" id="availView"></div>
-      <div class="profile-edit" id="availEdit">
+    <!-- ============ WORKING HOURS ============ -->
+    <div class="view" data-view="hours">
+      <h1 data-i18n="nav_hours">Working hours</h1>
+      <p class="page-sub" data-i18n="hours_sub">Which days and times you're open. Each service's own length controls how slots are spaced.</p>
+      <div class="card">
         <div class="field-group">
           <label data-i18n="l_days">Working days</label>
           <div class="chip-grid" id="dayChips"></div>
@@ -250,105 +341,89 @@
             <input type="time" id="editWorkEnd">
           </div>
         </div>
-        <div class="field-group">
-          <label data-i18n="l_duration">Appointment length</label>
-          <select id="editDuration">
-            <option value="30">30 min</option>
-            <option value="45">45 min</option>
-            <option value="60">60 min</option>
-          </select>
-        </div>
         <div class="btn-row">
-          <button class="btn btn-primary" id="saveAvailBtn" data-i18n="save">Save changes</button>
-          <button class="btn btn-secondary" id="cancelAvailBtn" data-i18n="cancel">Cancel</button>
+          <button class="btn btn-primary" id="saveHoursBtn" data-i18n="save">Save changes</button>
         </div>
-        <div class="save-msg" id="saveAvailMsg" data-i18n="saved">Saved.</div>
+        <div class="save-msg" id="saveHoursMsg" data-i18n="saved">Saved.</div>
       </div>
     </div>
 
-    <div class="section-title">
-      <span data-i18n="location_title">Location</span>
-      <span class="edit-link" id="editLocationLink" data-i18n="edit">Edit</span>
+    <!-- ============ SERVICES ============ -->
+    <div class="view" data-view="services">
+      <h1 data-i18n="nav_services">Services</h1>
+      <p class="page-sub" data-i18n="services_sub">Turn on what you offer, set your own duration and price for each.</p>
+      <div class="card" id="servicesCard"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
+      </div>
+      <div class="save-msg" id="saveServicesMsg" data-i18n="saved">Saved.</div>
     </div>
-    <div class="profile-card">
-      <div class="profile-view" id="locationView"></div>
-      <div class="profile-edit" id="locationEdit">
-        <div class="field-group">
-          <label data-i18n="l_shop_name">Shop name</label>
-          <input type="text" id="editShopName" data-i18n-ph="shop_name_ph" placeholder="e.g. Jasur's Barbershop">
+
+    <!-- ============ PHOTOS ============ -->
+    <div class="view" data-view="photos">
+      <h1 data-i18n="nav_photos">Photos</h1>
+      <p class="page-sub" data-i18n="photos_sub">A clear photo of you, plus examples of your work (optional).</p>
+
+      <div class="section-title"><span data-i18n="photo_profile_title">Your photo</span></div>
+      <div class="card">
+        <div class="profile-photo-row">
+          <div class="avatar-preview" id="avatarPreview"></div>
+          <div>
+            <label class="file-btn" for="avatarInput" data-i18n="upload_photo">Upload photo</label>
+            <input type="file" id="avatarInput" accept="image/*">
+          </div>
         </div>
-        <div class="map-container" id="locationMap"></div>
-        <p class="location-hint" data-i18n="location_hint">Drag the pin to your shop's exact location.</p>
-        <p class="location-hint" data-i18n="verify_hint">Your shop won't appear on the client map until we verify it — we'll be in touch to confirm details.</p>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="saveLocationBtn" data-i18n="save">Save changes</button>
-          <button class="btn btn-secondary" id="cancelLocationBtn" data-i18n="cancel">Cancel</button>
+      </div>
+
+      <div class="section-title"><span data-i18n="photo_portfolio_title">Your work (optional)</span></div>
+      <div class="card">
+        <div class="portfolio-grid" id="portfolioGrid">
+          <label class="portfolio-add" for="portfolioInput">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="add_photo">Add photo</span>
+          </label>
+          <input type="file" id="portfolioInput" accept="image/*">
         </div>
-        <div class="save-msg" id="saveLocationMsg" data-i18n="saved">Saved.</div>
       </div>
     </div>
 
-    <div class="section-title">
-      <span data-i18n="services_title">Services</span>
-      <span class="edit-link" id="editServicesLink" data-i18n="edit">Edit</span>
-    </div>
-    <div class="profile-card">
-      <div class="profile-view" id="servicesView"></div>
-      <div class="profile-edit" id="servicesEdit">
-        <div id="serviceRows"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
-          <button class="btn btn-secondary" id="cancelServicesBtn" data-i18n="cancel">Cancel</button>
-        </div>
-        <div class="save-msg" id="saveServicesMsg" data-i18n="saved">Saved.</div>
+    <!-- ============ BOOKINGS ============ -->
+    <div class="view" data-view="bookings">
+      <h1 data-i18n="nav_bookings">Bookings</h1>
+      <p class="page-sub" data-i18n="bookings_sub">Everyone who's booked with you.</p>
+      <div class="filter-tabs" id="bookingFilterTabs">
+        <div class="filter-tab active" data-status="all" data-i18n="filter_all">All</div>
+        <div class="filter-tab" data-status="pending" data-i18n="filter_pending">Pending</div>
+        <div class="filter-tab" data-status="confirmed" data-i18n="filter_confirmed">Confirmed</div>
+        <div class="filter-tab" data-status="cancelled" data-i18n="filter_cancelled">Cancelled</div>
       </div>
+      <div id="bookingsArea"></div>
     </div>
-
-    <div class="section-title">
-      <span data-i18n="bookings_title">Upcoming bookings</span>
-    </div>
-    <div id="bookingsArea"></div>
-  </div>
-</main>
+  </main>
+</div>
 
 <script>
+/* ============================================================
+   Schema verified live against Supabase on 2026-07-03:
+   - barbers: id, full_name, district, bio, specialties[],
+     years_experience, avatar_url, is_published, is_approved,
+     work_days[], work_start, work_end
+   - services: id, barber_id, service_key, duration_minutes,
+     price, is_active — unique(barber_id, service_key) confirmed,
+     upsert onConflict below works as written.
+   - portfolio_photos: id, barber_id, image_path, position,
+     created_at — NOTE: column is image_path (a storage path),
+     not photo_url/a public URL. Public URLs are computed on the
+     fly via portfolioPublicUrl() below.
+   - Storage bucket "barber-media": RLS confirmed to allow a
+     barber to write under their own {barber_id}/... prefix,
+     covering both {barber_id}/avatar.{ext} and
+     {barber_id}/portfolio/{uuid}.{ext}.
+   ============================================================ */
+
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const YANDEX_MAPS_API_KEY = '17f97aa1-a3a1-4d93-b0df-ec23e92d2874';
-// Yandex Maps JS API v3 uses [longitude, latitude] order (GeoJSON-style),
-// the opposite of the v2 API and of how we store/read lat/long from Postgres.
-const TASHKENT_CENTER_LONLAT = [69.240562, 41.311081];
-const MEDIA_BUCKET = 'barber-media';
-const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
-
-function loadYandexMaps(){
-  return new Promise((resolve, reject)=>{
-    if(window.ymaps3){ window.ymaps3.ready.then(resolve); return; }
-    const script = document.createElement('script');
-    script.src = `https://api-maps.yandex.ru/v3/?apikey=${YANDEX_MAPS_API_KEY}&lang=en_US`;
-    script.onload = () => {
-      if(window.ymaps3 && window.ymaps3.ready){
-        window.ymaps3.ready.then(resolve).catch(reject);
-      } else {
-        reject(new Error('Yandex Maps failed to initialize (invalid key or service unavailable)'));
-      }
-    };
-    script.onerror = () => reject(new Error('Failed to load Yandex Maps script'));
-    document.head.appendChild(script);
-  });
-}
-
-function createDraggablePinElement(){
-  const el = document.createElement('div');
-  el.style.cssText = 'width:30px; height:42px; cursor:grab; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));';
-  el.innerHTML = `<svg width="30" height="42" viewBox="0 0 30 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 0C6.7 0 0 6.7 0 15c0 10.5 15 27 15 27s15-16.5 15-27C30 6.7 23.3 0 15 0z" fill="#A67C1A"/>
-    <circle cx="15" cy="15" r="6" fill="#F7F4EF"/>
-  </svg>`;
-  return el;
-}
 
 const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
 const SPECIALTIES_LOCAL = {
@@ -356,304 +431,212 @@ const SPECIALTIES_LOCAL = {
   uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
   ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
 };
-
-const SERVICE_KEYS = ["haircut","beard_trim","haircut_beard","kids_haircut","lineup","coloring"];
+const SERVICE_KEYS = ['haircut','beard_trim','haircut_beard','kids_haircut','lineup','coloring'];
 const SERVICES_LOCAL = {
-  en: ["Haircut","Beard trim","Haircut + beard","Kids' haircut","Line-up","Coloring"],
-  uz: ["Soch olish","Soqol olish","Soch + soqol","Bolalar uchun soch olish","Line-up","Soch bo'yash"],
-  ru: ["Стрижка","Оформление бороды","Стрижка + борода","Детская стрижка","Line-up","Окрашивание"]
+  en: { haircut:"Haircut", beard_trim:"Beard trim", haircut_beard:"Haircut + Beard", kids_haircut:"Kids' haircut", lineup:"Line-up", coloring:"Hair coloring" },
+  uz: { haircut:"Soch olish", beard_trim:"Soqol olish", haircut_beard:"Soch + Soqol", kids_haircut:"Bolalar uchun", lineup:"Line-up", coloring:"Soch bo'yash" },
+  ru: { haircut:"Стрижка", beard_trim:"Оформление бороды", haircut_beard:"Стрижка + Борода", kids_haircut:"Детская стрижка", lineup:"Line-up", coloring:"Окрашивание" }
 };
+const DAY_KEYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 const I18N = {
-  en:{ logout:"Log out", gate_msg:"Checking your session...", welcome:"Welcome back", sub:"Manage your profile and see your bookings.",
-    status_on:"Your profile is live", status_on_sub:"Clients can find and book you.",
-    status_off:"Your profile is hidden", status_off_sub:"Turn this on when you're ready for clients to find you.",
-    profile_title:"Your profile", edit:"Edit", l_district:"District", l_experience:"Years of experience",
-    l_specialties:"Specialties", l_bio:"Short bio", save:"Save changes", cancel:"Cancel", saved:"Saved.",
-    bookings_title:"Upcoming bookings", empty_bookings:"No bookings yet. They'll show up here once clients start booking you.",
+  en:{
+    nav_overview:"Overview", nav_profile:"Profile", nav_hours:"Working hours", nav_services:"Services",
+    nav_photos:"Photos", nav_bookings:"Bookings", logout:"Log out",
+    ov_title:"Welcome back", ov_sub:"Here's where things stand today.",
+    stat_upcoming:"Upcoming bookings", stat_pending:"Awaiting your confirmation", stat_services:"Active services",
+    ov_next:"Next up",
+    status_live_h:"You're live", status_live_s:"Clients can find and book you.",
+    status_pending_h:"Pending review", status_pending_s:"We'll notify you once the founder approves your profile.",
+    status_unpublished_h:"Not visible yet", status_unpublished_s:"Turn on \"Live\" in your profile once you're ready.",
+    profile_sub:"This is what clients see when they find you.",
+    edit:"Edit", l_district:"District", l_experience:"Years of experience", l_specialties:"Specialties",
+    l_bio:"Short bio", save:"Save changes", cancel:"Cancel", saved:"Saved.",
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"years",
-    availability_title:"Working hours", l_days:"Working days", l_start:"Opens at", l_end:"Closes at",
-    l_duration:"Appointment length", rv_days:"Days", rv_hours:"Hours", rv_duration:"Length",
-    not_set:"Not set yet", confirm:"Confirm", cancel_booking:"Cancel", confirmed:"confirmed", cancelled:"cancelled",
+    hours_sub:"Which days and times you're open. Each service's own length controls how slots are spaced.",
+    l_days:"Working days", l_start:"Opens at", l_end:"Closes at",
+    services_sub:"Turn on what you offer, set your own duration and price for each.",
+    photos_sub:"A clear photo of you, plus examples of your work (optional).",
+    photo_profile_title:"Your photo", photo_portfolio_title:"Your work (optional)",
+    upload_photo:"Upload photo", add_photo:"Add photo",
+    bookings_sub:"Everyone who's booked with you.",
+    filter_all:"All", filter_pending:"Pending", filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
+    empty_bookings:"No bookings yet.", confirm:"Confirm", cancel_booking:"Cancel",
+    confirmed:"confirmed", cancelled:"cancelled", pending:"pending",
     day_mon:"Mon", day_tue:"Tue", day_wed:"Wed", day_thu:"Thu", day_fri:"Fri", day_sat:"Sat", day_sun:"Sun",
-    services_title:"Services", min_short:"min", currency:"so'm",
-    pending_review_msg:"Pending review — we'll notify you once approved.",
-    location_title:"Location", location_hint:"Drag the pin to your shop's exact location.",
-    verify_hint:"Your shop won't appear on the client map until we verify it — we'll be in touch to confirm details.",
-    rv_location:"Location", location_set:"Set", l_shop_name:"Shop name", shop_name_ph:"e.g. Jasur's Barbershop",
-    rv_shop_name:"Shop name", verified:"Verified", pending_verification:"Pending verification",
-    map_unavailable:"Map is temporarily unavailable — try again shortly.",
-    change_photo:"Change photo", uploading:"Uploading...", upload_failed:"Upload failed — try again.",
-    file_too_large:"That image is too large (max 8MB).",
-    portfolio_title:"Portfolio", portfolio_empty:"No photos yet — add before & after shots of your work.", add_photos:"+ Add photos" },
-  uz:{ logout:"Chiqish", gate_msg:"Sessiya tekshirilmoqda...", welcome:"Xush kelibsiz", sub:"Profilingizni boshqaring va bandlarni ko'ring.",
-    status_on:"Profilingiz faol", status_on_sub:"Mijozlar sizni topib, band qilishlari mumkin.",
-    status_off:"Profilingiz yashirin", status_off_sub:"Mijozlar sizni topishi uchun buni yoqing.",
-    profile_title:"Profilingiz", edit:"Tahrirlash", l_district:"Tuman", l_experience:"Tajriba (yil)",
-    l_specialties:"Mutaxassisliklar", l_bio:"Qisqa bio", save:"Saqlash", cancel:"Bekor qilish", saved:"Saqlandi.",
-    bookings_title:"Kelgusi bandlar", empty_bookings:"Hozircha bandlar yo'q. Mijozlar band qilganda shu yerda ko'rinadi.",
+    min:"min"
+  },
+  uz:{
+    nav_overview:"Umumiy", nav_profile:"Profil", nav_hours:"Ish vaqti", nav_services:"Xizmatlar",
+    nav_photos:"Suratlar", nav_bookings:"Bandlar", logout:"Chiqish",
+    ov_title:"Xush kelibsiz", ov_sub:"Bugungi holat shu yerda.",
+    stat_upcoming:"Kelgusi bandlar", stat_pending:"Tasdiqlashingizni kutmoqda", stat_services:"Faol xizmatlar",
+    ov_next:"Navbatdagi",
+    status_live_h:"Siz faolsiz", status_live_s:"Mijozlar sizni topib, band qilishlari mumkin.",
+    status_pending_h:"Ko'rib chiqilmoqda", status_pending_s:"Asoschi profilingizni tasdiqlagach xabar beramiz.",
+    status_unpublished_h:"Hali ko'rinmaydi", status_unpublished_s:"Tayyor bo'lganingizda profilda \"Faol\"ni yoqing.",
+    profile_sub:"Mijozlar sizni topganda shuni ko'radi.",
+    edit:"Tahrirlash", l_district:"Tuman", l_experience:"Tajriba (yil)", l_specialties:"Mutaxassisliklar",
+    l_bio:"Qisqa bio", save:"Saqlash", cancel:"Bekor qilish", saved:"Saqlandi.",
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
-    availability_title:"Ish vaqti", l_days:"Ish kunlari", l_start:"Ochilish vaqti", l_end:"Yopilish vaqti",
-    l_duration:"Uchrashuv davomiyligi", rv_days:"Kunlar", rv_hours:"Vaqt", rv_duration:"Davomiyligi",
-    not_set:"Hali sozlanmagan", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish", confirmed:"tasdiqlangan", cancelled:"bekor qilingan",
+    hours_sub:"Qaysi kunlari va soatlarda ochiqsiz. Har bir xizmatning davomiyligi bo'sh joylarni belgilaydi.",
+    l_days:"Ish kunlari", l_start:"Ochilish vaqti", l_end:"Yopilish vaqti",
+    services_sub:"Nima taklif qilishingizni yoqing, har biriga davomiylik va narx belgilang.",
+    photos_sub:"Sizning aniq suratingiz va ishlaringiz namunalari (ixtiyoriy).",
+    photo_profile_title:"Sizning suratingiz", photo_portfolio_title:"Ishlaringiz (ixtiyoriy)",
+    upload_photo:"Surat yuklash", add_photo:"Surat qo'shish",
+    bookings_sub:"Siz bilan band qilganlarning barchasi.",
+    filter_all:"Barchasi", filter_pending:"Kutilmoqda", filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
+    empty_bookings:"Hozircha bandlar yo'q.", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish",
+    confirmed:"tasdiqlangan", cancelled:"bekor qilingan", pending:"kutilmoqda",
     day_mon:"Du", day_tue:"Se", day_wed:"Ch", day_thu:"Pa", day_fri:"Ju", day_sat:"Sh", day_sun:"Ya",
-    services_title:"Xizmatlar", min_short:"daq", currency:"so'm",
-    pending_review_msg:"Ko'rib chiqilmoqda — tasdiqlangach sizga xabar beramiz.",
-    location_title:"Manzil", location_hint:"Do'koningizning aniq joylashuviga ko'rsatkichni suring.",
-    verify_hint:"Do'koningiz tekshirilmaguncha mijozlar xaritasida ko'rinmaydi — tafsilotlarni tasdiqlash uchun siz bilan bog'lanamiz.",
-    rv_location:"Manzil", location_set:"Belgilangan", l_shop_name:"Do'kon nomi", shop_name_ph:"masalan, Jasur sartaroshxonasi",
-    rv_shop_name:"Do'kon nomi", verified:"Tasdiqlangan", pending_verification:"Tekshirilmoqda",
-    map_unavailable:"Xarita vaqtincha ishlamayapti — birozdan so'ng qayta urinib ko'ring.",
-    change_photo:"Rasmni almashtirish", uploading:"Yuklanmoqda...", upload_failed:"Yuklab bo'lmadi — qayta urinib ko'ring.",
-    file_too_large:"Rasm hajmi juda katta (maksimal 8MB).",
-    portfolio_title:"Portfolio", portfolio_empty:"Hali rasm yo'q — ishlaringizning oldin va keyin suratlarini qo'shing.", add_photos:"+ Rasm qo'shish" },
-  ru:{ logout:"Выйти", gate_msg:"Проверка сессии...", welcome:"С возвращением", sub:"Управляйте профилем и смотрите записи.",
-    status_on:"Профиль активен", status_on_sub:"Клиенты могут найти и записаться к вам.",
-    status_off:"Профиль скрыт", status_off_sub:"Включите, когда будете готовы принимать клиентов.",
-    profile_title:"Ваш профиль", edit:"Изменить", l_district:"Район", l_experience:"Опыт (лет)",
-    l_specialties:"Специализации", l_bio:"Краткое био", save:"Сохранить", cancel:"Отмена", saved:"Сохранено.",
-    bookings_title:"Предстоящие записи", empty_bookings:"Записей пока нет. Они появятся здесь, когда клиенты начнут записываться.",
+    min:"daq"
+  },
+  ru:{
+    nav_overview:"Обзор", nav_profile:"Профиль", nav_hours:"Рабочие часы", nav_services:"Услуги",
+    nav_photos:"Фото", nav_bookings:"Записи", logout:"Выйти",
+    ov_title:"С возвращением", ov_sub:"Вот как обстоят дела сегодня.",
+    stat_upcoming:"Предстоящие записи", stat_pending:"Ждут вашего подтверждения", stat_services:"Активные услуги",
+    ov_next:"Далее",
+    status_live_h:"Вы активны", status_live_s:"Клиенты могут найти и записаться к вам.",
+    status_pending_h:"На рассмотрении", status_pending_s:"Сообщим, как только основатель одобрит профиль.",
+    status_unpublished_h:"Пока не виден", status_unpublished_s:"Включите \"Активен\" в профиле, когда будете готовы.",
+    profile_sub:"Это видят клиенты, когда находят вас.",
+    edit:"Изменить", l_district:"Район", l_experience:"Опыт (лет)", l_specialties:"Специализации",
+    l_bio:"Краткое био", save:"Сохранить", cancel:"Отмена", saved:"Сохранено.",
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
-    availability_title:"Рабочие часы", l_days:"Рабочие дни", l_start:"Открытие", l_end:"Закрытие",
-    l_duration:"Длительность записи", rv_days:"Дни", rv_hours:"Часы", rv_duration:"Длительность",
-    not_set:"Ещё не настроено", confirm:"Подтвердить", cancel_booking:"Отменить", confirmed:"подтверждено", cancelled:"отменено",
+    hours_sub:"В какие дни и часы вы открыты. Длительность каждой услуги определяет интервалы записи.",
+    l_days:"Рабочие дни", l_start:"Открытие", l_end:"Закрытие",
+    services_sub:"Включите то, что предлагаете, задайте длительность и цену для каждой.",
+    photos_sub:"Ваше чёткое фото и примеры работ (необязательно).",
+    photo_profile_title:"Ваше фото", photo_portfolio_title:"Ваши работы (необязательно)",
+    upload_photo:"Загрузить фото", add_photo:"Добавить фото",
+    bookings_sub:"Все, кто записался к вам.",
+    filter_all:"Все", filter_pending:"Ожидают", filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
+    empty_bookings:"Записей пока нет.", confirm:"Подтвердить", cancel_booking:"Отменить",
+    confirmed:"подтверждено", cancelled:"отменено", pending:"ожидает",
     day_mon:"Пн", day_tue:"Вт", day_wed:"Ср", day_thu:"Чт", day_fri:"Пт", day_sat:"Сб", day_sun:"Вс",
-    services_title:"Услуги", min_short:"мин", currency:"сум",
-    pending_review_msg:"На рассмотрении — мы сообщим, когда вас одобрят.",
-    location_title:"Адрес", location_hint:"Перетащите метку на точное расположение вашей точки.",
-    verify_hint:"Ваша точка не появится на карте клиентов, пока мы её не проверим — свяжемся с вами для подтверждения деталей.",
-    rv_location:"Адрес", location_set:"Указан", l_shop_name:"Название точки", shop_name_ph:"например, Барбершоп Джасура",
-    rv_shop_name:"Название точки", verified:"Проверено", pending_verification:"На проверке",
-    map_unavailable:"Карта временно недоступна — попробуйте снова чуть позже.",
-    change_photo:"Изменить фото", uploading:"Загрузка...", upload_failed:"Не удалось загрузить — попробуйте снова.",
-    file_too_large:"Файл слишком большой (максимум 8МБ).",
-    portfolio_title:"Портфолио", portfolio_empty:"Фото пока нет — добавьте свои работы до и после.", add_photos:"+ Добавить фото" }
+    min:"мин"
+  }
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
 const currentLang = I18N[browserLang] ? browserLang : 'en';
+function t(key){ return I18N[currentLang][key]; }
+document.querySelectorAll('[data-i18n]').forEach(el=>{
+  if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
+});
+
 let barberData = null;
+let servicesData = [];
+let bookingsData = [];
 let selectedSpecialties = [];
 let selectedDays = [];
-let barberServices = [];
-let editServiceState = {};
-let portfolioPhotos = [];
-const DAY_KEYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-
-function t(key){ return I18N[currentLang][key]; }
-function applyStaticI18n(){
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
-  });
-  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
-    if(I18N[currentLang][el.dataset.i18nPh] !== undefined) el.placeholder = I18N[currentLang][el.dataset.i18nPh];
-  });
-}
-applyStaticI18n();
+let currentBookingFilter = 'all';
 
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
-function initials(name){ return (name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
-function localizeSpecialty(enTag){
-  const idx = SPECIALTIES_EN.indexOf(enTag);
-  return idx === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][idx];
-}
-function localizeService(key){
-  const idx = SERVICE_KEYS.indexOf(key);
-  return idx === -1 ? key : SERVICES_LOCAL[currentLang][idx];
-}
-function fileExt(filename){
-  const m = /\.([a-zA-Z0-9]+)$/.exec(filename || '');
-  return m ? m[1].toLowerCase() : 'jpg';
-}
+function localizeSpecialty(enTag){ const i = SPECIALTIES_EN.indexOf(enTag); return i === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][i]; }
+function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '—'; }
 
+/* ---------- sidebar nav ---------- */
+document.getElementById('sidebarNav').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.nav-item');
+  if(!btn) return;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.dataset.view === btn.dataset.view));
+});
+
+/* ---------- init ---------- */
 async function init(){
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(!sessionData.session){
-    window.location.href = 'auth.html?role=barber';
+    window.location.href = 'auth.html';
     return;
   }
   const userId = sessionData.session.user.id;
 
   const { data: barber, error } = await supabaseClient.from('barbers').select('*').eq('id', userId).single();
   if(error || !barber){
-    document.getElementById('gate').textContent = 'Could not load your profile. Please contact us.';
-    document.getElementById('gate').classList.add('active');
-    return;
-  }
-  if(!barber.is_approved){
-    await supabaseClient.auth.signOut();
-    window.location.href = 'auth.html?role=barber';
+    document.querySelector('main').innerHTML = '<p style="padding:40px;">Could not load your profile. Please contact support.</p>';
     return;
   }
   barberData = barber;
   selectedSpecialties = (barber.specialties || []).map(s => SPECIALTIES_EN.indexOf(s)).filter(i => i !== -1);
+  selectedDays = [...(barber.work_days || [])];
 
   document.getElementById('nameInsert').textContent = ', ' + barber.full_name.split(' ')[0];
-  document.getElementById('dashboardMain').style.display = 'block';
 
-  renderStatus();
-  renderAvatar();
+  renderStatusBanner();
   renderProfileView();
   renderEditChips();
-  renderAvailabilityView();
   renderDayChips();
-  renderLocationView();
-  loadBookings(userId);
-  loadPortfolio(userId);
+  renderAvatar();
 
-  const { data: servicesData } = await supabaseClient.from('services').select('*').eq('barber_id', userId);
-  barberServices = servicesData || [];
-  renderServicesView();
+  const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', userId);
+  servicesData = services || [];
+  renderServices();
+
+  const { data: bookings } = await supabaseClient.from('bookings').select('*').eq('barber_id', userId).order('start_time', { ascending:true });
+  bookingsData = bookings || [];
+  renderOverviewStats();
+  renderOverviewBookings();
+  renderBookingsList();
+
+  const { data: photos } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', userId).order('position', { ascending:true });
+  renderPortfolio(photos || []);
 }
 
-function renderStatus(){
-  const dot = document.getElementById('statusDot');
+/* ---------- overview ---------- */
+function renderStatusBanner(){
+  const banner = document.getElementById('statusBanner');
   const headline = document.getElementById('statusHeadline');
   const sub = document.getElementById('statusSub');
-  const toggle = document.getElementById('publishToggle');
-  toggle.checked = !!barberData.is_published;
-  dot.classList.toggle('live', !!barberData.is_published);
-  headline.textContent = barberData.is_published ? t('status_on') : t('status_off');
-  sub.textContent = barberData.is_published ? t('status_on_sub') : t('status_off_sub');
-  document.getElementById('pendingBanner').classList.toggle('active', !barberData.is_approved);
-}
-
-document.getElementById('publishToggle').addEventListener('change', async function(){
-  const newVal = this.checked;
-  const { error } = await supabaseClient.from('barbers').update({ is_published: newVal }).eq('id', barberData.id);
-  if(!error){ barberData.is_published = newVal; renderStatus(); }
-  else { this.checked = !newVal; }
-});
-
-/* ---------- profile photo ---------- */
-function renderAvatar(){
-  const preview = document.getElementById('avatarPreview');
-  preview.innerHTML = barberData.avatar_url
-    ? `<img src="${escapeHtml(barberData.avatar_url)}" alt="">`
-    : initials(barberData.full_name);
-}
-
-document.getElementById('avatarUploadBtn').addEventListener('click', ()=>{
-  document.getElementById('avatarFileInput').click();
-});
-
-document.getElementById('avatarFileInput').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  e.target.value = '';
-  if(!file) return;
-  const status = document.getElementById('avatarStatus');
-  const btn = document.getElementById('avatarUploadBtn');
-  if(file.size > MAX_UPLOAD_BYTES){
-    status.textContent = t('file_too_large');
-    return;
-  }
-  btn.disabled = true;
-  status.textContent = t('uploading');
-  const path = `${barberData.id}/avatar/${Date.now()}.${fileExt(file.name)}`;
-  const { error: uploadError } = await supabaseClient.storage.from(MEDIA_BUCKET).upload(path, file, { upsert: true });
-  if(uploadError){
-    btn.disabled = false;
-    status.textContent = t('upload_failed');
-    return;
-  }
-  const { data: pub } = supabaseClient.storage.from(MEDIA_BUCKET).getPublicUrl(path);
-  const { error: updateError } = await supabaseClient.from('barbers').update({ avatar_url: pub.publicUrl }).eq('id', barberData.id);
-  btn.disabled = false;
-  if(!updateError){
-    barberData.avatar_url = pub.publicUrl;
-    renderAvatar();
-    status.textContent = '';
+  if(!barberData.is_approved){
+    banner.className = 'status-banner pending';
+    headline.textContent = t('status_pending_h');
+    sub.textContent = t('status_pending_s');
+  } else if(barberData.is_published){
+    banner.className = 'status-banner live';
+    headline.textContent = t('status_live_h');
+    sub.textContent = t('status_live_s');
   } else {
-    status.textContent = t('upload_failed');
+    banner.className = 'status-banner pending';
+    headline.textContent = t('status_unpublished_h');
+    sub.textContent = t('status_unpublished_s');
   }
-});
-
-/* ---------- portfolio ---------- */
-async function loadPortfolio(userId){
-  const { data } = await supabaseClient
-    .from('portfolio_photos')
-    .select('*')
-    .eq('barber_id', userId)
-    .order('position', { ascending:true });
-  portfolioPhotos = data || [];
-  renderPortfolio();
 }
 
-function portfolioPublicUrl(imagePath){
-  const { data } = supabaseClient.storage.from(MEDIA_BUCKET).getPublicUrl(imagePath);
-  return data.publicUrl;
+function renderOverviewStats(){
+  const now = new Date();
+  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status === 'confirmed').length;
+  const pending = bookingsData.filter(b => b.status === 'pending').length;
+  const activeServices = servicesData.filter(s => s.is_active).length;
+  document.getElementById('statUpcoming').textContent = upcoming;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statServices').textContent = activeServices;
 }
 
-function renderPortfolio(){
-  const grid = document.getElementById('portfolioGrid');
-  const empty = document.getElementById('portfolioEmpty');
-  if(portfolioPhotos.length === 0){
-    grid.innerHTML = '';
-    empty.style.display = 'block';
+function renderOverviewBookings(){
+  const area = document.getElementById('overviewBookings');
+  const now = new Date();
+  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled').slice(0,4);
+  if(upcoming.length === 0){
+    area.innerHTML = `<div class="empty-state">${t('empty_bookings')}</div>`;
     return;
   }
-  empty.style.display = 'none';
-  grid.innerHTML = portfolioPhotos.map(p => `
-    <div class="portfolio-item">
-      <img src="${escapeHtml(portfolioPublicUrl(p.image_path))}" alt="">
-      <button type="button" class="portfolio-remove" data-remove="${p.id}">&times;</button>
-    </div>
-  `).join('');
-  grid.querySelectorAll('[data-remove]').forEach(btn=>{
-    btn.addEventListener('click', ()=> removePortfolioPhoto(btn.dataset.remove));
-  });
+  area.innerHTML = upcoming.map(b => bookingRowHtml(b, false)).join('');
 }
 
-async function removePortfolioPhoto(id){
-  const photo = portfolioPhotos.find(p => p.id === id);
-  if(!photo) return;
-  await supabaseClient.storage.from(MEDIA_BUCKET).remove([photo.image_path]);
-  await supabaseClient.from('portfolio_photos').delete().eq('id', id);
-  portfolioPhotos = portfolioPhotos.filter(p => p.id !== id);
-  renderPortfolio();
-}
-
-document.getElementById('portfolioAddBtn').addEventListener('click', ()=>{
-  document.getElementById('portfolioFileInput').click();
-});
-
-document.getElementById('portfolioFileInput').addEventListener('change', async (e)=>{
-  const files = Array.from(e.target.files || []);
-  e.target.value = '';
-  if(files.length === 0) return;
-  const uploading = document.getElementById('portfolioUploading');
-  const addBtn = document.getElementById('portfolioAddBtn');
-  addBtn.disabled = true;
-  uploading.classList.add('active');
-
-  let nextPosition = portfolioPhotos.length;
-  for(const file of files){
-    if(file.size > MAX_UPLOAD_BYTES) continue;
-    const path = `${barberData.id}/portfolio/${Date.now()}-${nextPosition}.${fileExt(file.name)}`;
-    const { error: uploadError } = await supabaseClient.storage.from(MEDIA_BUCKET).upload(path, file);
-    if(uploadError) continue;
-    const { data: row, error: insertError } = await supabaseClient
-      .from('portfolio_photos')
-      .insert([{ barber_id: barberData.id, image_path: path, position: nextPosition }])
-      .select()
-      .single();
-    if(!insertError && row) portfolioPhotos.push(row);
-    nextPosition++;
-  }
-
-  addBtn.disabled = false;
-  uploading.classList.remove('active');
-  renderPortfolio();
-});
-
+/* ---------- profile ---------- */
 function renderProfileView(){
   const view = document.getElementById('profileView');
   const specs = (barberData.specialties || []).map(s => localizeSpecialty(s)).join(', ') || '—';
   view.innerHTML = `
-    <div class="row"><span class="k">${t('rv_district')}</span><span class="v">${escapeHtml(barberData.district || '—')}</span></div>
-    <div class="row"><span class="k">${t('rv_experience')}</span><span class="v">${barberData.years_experience ? barberData.years_experience + ' ' + t('years') : '—'}</span></div>
-    <div class="row"><span class="k">${t('rv_specialties')}</span><span class="v">${escapeHtml(specs)}</span></div>
-    <div class="row"><span class="k">${t('rv_bio')}</span><span class="v">${escapeHtml(barberData.bio || '—')}</span></div>
+    <div class="info-row"><span class="k">${t('rv_district')}</span><span class="v">${escapeHtml(barberData.district || '—')}</span></div>
+    <div class="info-row"><span class="k">${t('rv_experience')}</span><span class="v">${barberData.years_experience ? barberData.years_experience + ' ' + t('years') : '—'}</span></div>
+    <div class="info-row"><span class="k">${t('rv_specialties')}</span><span class="v">${escapeHtml(specs)}</span></div>
+    <div class="info-row"><span class="k">${t('rv_bio')}</span><span class="v">${escapeHtml(barberData.bio || '—')}</span></div>
   `;
 }
 
@@ -673,17 +656,43 @@ function renderEditChips(){
   });
 }
 
-function renderAvailabilityView(){
-  const view = document.getElementById('availView');
-  const hasHours = barberData.work_start && barberData.work_end;
-  const days = (barberData.work_days || []).map(d => t('day_' + d.toLowerCase())).join(', ');
-  view.innerHTML = `
-    <div class="row"><span class="k">${t('rv_days')}</span><span class="v">${days || t('not_set')}</span></div>
-    <div class="row"><span class="k">${t('rv_hours')}</span><span class="v">${hasHours ? barberData.work_start.slice(0,5) + ' – ' + barberData.work_end.slice(0,5) : t('not_set')}</span></div>
-    <div class="row"><span class="k">${t('rv_duration')}</span><span class="v">${barberData.slot_duration_minutes || 30} min</span></div>
-  `;
-}
+document.getElementById('editProfileLink').addEventListener('click', ()=>{
+  document.getElementById('editDistrict').value = barberData.district || 'Chorsu';
+  document.getElementById('editExperience').value = barberData.years_experience || '';
+  document.getElementById('editBio').value = barberData.bio || '';
+  renderEditChips();
+  document.getElementById('profileView').classList.add('hidden');
+  document.getElementById('profileEdit').classList.add('active');
+});
+document.getElementById('cancelProfileBtn').addEventListener('click', ()=>{
+  document.getElementById('profileView').classList.remove('hidden');
+  document.getElementById('profileEdit').classList.remove('active');
+});
+document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveProfileBtn');
+  btn.disabled = true;
+  const updates = {
+    district: document.getElementById('editDistrict').value,
+    years_experience: parseInt(document.getElementById('editExperience').value) || null,
+    bio: document.getElementById('editBio').value.trim(),
+    specialties: selectedSpecialties.map(i => SPECIALTIES_EN[i])
+  };
+  const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
+  btn.disabled = false;
+  if(!error){
+    Object.assign(barberData, updates);
+    renderProfileView();
+    const msg = document.getElementById('saveProfileMsg');
+    msg.style.display = 'block';
+    setTimeout(()=>{
+      msg.style.display = 'none';
+      document.getElementById('profileView').classList.remove('hidden');
+      document.getElementById('profileEdit').classList.remove('active');
+    }, 800);
+  }
+});
 
+/* ---------- working hours ---------- */
 function renderDayChips(){
   const grid = document.getElementById('dayChips');
   grid.innerHTML = '';
@@ -698,312 +707,211 @@ function renderDayChips(){
     });
     grid.appendChild(chip);
   });
-}
-
-let locationMap = null;
-let locationMarker = null;
-let locationCoordsLonLat = null;
-
-function renderLocationView(){
-  const view = document.getElementById('locationView');
-  const hasLocation = barberData.latitude != null && barberData.longitude != null;
-  let badge = '';
-  if(hasLocation){
-    badge = barberData.is_location_verified
-      ? `<span class="verify-badge verified"><span class="dot"></span>${t('verified')}</span>`
-      : `<span class="verify-badge pending"><span class="dot"></span>${t('pending_verification')}</span>`;
-  }
-  view.innerHTML = `
-    <div class="row"><span class="k">${t('rv_shop_name')}</span><span class="v">${escapeHtml(barberData.shop_name || t('not_set'))}</span></div>
-    <div class="row"><span class="k">${t('rv_location')}</span><span class="v">${hasLocation ? t('location_set') : t('not_set')} ${badge}</span></div>
-  `;
-}
-
-async function initLocationMap(){
-  const container = document.getElementById('locationMap');
-  container.innerHTML = '';
-  locationMap = null; locationMarker = null; locationCoordsLonLat = null;
-  document.getElementById('editShopName').value = barberData.shop_name || '';
-  const saveBtn = document.getElementById('saveLocationBtn');
-  try{
-    await loadYandexMaps();
-    const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker, YMapControls, YMapZoomControl } = ymaps3;
-    const center = (barberData.latitude != null && barberData.longitude != null)
-      ? [barberData.longitude, barberData.latitude]
-      : TASHKENT_CENTER_LONLAT;
-    locationCoordsLonLat = center;
-    locationMap = new YMap(container, { location: { center, zoom: 15 } });
-    locationMap.addChild(new YMapDefaultSchemeLayer());
-    locationMap.addChild(new YMapDefaultFeaturesLayer());
-    locationMap.addChild(new YMapControls({ position: 'right' }).addChild(new YMapZoomControl()));
-    locationMarker = new YMapMarker(
-      { coordinates: center, draggable: true, onDragEnd: (coords)=>{ locationCoordsLonLat = coords; } },
-      createDraggablePinElement()
-    );
-    locationMap.addChild(locationMarker);
-    saveBtn.disabled = false;
-  } catch(err){
-    console.error('Yandex Maps failed to load:', err);
-    container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; padding:24px; text-align:center; color:var(--ink-dim); font-size:13px;">${t('map_unavailable')}</div>`;
-    saveBtn.disabled = true;
-  }
-}
-
-document.getElementById('editLocationLink').addEventListener('click', async ()=>{
-  document.getElementById('locationView').classList.add('hidden');
-  document.getElementById('locationEdit').classList.add('active');
-  await initLocationMap();
-});
-
-document.getElementById('cancelLocationBtn').addEventListener('click', ()=>{
-  document.getElementById('locationView').classList.remove('hidden');
-  document.getElementById('locationEdit').classList.remove('active');
-});
-
-document.getElementById('saveLocationBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('saveLocationBtn');
-  const msg = document.getElementById('saveLocationMsg');
-  if(!locationCoordsLonLat) return;
-  btn.disabled = true;
-  const updates = {
-    longitude: locationCoordsLonLat[0],
-    latitude: locationCoordsLonLat[1],
-    shop_name: document.getElementById('editShopName').value.trim() || null
-  };
-  const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
-  btn.disabled = false;
-  if(!error){
-    Object.assign(barberData, updates);
-    renderLocationView();
-    msg.style.display = 'block';
-    setTimeout(()=>{
-      msg.style.display = 'none';
-      document.getElementById('locationView').classList.remove('hidden');
-      document.getElementById('locationEdit').classList.remove('active');
-    }, 900);
-  }
-});
-
-function formatPrice(n){
-  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' ' + t('currency');
-}
-
-function renderServicesView(){
-  const view = document.getElementById('servicesView');
-  const active = barberServices.filter(s => s.is_active);
-  if(active.length === 0){
-    view.innerHTML = `<div class="row"><span class="v" style="text-align:left;">${t('not_set')}</span></div>`;
-    return;
-  }
-  view.innerHTML = active.map(s => `
-    <div class="row"><span class="k">${escapeHtml(localizeService(s.service_key))}</span><span class="v">${s.duration_minutes} ${t('min_short')}${s.price ? ' · ' + formatPrice(s.price) : ''}</span></div>
-  `).join('');
-}
-
-function renderServiceRows(){
-  const container = document.getElementById('serviceRows');
-  container.innerHTML = SERVICE_KEYS.map((key, i) => {
-    const state = editServiceState[key];
-    return `
-      <div class="service-row">
-        <div class="chip${state.active ? ' selected' : ''}" data-key="${key}">${escapeHtml(SERVICES_LOCAL[currentLang][i])}</div>
-        <div class="service-fields" style="${state.active ? '' : 'visibility:hidden;'}">
-          <div class="service-field">
-            <input type="number" min="5" step="5" value="${state.duration}" data-duration-key="${key}">
-            <span>${t('min_short')}</span>
-          </div>
-          <div class="service-field">
-            <input type="number" min="0" step="1000" class="price-input" value="${state.price || ''}" data-price-key="${key}" placeholder="0">
-            <span>${t('currency')}</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  container.querySelectorAll('.chip[data-key]').forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const key = chip.dataset.key;
-      editServiceState[key].active = !editServiceState[key].active;
-      renderServiceRows();
-    });
-  });
-  container.querySelectorAll('input[data-duration-key]').forEach(inp=>{
-    inp.addEventListener('input', ()=>{
-      editServiceState[inp.dataset.durationKey].duration = parseInt(inp.value) || 30;
-    });
-  });
-  container.querySelectorAll('input[data-price-key]').forEach(inp=>{
-    inp.addEventListener('input', ()=>{
-      editServiceState[inp.dataset.priceKey].price = inp.value ? parseInt(inp.value) : null;
-    });
-  });
-}
-
-document.getElementById('editServicesLink').addEventListener('click', ()=>{
-  editServiceState = {};
-  SERVICE_KEYS.forEach(key=>{
-    const existing = barberServices.find(s => s.service_key === key);
-    editServiceState[key] = {
-      active: existing ? existing.is_active : false,
-      duration: existing ? existing.duration_minutes : 30,
-      price: existing ? existing.price : null
-    };
-  });
-  renderServiceRows();
-  document.getElementById('servicesView').classList.add('hidden');
-  document.getElementById('servicesEdit').classList.add('active');
-});
-
-document.getElementById('cancelServicesBtn').addEventListener('click', ()=>{
-  document.getElementById('servicesView').classList.remove('hidden');
-  document.getElementById('servicesEdit').classList.remove('active');
-});
-
-document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('saveServicesBtn');
-  const msg = document.getElementById('saveServicesMsg');
-  btn.disabled = true;
-  const rows = SERVICE_KEYS.map(key => ({
-    barber_id: barberData.id,
-    service_key: key,
-    duration_minutes: editServiceState[key].duration,
-    is_active: editServiceState[key].active,
-    price: editServiceState[key].price
-  }));
-  const { data, error } = await supabaseClient.from('services').upsert(rows, { onConflict: 'barber_id,service_key' }).select();
-  btn.disabled = false;
-  if(!error){
-    barberServices = data || [];
-    renderServicesView();
-    msg.style.display = 'block';
-    setTimeout(()=>{
-      msg.style.display = 'none';
-      document.getElementById('servicesView').classList.remove('hidden');
-      document.getElementById('servicesEdit').classList.remove('active');
-    }, 900);
-  }
-});
-
-document.getElementById('editAvailLink').addEventListener('click', ()=>{
-  selectedDays = [...(barberData.work_days || [])];
   document.getElementById('editWorkStart').value = (barberData.work_start || '09:00').slice(0,5);
   document.getElementById('editWorkEnd').value = (barberData.work_end || '20:00').slice(0,5);
-  document.getElementById('editDuration').value = barberData.slot_duration_minutes || 30;
-  renderDayChips();
-  document.getElementById('availView').classList.add('hidden');
-  document.getElementById('availEdit').classList.add('active');
-});
-
-document.getElementById('cancelAvailBtn').addEventListener('click', ()=>{
-  document.getElementById('availView').classList.remove('hidden');
-  document.getElementById('availEdit').classList.remove('active');
-});
-
-document.getElementById('saveAvailBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('saveAvailBtn');
-  const msg = document.getElementById('saveAvailMsg');
+}
+document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveHoursBtn');
   btn.disabled = true;
   const updates = {
     work_days: selectedDays,
     work_start: document.getElementById('editWorkStart').value,
-    work_end: document.getElementById('editWorkEnd').value,
-    slot_duration_minutes: parseInt(document.getElementById('editDuration').value)
+    work_end: document.getElementById('editWorkEnd').value
   };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
   if(!error){
     Object.assign(barberData, updates);
-    renderAvailabilityView();
+    const msg = document.getElementById('saveHoursMsg');
     msg.style.display = 'block';
-    setTimeout(()=>{
-      msg.style.display = 'none';
-      document.getElementById('availView').classList.remove('hidden');
-      document.getElementById('availEdit').classList.remove('active');
-    }, 900);
+    setTimeout(()=> msg.style.display = 'none', 1200);
   }
 });
 
-document.getElementById('editLink').addEventListener('click', ()=>{
-  document.getElementById('editDistrict').value = barberData.district || 'Chorsu';
-  document.getElementById('editExperience').value = barberData.years_experience || '';
-  document.getElementById('editBio').value = barberData.bio || '';
-  document.getElementById('profileView').classList.add('hidden');
-  document.getElementById('profileEdit').classList.add('active');
-});
-
-document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
-  document.getElementById('profileView').classList.remove('hidden');
-  document.getElementById('profileEdit').classList.remove('active');
-});
-
-document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('saveProfileBtn');
-  const saveMsg = document.getElementById('saveMsg');
+/* ---------- services ---------- */
+function renderServices(){
+  const card = document.getElementById('servicesCard');
+  card.innerHTML = SERVICE_KEYS.map(key => {
+    const existing = servicesData.find(s => s.service_key === key) || {};
+    return `
+      <div class="service-row" data-key="${key}">
+        <div class="service-name">${SERVICES_LOCAL[currentLang][key]}</div>
+        <div class="service-inputs">
+          <label class="toggle-switch">
+            <input type="checkbox" class="svc-active" ${existing.is_active ? 'checked' : ''}>
+            <span class="toggle-slider"></span>
+          </label>
+          <input type="number" class="svc-duration" placeholder="${t('min')}" min="5" step="5" value="${existing.duration_minutes || ''}">
+          <input type="number" class="svc-price" placeholder="UZS" min="0" step="1000" value="${existing.price || ''}">
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveServicesBtn');
   btn.disabled = true;
-  const updates = {
-    district: document.getElementById('editDistrict').value,
-    years_experience: parseInt(document.getElementById('editExperience').value) || null,
-    bio: document.getElementById('editBio').value.trim(),
-    specialties: selectedSpecialties.map(i => SPECIALTIES_EN[i])
-  };
-  const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
+  const rows = document.querySelectorAll('.service-row');
+  const upserts = [];
+  rows.forEach(row => {
+    const key = row.dataset.key;
+    const isActive = row.querySelector('.svc-active').checked;
+    const duration = parseInt(row.querySelector('.svc-duration').value) || 30;
+    const price = parseInt(row.querySelector('.svc-price').value) || 0;
+    upserts.push({ barber_id: barberData.id, service_key: key, duration_minutes: duration, price: price, is_active: isActive });
+  });
+  const { error } = await supabaseClient.from('services').upsert(upserts, { onConflict: 'barber_id,service_key' });
   btn.disabled = false;
   if(!error){
-    Object.assign(barberData, updates);
-    renderProfileView();
-    saveMsg.style.display = 'block';
-    setTimeout(()=>{
-      saveMsg.style.display = 'none';
-      document.getElementById('profileView').classList.remove('hidden');
-      document.getElementById('profileEdit').classList.remove('active');
-    }, 900);
+    const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', barberData.id);
+    servicesData = services || [];
+    renderOverviewStats();
+    const msg = document.getElementById('saveServicesMsg');
+    msg.style.display = 'block';
+    setTimeout(()=> msg.style.display = 'none', 1200);
+  } else {
+    console.error('Services upsert error (check unique constraint exists on barber_id+service_key):', error);
   }
 });
 
-async function loadBookings(userId){
-  const area = document.getElementById('bookingsArea');
-  const { data, error } = await supabaseClient
-    .from('bookings')
-    .select('*')
-    .eq('barber_id', userId)
-    .order('start_time', { ascending:true });
-
-  if(error || !data || data.length === 0){
-    area.innerHTML = `<div class="empty-bookings">${t('empty_bookings')}</div>`;
-    return;
+/* ---------- photos ---------- */
+function renderAvatar(){
+  const el = document.getElementById('avatarPreview');
+  if(barberData.avatar_url){
+    el.innerHTML = `<img src="${escapeHtml(barberData.avatar_url)}" alt="">`;
+  } else {
+    el.textContent = (barberData.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   }
-  area.innerHTML = data.map(b => `
+}
+document.getElementById('avatarInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const ext = file.name.split('.').pop();
+  const path = `${barberData.id}/avatar.${ext}`;
+  const { error: uploadError } = await supabaseClient.storage.from('barber-media').upload(path, file, { upsert: true });
+  if(uploadError){ console.error('Avatar upload error:', uploadError); return; }
+  const { data: urlData } = supabaseClient.storage.from('barber-media').getPublicUrl(path);
+  const publicUrl = urlData.publicUrl;
+  const { error: dbError } = await supabaseClient.from('barbers').update({ avatar_url: publicUrl }).eq('id', barberData.id);
+  if(!dbError){
+    barberData.avatar_url = publicUrl;
+    renderAvatar();
+  }
+});
+
+function portfolioPublicUrl(imagePath){
+  const { data } = supabaseClient.storage.from('barber-media').getPublicUrl(imagePath);
+  return data.publicUrl;
+}
+
+function renderPortfolio(photos){
+  const grid = document.getElementById('portfolioGrid');
+  const addBtn = grid.querySelector('.portfolio-add');
+  grid.querySelectorAll('.portfolio-item').forEach(el => el.remove());
+  photos.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'portfolio-item';
+    item.innerHTML = `<img src="${escapeHtml(portfolioPublicUrl(p.image_path))}" alt=""><button class="remove-btn" data-id="${p.id}" data-path="${escapeHtml(p.image_path)}">&times;</button>`;
+    grid.insertBefore(item, addBtn);
+  });
+  grid.querySelectorAll('.remove-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await supabaseClient.storage.from('barber-media').remove([btn.dataset.path]);
+      await supabaseClient.from('portfolio_photos').delete().eq('id', btn.dataset.id);
+      btn.closest('.portfolio-item').remove();
+    });
+  });
+}
+document.getElementById('portfolioInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const ext = file.name.split('.').pop();
+  const fileId = crypto.randomUUID();
+  const path = `${barberData.id}/portfolio/${fileId}.${ext}`;
+  const { error: uploadError } = await supabaseClient.storage.from('barber-media').upload(path, file);
+  if(uploadError){ console.error('Portfolio upload error:', uploadError); return; }
+  const nextPosition = document.querySelectorAll('.portfolio-item').length;
+  const { data: inserted, error: dbError } = await supabaseClient.from('portfolio_photos')
+    .insert([{ barber_id: barberData.id, image_path: path, position: nextPosition }]).select().single();
+  if(!dbError && inserted){
+    const grid = document.getElementById('portfolioGrid');
+    const addBtn = grid.querySelector('.portfolio-add');
+    const item = document.createElement('div');
+    item.className = 'portfolio-item';
+    item.innerHTML = `<img src="${escapeHtml(portfolioPublicUrl(inserted.image_path))}" alt=""><button class="remove-btn" data-id="${inserted.id}" data-path="${escapeHtml(inserted.image_path)}">&times;</button>`;
+    grid.insertBefore(item, addBtn);
+    item.querySelector('.remove-btn').addEventListener('click', async ()=>{
+      await supabaseClient.storage.from('barber-media').remove([inserted.image_path]);
+      await supabaseClient.from('portfolio_photos').delete().eq('id', inserted.id);
+      item.remove();
+    });
+  } else {
+    console.error('portfolio_photos insert error:', dbError);
+  }
+});
+
+/* ---------- bookings ---------- */
+function bookingRowHtml(b, withActions = true){
+  const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
+  const statusLabel = t(b.status) || b.status;
+  return `
     <div class="booking-row">
       <div>
-        <strong>${escapeHtml(b.client_name)}</strong>${b.service_key ? ` · ${escapeHtml(localizeService(b.service_key))}` : ''}<br>
+        <strong>${escapeHtml(b.client_name)}</strong>${svcName ? ' · ' + escapeHtml(svcName) : ''}<br>
         <span style="color:var(--ink-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
-        ${b.status === 'pending' ? `
-          <button class="btn btn-primary" style="padding:8px 14px; font-size:12px;" data-confirm="${b.id}">${t('confirm')}</button>
-          <button class="btn btn-secondary" style="padding:8px 14px; font-size:12px;" data-cancel="${b.id}">${t('cancel_booking')}</button>
-        ` : `<span class="booking-status">${b.status === 'confirmed' ? t('confirmed') : b.status === 'cancelled' ? t('cancelled') : escapeHtml(b.status)}</span>`}
-      </div>
+      ${withActions && b.status === 'pending' ? `
+        <div class="booking-actions">
+          <button class="btn btn-primary" data-confirm="${b.id}">${t('confirm')}</button>
+          <button class="btn btn-secondary" data-cancel="${b.id}">${t('cancel_booking')}</button>
+        </div>
+      ` : `<span class="booking-status">${statusLabel}</span>`}
     </div>
-  `).join('');
+  `;
+}
 
+function renderBookingsList(){
+  const area = document.getElementById('bookingsArea');
+  const filtered = currentBookingFilter === 'all' ? bookingsData : bookingsData.filter(b => b.status === currentBookingFilter);
+  if(filtered.length === 0){
+    area.innerHTML = `<div class="empty-state">${t('empty_bookings')}</div>`;
+    return;
+  }
+  area.innerHTML = filtered.map(b => bookingRowHtml(b, true)).join('');
   area.querySelectorAll('[data-confirm]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
       await supabaseClient.from('bookings').update({ status:'confirmed' }).eq('id', btn.dataset.confirm);
-      loadBookings(userId);
+      await refreshBookings();
     });
   });
   area.querySelectorAll('[data-cancel]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
       await supabaseClient.from('bookings').update({ status:'cancelled' }).eq('id', btn.dataset.cancel);
-      loadBookings(userId);
+      await refreshBookings();
     });
   });
 }
 
+async function refreshBookings(){
+  const { data: bookings } = await supabaseClient.from('bookings').select('*').eq('barber_id', barberData.id).order('start_time', { ascending:true });
+  bookingsData = bookings || [];
+  renderOverviewStats();
+  renderOverviewBookings();
+  renderBookingsList();
+}
+
+document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.filter-tab');
+  if(!tab) return;
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  currentBookingFilter = tab.dataset.status;
+  renderBookingsList();
+});
+
+/* ---------- logout ---------- */
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
   window.location.href = 'index.html';
