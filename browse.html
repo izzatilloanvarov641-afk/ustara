@@ -135,7 +135,7 @@
   /* modal */
   .modal-backdrop{
     display:none; position:fixed; inset:0; background:rgba(28,26,23,0.5); backdrop-filter:blur(3px);
-    z-index:100; align-items:center; justify-content:center; padding:20px;
+    z-index:1000; align-items:center; justify-content:center; padding:20px;
   }
   .modal-backdrop.active{ display:flex; }
   .modal{
@@ -413,12 +413,35 @@ function renderMapPins(barbers){
     const price = lowestPrice(b.id);
     if(price === null) return;
     const marker = L.marker([b.latitude, b.longitude], { icon: priceIcon(price, false) }).addTo(map);
-    marker.on('click', ()=> highlightBarber(b.id));
+    const avatarHtml = b.avatar_url
+      ? `<img src="${escapeHtml(b.avatar_url)}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">`
+      : `<div style="width:40px;height:40px;border-radius:8px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;color:var(--brass);">${initials(b.full_name)}</div>`;
+    const popupHtml = `
+      <div style="min-width:180px; font-family:'Inter',sans-serif;">
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+          ${avatarHtml}
+          <div>
+            <div style="font-family:'Fraunces',serif; font-weight:600; font-size:14px;">${escapeHtml(b.full_name)}</div>
+            <div style="font-size:11.5px; color:#7A7264;">${escapeHtml(b.district || '')}</div>
+          </div>
+        </div>
+        <div style="font-size:12.5px; font-weight:700; color:#A67C1A; margin-bottom:8px;">${t('from')} ${formatPrice(price)}</div>
+        <button onclick="window.openBarberModalById('${b.id}')" style="width:100%; background:#A67C1A; color:#fff; border:none; padding:8px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer;">${currentLang==='en'?'View & book':currentLang==='uz'?"Ko'rish va band qilish":'Смотреть и записаться'}</button>
+      </div>
+    `;
+    marker.bindPopup(popupHtml);
+    marker.on('click', ()=>{ highlightBarber(b.id); marker.openPopup(); });
     markersById[b.id] = marker;
     bounds.push([b.latitude, b.longitude]);
   });
   if(bounds.length > 0) map.fitBounds(bounds, { padding:[40,40], maxZoom:14 });
 }
+
+window.openBarberModalById = function(barberId){
+  if(map) map.closePopup();
+  const b = allBarbers.find(x => x.id === barberId);
+  if(b) openModal(b);
+};
 
 function highlightBarber(barberId){
   Object.entries(markersById).forEach(([id, marker])=>{
