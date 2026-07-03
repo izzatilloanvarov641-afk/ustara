@@ -137,27 +137,10 @@
     margin:0 auto 40px; text-align:center;
   }
 
-  .hero-capture{
-    display:flex; align-items:center; max-width:600px; margin:0 auto;
-    background:var(--surface); border:1px solid var(--line); border-radius:40px; padding:8px; gap:6px;
-  }
-  .hero-capture .field{ display:flex; align-items:center; gap:10px; flex:1; padding:10px 18px; }
-  .hero-capture .field svg{ flex-shrink:0; opacity:0.5; }
-  .hero-capture input{
-    background:none; border:none; outline:none; color:var(--ink);
-    font-family:'Inter', sans-serif; font-size:14.5px; width:100%;
-  }
-  .hero-capture input::placeholder{ color:var(--ink-dim); }
-  .hero-capture button{
-    background:var(--brass); color:var(--bg); border:none; padding:14px 26px; border-radius:30px;
-    font-size:13.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; white-space:nowrap;
-    transition:background .18s ease; display:flex; align-items:center; gap:8px;
-  }
-  .hero-capture button:hover{ background:var(--brass-soft); }
-  @media (max-width:600px){
-    .hero-capture{ flex-direction:column; border-radius:16px; }
-    .hero-capture .field{ width:100%; }
-    .hero-capture button{ width:100%; justify-content:center; }
+  .hero-cta-row{ display:flex; align-items:center; justify-content:center; gap:14px; max-width:600px; margin:0 auto; flex-wrap:wrap; }
+  @media (max-width:480px){
+    .hero-cta-row{ flex-direction:column; }
+    .hero-cta-row .btn-primary, .hero-cta-row .btn-ghost{ width:100%; text-align:center; }
   }
 
   .hero-stage{ margin:56px auto 0; max-width:980px; padding:0 32px; }
@@ -243,38 +226,12 @@
   .mock-copy p{ color:var(--ink-dim); font-size:16px; line-height:1.75; margin-bottom:16px; }
   @media (max-width:900px){ .mock-wrap{ grid-template-columns:1fr; gap:44px; } }
 
-  .waitlist{ background:var(--bg-alt); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-  .waitlist-inner{ text-align:center; max-width:640px; margin:0 auto; }
-  .waitlist .eyebrow{ display:block; }
-  .waitlist h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(32px,5vw,52px); line-height:1.1; margin:20px 0 16px; }
-  .waitlist h2 em{ font-style:italic; color:var(--brass); }
-  .waitlist p{ color:var(--ink-dim); font-size:16px; margin-bottom:40px; }
-
-  .toggle{ display:inline-flex; border:1px solid var(--line); border-radius:24px; padding:4px; margin-bottom:28px; }
-  .toggle button{
-    background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:13px;
-    font-weight:500; padding:9px 20px; border-radius:20px; cursor:pointer; transition:all .2s ease;
-  }
-  .toggle button.active{ background:var(--brass); color:var(--bg); }
-
-  .waitlist-form{ display:flex; gap:10px; max-width:440px; margin:0 auto; }
-  .waitlist-form input{
-    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--ink);
-    padding:15px 18px; border-radius:3px; font-size:14px; font-family:'Inter', sans-serif;
-  }
-  .waitlist-form input::placeholder{ color:var(--ink-dim); }
-  .waitlist-form input:focus{ outline:none; border-color:var(--brass); }
-  .waitlist-form button{
-    background:var(--brass); color:var(--bg); border:none; padding:0 26px; border-radius:3px;
-    font-size:14px; font-weight:600; cursor:pointer; transition:background .18s ease; white-space:nowrap;
-  }
-  .waitlist-form button:hover{ background:var(--brass-soft); }
-  .waitlist-form.stacked{ flex-direction:column; }
-  .form-note{ font-size:12.5px; color:var(--ink-dim); margin-top:16px; }
-  .form-success{ display:none; color:var(--brass); font-size:14.5px; font-family:'Fraunces', serif; font-style:italic; }
-  .form-error{ display:none; color:#c0392b; font-size:13px; margin-top:14px; }
-  .form-error a{ color:var(--brass); font-weight:600; }
-  @media (max-width:520px){ .waitlist-form{ flex-direction:column; } }
+  .get-started{ background:var(--bg-alt); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .get-started-inner{ text-align:center; max-width:640px; margin:0 auto; }
+  .get-started .eyebrow{ display:block; }
+  .get-started h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(32px,5vw,52px); line-height:1.1; margin:20px 0 16px; }
+  .get-started h2 em{ font-style:italic; color:var(--brass); }
+  .get-started p{ color:var(--ink-dim); font-size:16px; margin-bottom:40px; }
 
   footer{ padding:56px 0 40px; }
   footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
@@ -309,25 +266,22 @@
         <button type="button" data-lang="uz">UZ</button>
         <button type="button" data-lang="ru">RU</button>
       </div>
-      <a href="#waitlist" class="nav-cta" data-i18n="nav_cta">Join waitlist</a>
+      <a href="#get-started" class="nav-cta" data-i18n="nav_cta">Get started</a>
     </div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap hero-top">
-    <span class="launch-pill"><span class="dot"></span><span data-i18n="launch_pill">Launching soon in Tashkent</span></span>
+    <span class="launch-pill"><span class="dot"></span><span data-i18n="launch_pill">Now live in Tashkent</span></span>
     <h1 data-i18n="hero_title">Find your <em>barber.</em><br>Not just a shop.</h1>
     <div class="hero-line razor-line"></div>
     <p class="lede" data-i18n="hero_lede">Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.</p>
 
-    <form class="hero-capture" id="heroCaptureForm">
-      <div class="field">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input type="text" id="heroCaptureInput" data-i18n-ph="capture_ph" placeholder="Phone number or email — get notified" required>
-      </div>
-      <button type="submit"><span data-i18n="capture_btn">Join waitlist</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
-    </form>
+    <div class="hero-cta-row">
+      <a href="auth.html" class="btn-primary" data-i18n="hero_cta_client">I'm a client</a>
+      <a href="auth.html?role=barber" class="btn-ghost" data-i18n="hero_cta_barber">I'm a barber</a>
+    </div>
   </div>
 
   <div class="hero-stage reveal">
@@ -410,7 +364,7 @@
           <li data-i18n="cl_li3">Book in seconds, no phone calls</li>
           <li data-i18n="cl_li4">Your barber's profile follows them if they move</li>
         </ul>
-        <a href="#waitlist" class="btn-ghost" data-i18n="cl_btn">Join as a client</a>
+        <a href="#get-started" class="btn-ghost" data-i18n="cl_btn">Join as a client</a>
       </div>
       <div class="split-card">
         <span class="eyebrow" data-i18n="br_eyebrow">For barbers</span>
@@ -421,34 +375,23 @@
           <li data-i18n="br_li3">Manage your own schedule and pricing</li>
           <li data-i18n="br_li4">Get paid inside the app, no cash chasing</li>
         </ul>
-        <a href="#waitlist" class="btn-ghost" data-i18n="br_btn">Join as a barber</a>
+        <a href="#get-started" class="btn-ghost" data-i18n="br_btn">Join as a barber</a>
       </div>
     </div>
   </div>
 </section>
 
-<section class="waitlist" id="waitlist">
+<section class="get-started" id="get-started">
   <div class="wrap">
     <div class="reveal"><div class="razor-line-scroll"></div></div>
-    <div class="waitlist-inner reveal">
-      <span class="eyebrow" data-i18n="wl_eyebrow">Launching in Tashkent</span>
-      <h2 data-i18n="wl_h2">Be first to the <em>chair</em>.</h2>
-      <p data-i18n="wl_p">We're onboarding the first barbers and clients before public launch. Leave your contact — no spam, one message when we're live.</p>
-
-      <div class="toggle">
-        <button type="button" class="active" data-role="client" data-i18n="wl_toggle_client">I'm a client</button>
-        <button type="button" data-role="barber" data-i18n="wl_toggle_barber">I'm a barber</button>
+    <div class="get-started-inner reveal">
+      <span class="eyebrow" data-i18n="gs_eyebrow">Now live in Tashkent</span>
+      <h2 data-i18n="gs_h2">Ready for the <em>chair</em>?</h2>
+      <p data-i18n="gs_p">Create your account and get started today — no waitlist, no waiting.</p>
+      <div class="hero-cta-row">
+        <a href="auth.html" class="btn-primary" data-i18n="hero_cta_client">I'm a client</a>
+        <a href="auth.html?role=barber" class="btn-ghost" data-i18n="hero_cta_barber">I'm a barber</a>
       </div>
-
-      <form class="waitlist-form" id="waitlistForm">
-        <input type="text" id="waitlistName" data-i18n-ph="wl_name_ph" placeholder="Full name" style="display:none;">
-        <input type="text" id="waitlistInput" data-i18n-ph="wl_input_ph" placeholder="Phone number or email" required>
-        <input type="password" id="waitlistPassword" data-i18n-ph="wl_password_ph" placeholder="Create a password" style="display:none;" minlength="6">
-        <button type="submit" data-i18n="wl_submit">Join</button>
-      </form>
-      <div class="form-error" id="waitlistError"></div>
-      <div class="form-success" id="formSuccess" data-i18n="wl_success">You're on the list — welcome to Ustara.</div>
-      <p class="form-note" data-i18n="wl_note">By joining, you agree to be contacted about Ustara's launch in Tashkent.</p>
     </div>
   </div>
 </section>
@@ -480,11 +423,11 @@ const STRIP_DISTRICTS = {
 
 const I18N = {
   en:{
-    nav_how:"How it works", nav_barbers:"For barbers", nav_clients:"For clients", nav_cta:"Join waitlist",
-    launch_pill:"Launching soon in Tashkent",
+    nav_how:"How it works", nav_barbers:"For barbers", nav_clients:"For clients", nav_cta:"Get started",
+    launch_pill:"Now live in Tashkent",
     hero_title:'Find your <em>barber.</em><br>Not just a shop.',
     hero_lede:"Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.",
-    capture_ph:"Phone number or email — get notified", capture_btn:"Join waitlist",
+    hero_cta_client:"I'm a client", hero_cta_barber:"I'm a barber",
     hero_video_caption:"Real cuts, real barbers",
     loop_eyebrow:"The loop", loop_h2:"One relationship. Not one visit.",
     loop_p:"Most booking apps end at checkout. Ustara is built around what happens after — the next cut, the next referral, the next five years.",
@@ -505,26 +448,17 @@ const I18N = {
     br_li1:"A profile that belongs to you, not the salon", br_li2:"Fill your chair without chasing DMs",
     br_li3:"Manage your own schedule and pricing", br_li4:"Get paid inside the app, no cash chasing",
     br_btn:"Join as a barber",
-    wl_eyebrow:"Launching in Tashkent", wl_h2:'Be first to the <em>chair</em>.',
-    wl_p:"We're onboarding the first barbers and clients before public launch. Leave your contact — no spam, one message when we're live.",
-    wl_toggle_client:"I'm a client", wl_toggle_barber:"I'm a barber",
-    wl_input_ph:"Phone number or email", wl_email_ph:"Email address", wl_name_ph:"Full name",
-    wl_password_ph:"Create a password", wl_submit:"Join",
-    wl_success:"You're on the list — welcome to Ustara.",
-    wl_note:"By joining, you agree to be contacted about Ustara's launch in Tashkent.",
-    wl_invalid_email:"Enter a valid email address.",
-    wl_duplicate:'You already have an account. <a href="auth.html">Log in instead →</a>',
-    wl_signup_error:"Something went wrong — try again.",
-    wl_check_email:'Account created — check your email to activate it, then <a href="auth.html">log in</a>.',
+    gs_eyebrow:"Now live in Tashkent", gs_h2:'Ready for the <em>chair</em>?',
+    gs_p:"Create your account and get started today — no waitlist, no waiting.",
     foot_client_login:"Client login", foot_barber_login:"Barber login",
     foot_copy:"© 2026 Ustara. Tashkent, Uzbekistan."
   },
   uz:{
-    nav_how:"Qanday ishlaydi", nav_barbers:"Sartaroshlar uchun", nav_clients:"Mijozlar uchun", nav_cta:"Ro'yxatga yozilish",
-    launch_pill:"Tez orada Toshkentda",
+    nav_how:"Qanday ishlaydi", nav_barbers:"Sartaroshlar uchun", nav_clients:"Mijozlar uchun", nav_cta:"Boshlash",
+    launch_pill:"Toshkentda hozir faol",
     hero_title:"O'z sartaroshingizni toping.<br>Do'kon emas, <em>usta.</em>",
     hero_lede:"Ustara — sartaroshning obro'si unga tegishli bo'lgan platforma: portfolio, mijozlar va bandlar u qayerda bo'lsa ham u bilan boradi.",
-    capture_ph:"Telefon raqami yoki email — xabardor bo'ling", capture_btn:"Ro'yxatga yozilish",
+    hero_cta_client:"Men mijozman", hero_cta_barber:"Men sartaroshman",
     hero_video_caption:"Haqiqiy soch olish, haqiqiy sartaroshlar",
     loop_eyebrow:"Halqa", loop_h2:"Bitta munosabat. Bitta tashrif emas.",
     loop_p:"Ko'p bron qilish ilovalari to'lovda tugaydi. Ustara esa undan keyingi voqealar uchun qurilgan — keyingi soch olish, keyingi tavsiya, keyingi besh yil.",
@@ -545,26 +479,17 @@ const I18N = {
     br_li1:"Salonga emas, sizga tegishli profil", br_li2:"DM'larni ta'qib qilmasdan stulingizni to'ldiring",
     br_li3:"O'z jadvalingiz va narxlaringizni boshqaring", br_li4:"Ilova ichida to'lov oling, naqd pul yig'ishsiz",
     br_btn:"Sartarosh sifatida qo'shiling",
-    wl_eyebrow:"Toshkentda ishga tushmoqda", wl_h2:"Birinchi bo'lib <em>stulga</em> o'tiring.",
-    wl_p:"Ommaviy ishga tushishdan oldin birinchi sartaroshlar va mijozlarni qabul qilyapmiz. Aloqangizni qoldiring — spam yo'q, ishga tushganimizda bitta xabar.",
-    wl_toggle_client:"Men mijozman", wl_toggle_barber:"Men sartaroshman",
-    wl_input_ph:"Telefon raqami yoki email", wl_email_ph:"Email manzil", wl_name_ph:"To'liq ism",
-    wl_password_ph:"Parol yarating", wl_submit:"Qo'shilish",
-    wl_success:"Siz ro'yxatdasiz — Ustara'ga xush kelibsiz.",
-    wl_invalid_email:"To'g'ri email manzilini kiriting.",
-    wl_duplicate:'Sizda allaqachon hisob bor. <a href="auth.html">Buning o\'rniga kiring →</a>',
-    wl_signup_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
-    wl_check_email:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng <a href="auth.html">kiring</a>.',
-    wl_note:"Qo'shilish orqali Ustara'ning Toshkentdagi ishga tushishi haqida bog'lanishga rozilik bildirasiz.",
+    gs_eyebrow:"Toshkentda hozir faol", gs_h2:"<em>Stulga</em> tayyormisiz?",
+    gs_p:"Hisobingizni yarating va bugun boshlang — navbat yo'q, kutish yo'q.",
     foot_client_login:"Mijoz sifatida kirish", foot_barber_login:"Sartarosh sifatida kirish",
     foot_copy:"© 2026 Ustara. Toshkent, O'zbekiston."
   },
   ru:{
-    nav_how:"Как это работает", nav_barbers:"Барберам", nav_clients:"Клиентам", nav_cta:"Записаться в лист ожидания",
-    launch_pill:"Скоро запуск в Ташкенте",
+    nav_how:"Как это работает", nav_barbers:"Барберам", nav_clients:"Клиентам", nav_cta:"Начать",
+    launch_pill:"Уже работает в Ташкенте",
     hero_title:"Найдите своего барбера.<br>Не просто <em>салон.</em>",
     hero_lede:"Ustara — платформа, где репутация барбера принадлежит ему самому: портфолио, клиенты и записи следуют за ним, где бы ни было его кресло.",
-    capture_ph:"Телефон или email — получить уведомление", capture_btn:"В лист ожидания",
+    hero_cta_client:"Я клиент", hero_cta_barber:"Я барбер",
     hero_video_caption:"Настоящие стрижки, настоящие барберы",
     loop_eyebrow:"Цикл", loop_h2:"Отношения, а не разовый визит.",
     loop_p:"Большинство приложений для записи заканчиваются на оплате. Ustara создана для того, что происходит после — следующая стрижка, следующая рекомендация, следующие пять лет.",
@@ -585,17 +510,8 @@ const I18N = {
     br_li1:"Профиль принадлежит вам, а не салону", br_li2:"Заполняйте кресло без переписок в директе",
     br_li3:"Управляйте своим расписанием и ценами", br_li4:"Получайте оплату в приложении, без наличных",
     br_btn:"Присоединиться как барбер",
-    wl_eyebrow:"Запуск в Ташкенте", wl_h2:"Будьте первым в <em>кресле</em>.",
-    wl_p:"Мы набираем первых барберов и клиентов до публичного запуска. Оставьте контакт — без спама, одно сообщение при запуске.",
-    wl_toggle_client:"Я клиент", wl_toggle_barber:"Я барбер",
-    wl_input_ph:"Телефон или email", wl_email_ph:"Email адрес", wl_name_ph:"Полное имя",
-    wl_password_ph:"Придумайте пароль", wl_submit:"Записаться",
-    wl_success:"Вы в списке — добро пожаловать в Ustara.",
-    wl_note:"Присоединяясь, вы соглашаетесь на связь по поводу запуска Ustara в Ташкенте.",
-    wl_invalid_email:"Введите корректный email адрес.",
-    wl_duplicate:'У вас уже есть аккаунт. <a href="auth.html">Войти →</a>',
-    wl_signup_error:"Что-то пошло не так — попробуйте снова.",
-    wl_check_email:'Аккаунт создан — проверьте почту, чтобы активировать его, затем <a href="auth.html">войдите</a>.',
+    gs_eyebrow:"Уже работает в Ташкенте", gs_h2:"Готовы к <em>креслу</em>?",
+    gs_p:"Создайте аккаунт и начните уже сегодня — без листа ожидания.",
     foot_client_login:"Вход для клиентов", foot_barber_login:"Вход для барберов",
     foot_copy:"© 2026 Ustara. Ташкент, Узбекистан."
   }
@@ -636,198 +552,6 @@ document.getElementById('langSwitch').addEventListener('click', (e)=>{
 });
 
 applyLang('en');
-
-async function submitToWaitlist(contact, role){
-  const { error } = await supabaseClient
-    .from('waitlist')
-    .insert([{ contact: contact, role: role, lang: currentLang }]);
-  if(error && error.code !== '23505') {
-    console.error('Waitlist insert error:', error);
-    return { ok:false };
-  }
-  return { ok:true };
-}
-
-const NEXT_STEP_COPY = {
-  en: {
-    client: { text: "Want to look around now?", link: "Browse barbers", href: "browse.html" },
-    barber: { text: "Want to set up now instead of waiting?", link: "Create your barber profile", href: "auth.html?role=barber&tab=signup" }
-  },
-  uz: {
-    client: { text: "Hozir ko'rib chiqmoqchimisiz?", link: "Sartaroshlarni ko'rish", href: "browse.html" },
-    barber: { text: "Kutish o'rniga hozir sozlamoqchimisiz?", link: "Sartarosh profilini yaratish", href: "auth.html?role=barber&tab=signup" }
-  },
-  ru: {
-    client: { text: "Хотите посмотреть уже сейчас?", link: "Смотреть барберов", href: "browse.html" },
-    barber: { text: "Хотите настроить профиль уже сейчас?", link: "Создать профиль барбера", href: "auth.html?role=barber&tab=signup" }
-  }
-};
-
-function appendNextStep(container, role){
-  const copy = NEXT_STEP_COPY[currentLang][role];
-  const p = document.createElement('p');
-  p.style.marginTop = '14px';
-  p.style.fontSize = '13.5px';
-  p.style.color = 'var(--ink-dim)';
-  p.innerHTML = `${copy.text} <a href="${copy.href}" style="color:var(--brass); font-weight:600;">${copy.link} →</a>`;
-  container.appendChild(p);
-}
-
-document.getElementById('heroCaptureForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const form = this;
-  const input = document.getElementById('heroCaptureInput');
-  const btn = form.querySelector('button[type="submit"]');
-  const contact = input.value.trim();
-  if(!contact) return;
-
-  const originalHTML = btn.innerHTML;
-  btn.disabled = true;
-  btn.textContent = '...';
-
-  const result = await submitToWaitlist(contact, 'client');
-
-  btn.disabled = false;
-  btn.innerHTML = originalHTML;
-
-  if(!result.ok){
-    input.style.borderColor = '#c0392b';
-    return;
-  }
-
-  form.style.display = 'none';
-  const msg = document.createElement('div');
-  msg.className = 'form-success';
-  msg.style.display = 'block';
-  msg.style.textAlign = 'center';
-  msg.style.marginTop = '4px';
-  msg.textContent = I18N[currentLang].wl_success;
-  form.parentNode.appendChild(msg);
-  appendNextStep(form.parentNode, 'client');
-});
-
-function isValidEmail(value){
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function updateWaitlistFormForRole(){
-  const nameInput = document.getElementById('waitlistName');
-  const mainInput = document.getElementById('waitlistInput');
-  const passwordInput = document.getElementById('waitlistPassword');
-  const form = document.getElementById('waitlistForm');
-  document.getElementById('waitlistError').style.display = 'none';
-
-  if(selectedRole === 'client'){
-    nameInput.style.display = 'block';
-    nameInput.required = true;
-    passwordInput.style.display = 'block';
-    passwordInput.required = true;
-    form.classList.add('stacked');
-    mainInput.type = 'email';
-    mainInput.dataset.i18nPh = 'wl_email_ph';
-    mainInput.placeholder = I18N[currentLang].wl_email_ph;
-  } else {
-    nameInput.style.display = 'none';
-    nameInput.required = false;
-    passwordInput.style.display = 'none';
-    passwordInput.required = false;
-    form.classList.remove('stacked');
-    mainInput.type = 'text';
-    mainInput.dataset.i18nPh = 'wl_input_ph';
-    mainInput.placeholder = I18N[currentLang].wl_input_ph;
-  }
-}
-
-let selectedRole = 'client';
-document.querySelectorAll('.toggle button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedRole = btn.dataset.role;
-    updateWaitlistFormForRole();
-  });
-});
-updateWaitlistFormForRole();
-
-document.getElementById('waitlistForm').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const form = this;
-  const input = document.getElementById('waitlistInput');
-  const nameInput = document.getElementById('waitlistName');
-  const passwordInput = document.getElementById('waitlistPassword');
-  const success = document.getElementById('formSuccess');
-  const errorEl = document.getElementById('waitlistError');
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const contact = input.value.trim();
-  errorEl.style.display = 'none';
-  if(!contact) return;
-
-  if(selectedRole === 'client' && !isValidEmail(contact)){
-    errorEl.textContent = I18N[currentLang].wl_invalid_email;
-    errorEl.style.display = 'block';
-    return;
-  }
-
-  const originalBtnText = submitBtn.textContent;
-  submitBtn.disabled = true;
-  submitBtn.textContent = '...';
-
-  if(selectedRole === 'client'){
-    const fullName = nameInput.value.trim();
-    const password = passwordInput.value;
-
-    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-      email: contact, password,
-      options: { data: { role: 'client', full_name: fullName } }
-    });
-
-    submitBtn.disabled = false;
-    submitBtn.textContent = originalBtnText;
-
-    if(!authError && authData.user && authData.user.identities && authData.user.identities.length === 0){
-      errorEl.innerHTML = I18N[currentLang].wl_duplicate;
-      errorEl.style.display = 'block';
-      return;
-    }
-    if(authError){
-      if(/already registered|already exists/i.test(authError.message || '')){
-        errorEl.innerHTML = I18N[currentLang].wl_duplicate;
-      } else {
-        errorEl.textContent = I18N[currentLang].wl_signup_error;
-      }
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    if(authData.session){
-      window.location.href = 'client-dashboard.html';
-      return;
-    }
-
-    form.style.display = 'none';
-    success.dataset.i18n = 'wl_check_email';
-    success.innerHTML = I18N[currentLang].wl_check_email;
-    success.style.display = 'block';
-    return;
-  }
-
-  const result = await submitToWaitlist(contact, selectedRole);
-
-  submitBtn.disabled = false;
-  submitBtn.textContent = originalBtnText;
-
-  if(!result.ok){
-    errorEl.textContent = I18N[currentLang].wl_signup_error;
-    errorEl.style.display = 'block';
-    return;
-  }
-
-  form.style.display = 'none';
-  success.dataset.i18n = 'wl_success';
-  success.textContent = I18N[currentLang].wl_success;
-  success.style.display = 'block';
-  appendNextStep(success.parentNode, selectedRole);
-});
 
 const revealEls = document.querySelectorAll('.reveal');
 const io = new IntersectionObserver((entries)=>{
