@@ -104,7 +104,7 @@ function localizeService(key){
 async function init(){
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(!sessionData.session){
-    window.location.href = 'client-auth.html';
+    window.location.href = 'auth.html';
     return;
   }
   const user = sessionData.session.user;

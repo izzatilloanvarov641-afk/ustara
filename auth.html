@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Log in or sign up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#F7F4EF; --bg-alt:#F1ECE2; --surface:#FFFFFF; --line:#E4DBCB;
+    --ink:#1C1A17; --ink-dim:#6E6656; --brass:#A67C1A; --brass-soft:#C9A227; --err:#c0392b;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif;
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .card{
+    width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:40px 36px; box-shadow:0 30px 60px -28px rgba(28,26,23,0.18);
+  }
+  .logo{ font-family:'Fraunces', serif; font-size:22px; text-align:center; margin-bottom:30px; display:block; }
+  .logo em{ font-style:italic; color:var(--brass); }
+
+  .tabs{ display:flex; border:1px solid var(--line); border-radius:24px; padding:3px; margin-bottom:28px; }
+  .tabs button{ flex:1; background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:13px; font-weight:600; padding:10px; border-radius:20px; cursor:pointer; transition:all .15s ease; }
+  .tabs button.active{ background:var(--brass); color:var(--bg); }
+
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:24px; text-align:center; margin-bottom:22px; }
+
+  .role-toggle{ display:flex; border:1px solid var(--line); border-radius:24px; padding:3px; margin-bottom:22px; background:var(--bg-alt); }
+  .role-toggle button{ flex:1; background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:13px; font-weight:600; padding:10px; border-radius:20px; cursor:pointer; transition:all .15s ease; }
+  .role-toggle button.active{ background:var(--brass); color:var(--bg); }
+  .barber-note{ font-size:12px; color:var(--ink-dim); text-align:center; margin:-10px 0 20px; display:none; }
+  .barber-note.active{ display:block; }
+
+  .field-group{ margin-bottom:16px; }
+  label{ display:block; font-size:13px; color:var(--ink-dim); margin-bottom:7px; }
+  input{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:13px 15px; border-radius:6px; font-size:14.5px; font-family:'Inter', sans-serif; }
+  input:focus{ outline:none; border-color:var(--brass); }
+  .error-text{ font-size:12.5px; color:var(--err); margin-top:14px; display:none; text-align:center; }
+  .info-text{ font-size:12.5px; color:var(--brass); margin-top:14px; display:none; text-align:center; line-height:1.6; }
+  .info-text a{ color:var(--brass); font-weight:600; text-decoration:underline; }
+  .btn{ width:100%; background:var(--brass); color:var(--bg); border:none; padding:14px; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; transition:background .15s ease; }
+  .btn:hover{ background:var(--brass-soft); }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .form-panel{ display:none; }
+  .form-panel.active{ display:block; }
+  .foot-link{ text-align:center; font-size:13px; color:var(--ink-dim); margin-top:22px; }
+  .foot-link a{ color:var(--brass); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="card">
+  <a href="index.html" class="logo">ust<em>a</em>ra</a>
+
+  <div class="tabs">
+    <button type="button" class="active" data-tab="login" data-i18n="tab_login">Log in</button>
+    <button type="button" data-tab="signup" data-i18n="tab_signup">Sign up</button>
+  </div>
+
+  <div class="form-panel active" data-panel="login">
+    <h1 data-i18n="login_title">Welcome back</h1>
+    <form id="loginForm">
+      <div class="field-group"><label data-i18n="l_email">Email</label><input type="email" id="loginEmail" required></div>
+      <div class="field-group"><label data-i18n="l_password">Password</label><input type="password" id="loginPassword" required></div>
+      <div class="error-text" id="loginError" data-i18n="err_login">Incorrect email or password.</div>
+      <div class="error-text" id="pendingError" data-i18n="err_pending">Your barber profile hasn't been approved yet. We'll notify you by email once it's ready.</div>
+      <button type="submit" class="btn" id="loginBtn" data-i18n="submit_login">Log in</button>
+    </form>
+  </div>
+
+  <div class="form-panel" data-panel="signup">
+    <h1 data-i18n="signup_title">Create your account</h1>
+    <div class="role-toggle" id="roleToggle">
+      <button type="button" class="active" data-role="client" data-i18n="role_client">I'm a client</button>
+      <button type="button" data-role="barber" data-i18n="role_barber">I'm a barber</button>
+    </div>
+    <p class="barber-note" id="barberNote" data-i18n="barber_note">Barber profiles are reviewed before going live — usually within a day.</p>
+    <form id="signupForm">
+      <div class="field-group"><label data-i18n="l_name">Full name</label><input type="text" id="signupName" required></div>
+      <div class="field-group"><label data-i18n="l_phone">Phone number</label><input type="tel" id="signupPhone" placeholder="+998 90 123 45 67" required></div>
+      <div class="field-group"><label data-i18n="l_email">Email</label><input type="email" id="signupEmail" required></div>
+      <div class="field-group"><label data-i18n="l_password">Password</label><input type="password" id="signupPassword" minlength="6" required></div>
+      <div class="error-text" id="signupError" data-i18n="err_signup">Something went wrong. Try again.</div>
+      <button type="submit" class="btn" id="signupBtn" data-i18n="submit_signup">Create account</button>
+    </form>
+    <div class="info-text" id="signupInfo"></div>
+  </div>
+</div>
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const I18N = {
+  en:{ tab_login:"Log in", tab_signup:"Sign up",
+    login_title:"Welcome back", signup_title:"Create your account",
+    l_email:"Email", l_password:"Password", l_name:"Full name", l_phone:"Phone number",
+    role_client:"I'm a client", role_barber:"I'm a barber",
+    barber_note:"Barber profiles are reviewed before going live — usually within a day.",
+    err_login:"Incorrect email or password.", err_signup:"Something went wrong. Try again.",
+    err_pending:"Your barber profile hasn't been approved yet. We'll notify you by email once it's ready.",
+    check_email_client:'Account created — check your email to activate it, then log in.',
+    check_email_barber:'Account created — check your email to activate it. Your profile will also need a quick review before you can log in; we\'ll email you once it\'s approved.',
+    pending_after_signup:"Account created — your barber profile is now pending review. We'll email you once it's approved.",
+    submit_login:"Log in", submit_signup:"Create account" },
+  uz:{ tab_login:"Kirish", tab_signup:"Ro'yxatdan o'tish",
+    login_title:"Xush kelibsiz", signup_title:"Hisob yarating",
+    l_email:"Email", l_password:"Parol", l_name:"To'liq ism", l_phone:"Telefon raqami",
+    role_client:"Men mijozman", role_barber:"Men sartaroshman",
+    barber_note:"Sartarosh profillari faollashtirishdan oldin ko'rib chiqiladi — odatda bir kun ichida.",
+    err_login:"Email yoki parol noto'g'ri.", err_signup:"Xatolik yuz berdi. Qayta urinib ko'ring.",
+    err_pending:"Sartarosh profilingiz hali tasdiqlanmagan. Tayyor bo'lganda sizga email orqali xabar beramiz.",
+    check_email_client:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng kiring.',
+    check_email_barber:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring. Profilingiz kirishdan oldin qisqacha ko\'rib chiqiladi — tasdiqlangach xabar beramiz.',
+    pending_after_signup:"Hisob yaratildi — sartarosh profilingiz endi ko'rib chiqilmoqda. Tasdiqlangach sizga email orqali xabar beramiz.",
+    submit_login:"Kirish", submit_signup:"Hisob yaratish" },
+  ru:{ tab_login:"Войти", tab_signup:"Регистрация",
+    login_title:"С возвращением", signup_title:"Создайте аккаунт",
+    l_email:"Email", l_password:"Пароль", l_name:"Полное имя", l_phone:"Номер телефона",
+    role_client:"Я клиент", role_barber:"Я барбер",
+    barber_note:"Профили барберов проверяются перед публикацией — обычно в течение дня.",
+    err_login:"Неверный email или пароль.", err_signup:"Что-то пошло не так. Попробуйте снова.",
+    err_pending:"Ваш профиль барбера ещё не подтверждён. Мы сообщим по email, когда всё будет готово.",
+    check_email_client:'Аккаунт создан — проверьте почту, чтобы активировать его, затем войдите.',
+    check_email_barber:'Аккаунт создан — проверьте почту, чтобы активировать его. Профиль также пройдёт короткую проверку перед входом — сообщим по email, когда он будет одобрен.',
+    pending_after_signup:"Аккаунт создан — ваш профиль барбера сейчас на проверке. Сообщим по email, когда он будет одобрен.",
+    submit_login:"Войти", submit_signup:"Создать аккаунт" }
+};
+
+const params = new URLSearchParams(window.location.search);
+const browserLang = (navigator.language || 'en').slice(0,2);
+const currentLang = I18N[browserLang] ? browserLang : 'en';
+let signupRole = params.get('role') === 'barber' ? 'barber' : 'client';
+
+function t(key){ return I18N[currentLang][key]; }
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
+  });
+}
+applyI18n();
+
+function setTab(tab){
+  document.querySelectorAll('.tabs button').forEach(b=> b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.form-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel === tab));
+}
+document.querySelectorAll('.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
+});
+if(params.get('tab') === 'signup' || params.get('role') === 'barber') setTab('signup');
+
+function setRole(role){
+  signupRole = role;
+  document.querySelectorAll('#roleToggle button').forEach(b=> b.classList.toggle('active', b.dataset.role === role));
+  document.getElementById('barberNote').classList.toggle('active', role === 'barber');
+}
+document.querySelectorAll('#roleToggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=> setRole(btn.dataset.role));
+});
+setRole(signupRole);
+
+async function redirectByRole(userId, { silent } = {}){
+  const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
+  if(client){ window.location.href = 'client-dashboard.html'; return; }
+
+  const { data: barber } = await supabaseClient.from('barbers').select('is_approved').eq('id', userId).single();
+  if(barber){
+    if(barber.is_approved){ window.location.href = 'barber-dashboard.html'; return; }
+    await supabaseClient.auth.signOut();
+    if(!silent) document.getElementById('pendingError').style.display = 'block';
+    return;
+  }
+  await supabaseClient.auth.signOut();
+  if(!silent){
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  const pending = document.getElementById('pendingError');
+  err.style.display = 'none';
+  pending.style.display = 'none';
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = '...';
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: document.getElementById('loginEmail').value.trim(),
+    password: document.getElementById('loginPassword').value
+  });
+
+  if(error){
+    btn.disabled = false; btn.textContent = orig;
+    err.style.display = 'block';
+    return;
+  }
+  await redirectByRole(data.user.id);
+  btn.disabled = false; btn.textContent = orig;
+});
+
+document.getElementById('signupForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const form = this;
+  const btn = document.getElementById('signupBtn');
+  const err = document.getElementById('signupError');
+  const info = document.getElementById('signupInfo');
+  err.style.display = 'none';
+  info.style.display = 'none';
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = '...';
+
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const fullName = document.getElementById('signupName').value.trim();
+  const phone = document.getElementById('signupPhone').value.trim();
+
+  const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+    email, password,
+    options: { data: { role: signupRole, full_name: fullName, phone: phone } }
+  });
+  btn.disabled = false; btn.textContent = orig;
+  if(authError){
+    err.textContent = authError.message || t('err_signup');
+    err.style.display = 'block';
+    return;
+  }
+
+  if(authData.session){
+    if(signupRole === 'client'){
+      window.location.href = 'client-dashboard.html';
+    } else {
+      await supabaseClient.auth.signOut();
+      form.style.display = 'none';
+      info.textContent = t('pending_after_signup');
+      info.style.display = 'block';
+    }
+  } else {
+    form.style.display = 'none';
+    info.textContent = signupRole === 'client' ? t('check_email_client') : t('check_email_barber');
+    info.style.display = 'block';
+  }
+});
+
+supabaseClient.auth.getSession().then(({ data })=>{
+  if(data.session) redirectByRole(data.session.user.id, { silent:true });
+});
+</script>
+</body>
+</html>

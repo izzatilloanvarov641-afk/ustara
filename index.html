@@ -300,9 +300,9 @@
     </div>
     <div class="nav-right">
       <div class="nav-login">
-        <a href="client-auth.html" class="client-login" data-i18n="foot_client_login">Client login</a>
+        <a href="auth.html" class="client-login" data-i18n="foot_client_login">Client login</a>
         <span class="sep">/</span>
-        <a href="barber-login.html" data-i18n="foot_barber_login">Barber login</a>
+        <a href="auth.html?role=barber" data-i18n="foot_barber_login">Barber login</a>
       </div>
       <div class="lang-switch" id="langSwitch">
         <button type="button" data-lang="en" class="active">EN</button>
@@ -463,8 +463,8 @@
       <a href="#loop" data-i18n="nav_how">How it works</a>
       <a href="#barbers" data-i18n="nav_barbers">For barbers</a>
       <a href="#clients" data-i18n="nav_clients">For clients</a>
-      <a href="client-auth.html" data-i18n="foot_client_login">Client login</a>
-      <a href="barber-login.html" data-i18n="foot_barber_login">Barber login</a>
+      <a href="auth.html" data-i18n="foot_client_login">Client login</a>
+      <a href="auth.html?role=barber" data-i18n="foot_barber_login">Barber login</a>
       <a href="admin.html" style="opacity:0.5;">Admin</a>
     </div>
   </div>
@@ -513,9 +513,9 @@ const I18N = {
     wl_success:"You're on the list — welcome to Ustara.",
     wl_note:"By joining, you agree to be contacted about Ustara's launch in Tashkent.",
     wl_invalid_email:"Enter a valid email address.",
-    wl_duplicate:'You already have an account. <a href="client-auth.html">Log in instead →</a>',
+    wl_duplicate:'You already have an account. <a href="auth.html">Log in instead →</a>',
     wl_signup_error:"Something went wrong — try again.",
-    wl_check_email:'Account created — check your email to activate it, then <a href="client-auth.html">log in</a>.',
+    wl_check_email:'Account created — check your email to activate it, then <a href="auth.html">log in</a>.',
     foot_client_login:"Client login", foot_barber_login:"Barber login",
     foot_copy:"© 2026 Ustara. Tashkent, Uzbekistan."
   },
@@ -552,9 +552,9 @@ const I18N = {
     wl_password_ph:"Parol yarating", wl_submit:"Qo'shilish",
     wl_success:"Siz ro'yxatdasiz — Ustara'ga xush kelibsiz.",
     wl_invalid_email:"To'g'ri email manzilini kiriting.",
-    wl_duplicate:'Sizda allaqachon hisob bor. <a href="client-auth.html">Buning o\'rniga kiring →</a>',
+    wl_duplicate:'Sizda allaqachon hisob bor. <a href="auth.html">Buning o\'rniga kiring →</a>',
     wl_signup_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
-    wl_check_email:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng <a href="client-auth.html">kiring</a>.',
+    wl_check_email:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng <a href="auth.html">kiring</a>.',
     wl_note:"Qo'shilish orqali Ustara'ning Toshkentdagi ishga tushishi haqida bog'lanishga rozilik bildirasiz.",
     foot_client_login:"Mijoz sifatida kirish", foot_barber_login:"Sartarosh sifatida kirish",
     foot_copy:"© 2026 Ustara. Toshkent, O'zbekiston."
@@ -593,9 +593,9 @@ const I18N = {
     wl_success:"Вы в списке — добро пожаловать в Ustara.",
     wl_note:"Присоединяясь, вы соглашаетесь на связь по поводу запуска Ustara в Ташкенте.",
     wl_invalid_email:"Введите корректный email адрес.",
-    wl_duplicate:'У вас уже есть аккаунт. <a href="client-auth.html">Войти →</a>',
+    wl_duplicate:'У вас уже есть аккаунт. <a href="auth.html">Войти →</a>',
     wl_signup_error:"Что-то пошло не так — попробуйте снова.",
-    wl_check_email:'Аккаунт создан — проверьте почту, чтобы активировать его, затем <a href="client-auth.html">войдите</a>.',
+    wl_check_email:'Аккаунт создан — проверьте почту, чтобы активировать его, затем <a href="auth.html">войдите</a>.',
     foot_client_login:"Вход для клиентов", foot_barber_login:"Вход для барберов",
     foot_copy:"© 2026 Ustara. Ташкент, Узбекистан."
   }
@@ -651,15 +651,15 @@ async function submitToWaitlist(contact, role){
 const NEXT_STEP_COPY = {
   en: {
     client: { text: "Want to look around now?", link: "Browse barbers", href: "browse.html" },
-    barber: { text: "Want to set up now instead of waiting?", link: "Create your barber profile", href: "barber-signup.html" }
+    barber: { text: "Want to set up now instead of waiting?", link: "Create your barber profile", href: "auth.html?role=barber&tab=signup" }
   },
   uz: {
     client: { text: "Hozir ko'rib chiqmoqchimisiz?", link: "Sartaroshlarni ko'rish", href: "browse.html" },
-    barber: { text: "Kutish o'rniga hozir sozlamoqchimisiz?", link: "Sartarosh profilini yaratish", href: "barber-signup.html" }
+    barber: { text: "Kutish o'rniga hozir sozlamoqchimisiz?", link: "Sartarosh profilini yaratish", href: "auth.html?role=barber&tab=signup" }
   },
   ru: {
     client: { text: "Хотите посмотреть уже сейчас?", link: "Смотреть барберов", href: "browse.html" },
-    barber: { text: "Хотите настроить профиль уже сейчас?", link: "Создать профиль барбера", href: "barber-signup.html" }
+    barber: { text: "Хотите настроить профиль уже сейчас?", link: "Создать профиль барбера", href: "auth.html?role=barber&tab=signup" }
   }
 };
 
