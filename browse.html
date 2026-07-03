@@ -627,26 +627,40 @@ async function checkAuth(){
 
 /* ---------- load data ---------- */
 async function loadBarbers(){
-  initMap();
-  const { data: barbers, error } = await supabaseClient
-    .from('barbers').select('*')
-    .eq('is_published', true).eq('is_approved', true)
-    .order('created_at', { ascending:false });
+  try {
+    initMap();
+    const { data: barbers, error } = await supabaseClient
+      .from('barbers').select('*')
+      .eq('is_published', true).eq('is_approved', true)
+      .order('created_at', { ascending:false });
 
-  if(error){ console.error('Failed to load barbers:', error); allBarbers = []; }
-  else allBarbers = barbers || [];
+    if(error){
+      console.error('Failed to load barbers:', error);
+      const banner = document.createElement('div');
+      banner.style.cssText = 'background:#B3432B; color:#fff; padding:14px 24px; font-size:13px; position:sticky; top:66px; z-index:40;';
+      banner.textContent = 'Could not load barbers: ' + error.message + ' — please screenshot this and report it.';
+      document.body.insertBefore(banner, document.querySelector('.page-head'));
+      allBarbers = [];
+    } else {
+      allBarbers = barbers || [];
+    }
 
-  if(allBarbers.length > 0){
-    const ids = allBarbers.map(b => b.id);
-    const { data: services } = await supabaseClient.from('services').select('*').in('barber_id', ids);
-    servicesByBarber = {};
-    (services || []).forEach(s => {
-      if(!servicesByBarber[s.barber_id]) servicesByBarber[s.barber_id] = [];
-      servicesByBarber[s.barber_id].push(s);
-    });
+    if(allBarbers.length > 0){
+      const ids = allBarbers.map(b => b.id);
+      const { data: services } = await supabaseClient.from('services').select('*').in('barber_id', ids);
+      servicesByBarber = {};
+      (services || []).forEach(s => {
+        if(!servicesByBarber[s.barber_id]) servicesByBarber[s.barber_id] = [];
+        servicesByBarber[s.barber_id].push(s);
+      });
+    }
+
+    applyLang(currentLang);
+  } catch(e) {
+    console.error('loadBarbers crashed:', e);
+    document.getElementById('resultsArea').innerHTML =
+      `<div style="padding:40px; color:#B3432B;">Something failed to load: ${e.message} — please screenshot this and report it.</div>`;
   }
-
-  applyLang(currentLang);
 }
 
 loadBarbers();

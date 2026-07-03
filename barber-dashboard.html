@@ -596,6 +596,18 @@ document.getElementById('sidebarNav').addEventListener('click', (e)=>{
 
 /* ---------- init ---------- */
 async function init(){
+  try {
+    await initInner();
+  } catch(e) {
+    console.error('Dashboard init failed:', e);
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#B3432B; color:#fff; padding:16px 24px; font-size:13.5px; position:sticky; top:0; z-index:999;';
+    banner.textContent = 'Something failed to load: ' + (e.message || e) + ' — please screenshot this and report it.';
+    document.body.insertBefore(banner, document.body.firstChild);
+  }
+}
+
+async function initInner(){
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(!sessionData.session){
     window.location.href = 'auth.html';
