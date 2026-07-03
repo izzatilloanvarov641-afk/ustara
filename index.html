@@ -7,25 +7,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg: #171614;
-    --bg-alt: #1D1B18;
-    --surface: #221F1B;
-    --line: #34302A;
-    --bone: #F2EDE4;
-    --bone-dim: #A39A8B;
-    --brass: #C9A227;
-    --brass-soft: #E4C25A;
+    --bg: #F7F4EF;
+    --bg-alt: #F1ECE2;
+    --surface: #FFFFFF;
+    --line: #E4DBCB;
+    --ink: #1C1A17;
+    --ink-dim: #6E6656;
+    --brass: #A67C1A;
+    --brass-soft: #C9A227;
     --steel: #6B7280;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
   html{ scroll-behavior:smooth; }
   body{
     background:var(--bg);
-    color:var(--bone);
+    color:var(--ink);
     font-family:'Inter', sans-serif;
     line-height:1.5;
     -webkit-font-smoothing:antialiased;
@@ -52,25 +51,33 @@
   @keyframes stroke{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
   .hairline{ height:1px; background:var(--line); border:none; }
 
+  .razor-line-scroll{
+    height:1px; width:100%; max-width:160px; margin:0 auto 44px;
+    background:linear-gradient(90deg, transparent, var(--brass) 8%, var(--brass) 92%, transparent);
+    transform-origin:center; transform:scaleX(0);
+  }
+  .reveal.in .razor-line-scroll{ animation:stroke-center 1.1s cubic-bezier(.65,0,.35,1) forwards; }
+  @keyframes stroke-center{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+
   /* ---------- nav ---------- */
   nav{
     position:sticky; top:0; z-index:50;
-    background:rgba(23,22,20,0.88);
+    background:rgba(247,244,239,0.86);
     backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);
   }
   nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:72px; gap:20px; }
   .logo{ font-family:'Fraunces', serif; font-size:21px; font-weight:500; letter-spacing:0.01em; flex-shrink:0; }
   .logo em{ font-style:italic; color:var(--brass); }
-  .nav-links{ display:flex; gap:32px; align-items:center; font-size:14px; color:var(--bone-dim); }
-  .nav-links a:hover{ color:var(--bone); }
+  .nav-links{ display:flex; gap:32px; align-items:center; font-size:14px; color:var(--ink-dim); }
+  .nav-links a:hover{ color:var(--ink); }
   .nav-right{ display:flex; align-items:center; gap:18px; }
 
   .lang-switch{
     display:flex; border:1px solid var(--line); border-radius:20px; padding:3px;
   }
   .lang-switch button{
-    background:none; border:none; color:var(--bone-dim);
+    background:none; border:none; color:var(--ink-dim);
     font-family:'Inter', sans-serif; font-size:12px; font-weight:600;
     padding:6px 11px; border-radius:16px; cursor:pointer; letter-spacing:0.03em;
     transition:all .18s ease;
@@ -98,10 +105,10 @@
   }
   .btn-primary:hover{ background:var(--brass-soft); transform:translateY(-1px); }
   .btn-ghost{
-    border:1px solid var(--line); color:var(--bone); padding:15px 28px; font-size:14px;
+    border:1px solid var(--line); color:var(--ink); padding:15px 28px; font-size:14px;
     font-weight:500; border-radius:2px; transition:border-color .18s ease; display:inline-block;
   }
-  .btn-ghost:hover{ border-color:var(--bone-dim); }
+  .btn-ghost:hover{ border-color:var(--ink-dim); }
 
   /* ---------- hero ---------- */
   .hero{ padding:52px 0 0; position:relative; }
@@ -109,7 +116,7 @@
   .launch-pill{
     display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line);
     background:var(--bg-alt); padding:8px 16px; border-radius:20px; font-size:11px;
-    letter-spacing:0.09em; text-transform:uppercase; color:var(--bone-dim); margin-bottom:34px;
+    letter-spacing:0.09em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:34px;
   }
   .launch-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--brass); box-shadow:0 0 8px var(--brass); }
 
@@ -120,7 +127,7 @@
   .hero h1 em{ font-style:italic; color:var(--brass); font-weight:500; }
   .hero-line{ margin:32px auto; max-width:460px; }
   .hero p.lede{
-    font-size:16px; color:var(--bone-dim); max-width:480px; line-height:1.65;
+    font-size:16px; color:var(--ink-dim); max-width:480px; line-height:1.65;
     margin:0 auto 40px; text-align:center;
   }
 
@@ -131,10 +138,10 @@
   .hero-capture .field{ display:flex; align-items:center; gap:10px; flex:1; padding:10px 18px; }
   .hero-capture .field svg{ flex-shrink:0; opacity:0.5; }
   .hero-capture input{
-    background:none; border:none; outline:none; color:var(--bone);
+    background:none; border:none; outline:none; color:var(--ink);
     font-family:'Inter', sans-serif; font-size:14.5px; width:100%;
   }
-  .hero-capture input::placeholder{ color:#6B675E; }
+  .hero-capture input::placeholder{ color:var(--ink-dim); }
   .hero-capture button{
     background:var(--brass); color:var(--bg); border:none; padding:14px 26px; border-radius:30px;
     font-size:13.5px; font-weight:700; letter-spacing:0.02em; cursor:pointer; white-space:nowrap;
@@ -147,13 +154,29 @@
     .hero-capture button{ width:100%; justify-content:center; }
   }
 
-  .hero-stage{ margin-top:20px; width:100%; height:620px; position:relative; overflow:hidden; }
-  .hero-stage::after{
-    content:''; position:absolute; left:0; right:0; bottom:0; height:200px;
-    background:linear-gradient(to bottom, transparent, var(--bg) 90%); z-index:2; pointer-events:none;
+  .hero-stage{ margin:56px auto 0; max-width:980px; padding:0 32px; }
+  @media (max-width:640px){ .hero-stage{ padding:0 22px; margin-top:40px; } }
+  .hero-video-frame{
+    position:relative; width:100%; aspect-ratio:16/9; border-radius:14px; overflow:hidden;
+    box-shadow:0 40px 80px -32px rgba(28,26,23,0.35), 0 1px 0 rgba(28,26,23,0.06);
+    border:1px solid var(--line);
   }
-  #heroCanvas{ width:100%; height:100%; display:block; }
-  @media (max-width:700px){ .hero-stage{ height:400px; margin-top:10px; } }
+  .hero-video-frame video{
+    position:absolute; top:50%; left:50%; width:100%; height:140%; min-height:100%;
+    transform:translate(-50%,-50%); object-fit:cover; will-change:transform;
+  }
+  .hero-video-frame::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(28,26,23,0.05), rgba(28,26,23,0.22) 100%);
+    pointer-events:none;
+  }
+  .hero-video-caption{
+    position:absolute; left:24px; bottom:20px; z-index:2; display:flex; align-items:center; gap:10px;
+    font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:#F2EDE4; font-weight:600;
+  }
+  .hero-video-caption .rec-dot{ width:7px; height:7px; border-radius:50%; background:#e6543f; box-shadow:0 0 8px rgba(230,84,63,0.7); animation:pulse-rec 1.8s ease-in-out infinite; }
+  @keyframes pulse-rec{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+  @media (max-width:700px){ .hero-video-frame{ border-radius:10px; } }
 
   /* ---------- strip ---------- */
   .strip{
@@ -162,7 +185,7 @@
   }
   .strip-track{
     display:inline-flex; gap:56px; animation:scroll 30s linear infinite;
-    font-family:'Fraunces', serif; font-style:italic; font-size:15px; color:var(--bone-dim);
+    font-family:'Fraunces', serif; font-style:italic; font-size:15px; color:var(--ink-dim);
   }
   .strip-track span{ display:inline-flex; align-items:center; gap:56px; }
   .strip-track span::after{ content:'—'; color:var(--line); margin-left:56px; }
@@ -173,14 +196,14 @@
   .section-head{ max-width:620px; margin-bottom:64px; }
   @media (max-width:700px){ .section-head{ margin-bottom:44px; } }
   .section-head h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(30px, 4vw, 46px); line-height:1.15; margin-top:18px; }
-  .section-head p{ color:var(--bone-dim); font-size:16px; margin-top:18px; line-height:1.7; }
+  .section-head p{ color:var(--ink-dim); font-size:16px; margin-top:18px; line-height:1.7; }
 
   .loop{ display:grid; grid-template-columns:repeat(4, 1fr); gap:0; position:relative; }
   .loop::before{ content:''; position:absolute; top:26px; left:0; right:0; height:1px; background:var(--line); }
   .loop-step{ padding-right:28px; position:relative; }
   .loop-dot{ width:9px; height:9px; border-radius:50%; background:var(--brass); position:relative; z-index:2; margin-bottom:26px; }
   .loop-step h3{ font-family:'Fraunces', serif; font-weight:500; font-size:20px; margin-bottom:10px; }
-  .loop-step p{ color:var(--bone-dim); font-size:14.5px; line-height:1.65; }
+  .loop-step p{ color:var(--ink-dim); font-size:14.5px; line-height:1.65; }
   @media (max-width:900px){
     .loop{ grid-template-columns:1fr; gap:36px; }
     .loop::before{ display:none; }
@@ -192,7 +215,7 @@
   .split-card .eyebrow{ margin-bottom:20px; display:block; }
   .split-card h3{ font-family:'Fraunces', serif; font-weight:400; font-size:31px; margin-bottom:22px; line-height:1.18; }
   .split-list{ list-style:none; margin:28px 0 34px; }
-  .split-list li{ display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line); font-size:14.5px; color:var(--bone-dim); }
+  .split-list li{ display:flex; gap:12px; padding:12px 0; border-top:1px solid var(--line); font-size:14.5px; color:var(--ink-dim); }
   .split-list li:last-child{ border-bottom:1px solid var(--line); }
   .split-list li::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--brass); margin-top:7px; flex-shrink:0; }
   @media (max-width:760px){ .split{ grid-template-columns:1fr; } .split-card{ padding:44px 26px; } }
@@ -205,13 +228,13 @@
   }
   .mock-avatar::after{ content:''; position:absolute; inset:0; background:repeating-linear-gradient(115deg, transparent 0 18px, rgba(201,162,39,0.05) 18px 19px); }
   .mock-name{ font-family:'Fraunces', serif; font-size:22px; margin-bottom:4px; }
-  .mock-meta{ font-size:13px; color:var(--bone-dim); margin-bottom:18px; }
+  .mock-meta{ font-size:13px; color:var(--ink-dim); margin-bottom:18px; }
   .mock-tags{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
-  .mock-tag{ font-size:11.5px; border:1px solid var(--line); color:var(--bone-dim); padding:5px 10px; border-radius:20px; }
+  .mock-tag{ font-size:11.5px; border:1px solid var(--line); color:var(--ink-dim); padding:5px 10px; border-radius:20px; }
   .mock-btn{ background:var(--brass); color:var(--bg); text-align:center; padding:13px; border-radius:3px; font-size:13.5px; font-weight:600; }
   .mock-copy .eyebrow{ margin-bottom:20px; display:block; }
   .mock-copy h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(28px,3.6vw,40px); line-height:1.18; margin-bottom:20px; }
-  .mock-copy p{ color:var(--bone-dim); font-size:16px; line-height:1.75; margin-bottom:16px; }
+  .mock-copy p{ color:var(--ink-dim); font-size:16px; line-height:1.75; margin-bottom:16px; }
   @media (max-width:900px){ .mock-wrap{ grid-template-columns:1fr; gap:44px; } }
 
   .waitlist{ background:var(--bg-alt); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
@@ -219,21 +242,21 @@
   .waitlist .eyebrow{ display:block; }
   .waitlist h2{ font-family:'Fraunces', serif; font-weight:400; font-size:clamp(32px,5vw,52px); line-height:1.1; margin:20px 0 16px; }
   .waitlist h2 em{ font-style:italic; color:var(--brass); }
-  .waitlist p{ color:var(--bone-dim); font-size:16px; margin-bottom:40px; }
+  .waitlist p{ color:var(--ink-dim); font-size:16px; margin-bottom:40px; }
 
   .toggle{ display:inline-flex; border:1px solid var(--line); border-radius:24px; padding:4px; margin-bottom:28px; }
   .toggle button{
-    background:none; border:none; color:var(--bone-dim); font-family:'Inter', sans-serif; font-size:13px;
+    background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:13px;
     font-weight:500; padding:9px 20px; border-radius:20px; cursor:pointer; transition:all .2s ease;
   }
   .toggle button.active{ background:var(--brass); color:var(--bg); }
 
   .waitlist-form{ display:flex; gap:10px; max-width:440px; margin:0 auto; }
   .waitlist-form input{
-    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--bone);
+    flex:1; background:var(--bg); border:1px solid var(--line); color:var(--ink);
     padding:15px 18px; border-radius:3px; font-size:14px; font-family:'Inter', sans-serif;
   }
-  .waitlist-form input::placeholder{ color:#6B675E; }
+  .waitlist-form input::placeholder{ color:var(--ink-dim); }
   .waitlist-form input:focus{ outline:none; border-color:var(--brass); }
   .waitlist-form button{
     background:var(--brass); color:var(--bg); border:none; padding:0 26px; border-radius:3px;
@@ -241,7 +264,7 @@
   }
   .waitlist-form button:hover{ background:var(--brass-soft); }
   .waitlist-form.stacked{ flex-direction:column; }
-  .form-note{ font-size:12.5px; color:#6B675E; margin-top:16px; }
+  .form-note{ font-size:12.5px; color:var(--ink-dim); margin-top:16px; }
   .form-success{ display:none; color:var(--brass); font-size:14.5px; font-family:'Fraunces', serif; font-style:italic; }
   .form-error{ display:none; color:#c0392b; font-size:13px; margin-top:14px; }
   .form-error a{ color:var(--brass); font-weight:600; }
@@ -250,8 +273,8 @@
   footer{ padding:56px 0 40px; }
   footer .wrap{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
   footer .logo{ font-size:18px; }
-  footer .foot-links{ display:flex; gap:28px; font-size:13px; color:var(--bone-dim); }
-  footer .foot-copy{ font-size:12.5px; color:#6B675E; margin-top:24px; }
+  footer .foot-links{ display:flex; gap:28px; font-size:13px; color:var(--ink-dim); }
+  footer .foot-copy{ font-size:12.5px; color:var(--ink-dim); margin-top:24px; }
 
   .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
   .reveal.in{ opacity:1; transform:translateY(0); }
@@ -296,8 +319,12 @@
     </form>
   </div>
 
-  <div class="hero-stage">
-    <canvas id="heroCanvas"></canvas>
+  <div class="hero-stage reveal">
+    <div class="hero-video-frame" id="heroVideoFrame">
+      <video autoplay muted loop playsinline id="heroVideo"
+        src="https://videos.pexels.com/video-files/7686550/7686550-sd_640_360_24fps.mp4"></video>
+      <span class="hero-video-caption"><span class="rec-dot"></span> <span data-i18n="hero_video_caption">Real cuts, real barbers</span></span>
+    </div>
   </div>
 </header>
 
@@ -307,6 +334,7 @@
 
 <section id="loop">
   <div class="wrap">
+    <div class="reveal"><div class="razor-line-scroll"></div></div>
     <div class="section-head reveal">
       <span class="eyebrow" data-i18n="loop_eyebrow">The loop</span>
       <h2 data-i18n="loop_h2">One relationship. Not one visit.</h2>
@@ -390,6 +418,7 @@
 
 <section class="waitlist" id="waitlist">
   <div class="wrap">
+    <div class="reveal"><div class="razor-line-scroll"></div></div>
     <div class="waitlist-inner reveal">
       <span class="eyebrow" data-i18n="wl_eyebrow">Launching in Tashkent</span>
       <h2 data-i18n="wl_h2">Be first to the <em>chair</em>.</h2>
@@ -444,6 +473,7 @@ const I18N = {
     hero_title:'Find your <em>barber.</em><br>Not just a shop.',
     hero_lede:"Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.",
     capture_ph:"Phone number or email — get notified", capture_btn:"Join waitlist",
+    hero_video_caption:"Real cuts, real barbers",
     loop_eyebrow:"The loop", loop_h2:"One relationship. Not one visit.",
     loop_p:"Most booking apps end at checkout. Ustara is built around what happens after — the next cut, the next referral, the next five years.",
     loop1_h:"Discover", loop1_p:"Browse barbers by portfolio and style — not a random list of nearby shops.",
@@ -483,6 +513,7 @@ const I18N = {
     hero_title:"O'z sartaroshingizni toping.<br>Do'kon emas, <em>usta.</em>",
     hero_lede:"Ustara — sartaroshning obro'si unga tegishli bo'lgan platforma: portfolio, mijozlar va bandlar u qayerda bo'lsa ham u bilan boradi.",
     capture_ph:"Telefon raqami yoki email — xabardor bo'ling", capture_btn:"Ro'yxatga yozilish",
+    hero_video_caption:"Haqiqiy soch olish, haqiqiy sartaroshlar",
     loop_eyebrow:"Halqa", loop_h2:"Bitta munosabat. Bitta tashrif emas.",
     loop_p:"Ko'p bron qilish ilovalari to'lovda tugaydi. Ustara esa undan keyingi voqealar uchun qurilgan — keyingi soch olish, keyingi tavsiya, keyingi besh yil.",
     loop1_h:"Toping", loop1_p:"Sartaroshlarni portfolio va uslubi bo'yicha ko'ring — yaqin do'konlarning tasodifiy ro'yxati emas.",
@@ -522,6 +553,7 @@ const I18N = {
     hero_title:"Найдите своего барбера.<br>Не просто <em>салон.</em>",
     hero_lede:"Ustara — платформа, где репутация барбера принадлежит ему самому: портфолио, клиенты и записи следуют за ним, где бы ни было его кресло.",
     capture_ph:"Телефон или email — получить уведомление", capture_btn:"В лист ожидания",
+    hero_video_caption:"Настоящие стрижки, настоящие барберы",
     loop_eyebrow:"Цикл", loop_h2:"Отношения, а не разовый визит.",
     loop_p:"Большинство приложений для записи заканчиваются на оплате. Ustara создана для того, что происходит после — следующая стрижка, следующая рекомендация, следующие пять лет.",
     loop1_h:"Найти", loop1_p:"Смотрите барберов по портфолио и стилю — а не случайный список ближайших салонов.",
@@ -624,7 +656,7 @@ function appendNextStep(container, role){
   const p = document.createElement('p');
   p.style.marginTop = '14px';
   p.style.fontSize = '13.5px';
-  p.style.color = 'var(--bone-dim)';
+  p.style.color = 'var(--ink-dim)';
   p.innerHTML = `${copy.text} <a href="${copy.href}" style="color:var(--brass); font-weight:600;">${copy.link} →</a>`;
   container.appendChild(p);
 }
@@ -794,119 +826,25 @@ const io = new IntersectionObserver((entries)=>{
 revealEls.forEach(el=>io.observe(el));
 
 (function(){
-  const canvas = document.getElementById('heroCanvas');
-  const stage = document.querySelector('.hero-stage');
-  if(!window.THREE || !canvas) return;
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(35, stage.clientWidth/stage.clientHeight, 0.1, 100);
-  camera.position.set(0, 0.3, 8.5);
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(stage.clientWidth, stage.clientHeight);
-
-  function buildEnvTexture(){
-    const c = document.createElement('canvas');
-    c.width = 1024; c.height = 512;
-    const ctx = c.getContext('2d');
-    const grad = ctx.createLinearGradient(0,0,0,512);
-    grad.addColorStop(0, '#3a3226');
-    grad.addColorStop(0.35, '#171614');
-    grad.addColorStop(0.65, '#0e0d0c');
-    grad.addColorStop(1, '#241f16');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0,0,1024,512);
-
-    function softRect(x,y,w,h,color,blur){
-      ctx.save();
-      ctx.filter = `blur(${blur}px)`;
-      ctx.fillStyle = color;
-      ctx.fillRect(x,y,w,h);
-      ctx.restore();
-    }
-    softRect(120, 90, 260, 90, 'rgba(228,194,90,0.9)', 40);
-    softRect(620, 60, 300, 60, 'rgba(242,237,228,0.55)', 45);
-    softRect(300, 340, 420, 50, 'rgba(201,162,39,0.4)', 55);
-    softRect(780, 300, 180, 160, 'rgba(107,114,128,0.35)', 60);
-    softRect(40, 380, 180, 40, 'rgba(242,237,228,0.3)', 40);
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.mapping = THREE.EquirectangularReflectionMapping;
-    return tex;
-  }
-
-  const envTex = buildEnvTexture();
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  pmrem.compileEquirectangularShader();
-  const envMap = pmrem.fromEquirectangular(envTex).texture;
-  scene.environment = envMap;
-  envTex.dispose();
-
-  scene.add(new THREE.AmbientLight(0x1a1712, 0.6));
-  const key = new THREE.DirectionalLight(0xE4C25A, 1.4);
-  key.position.set(4, 5, 6);
-  scene.add(key);
-  const rim = new THREE.PointLight(0xF2EDE4, 0.8, 20);
-  rim.position.set(-4, 2, -4);
-  scene.add(rim);
-
-  const chromeMat = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff, metalness:1, roughness:0.06,
-    envMap: envMap, envMapIntensity:1.6, clearcoat:0.6, clearcoatRoughness:0.15
-  });
-  const brassMat = new THREE.MeshPhysicalMaterial({
-    color: 0xC9A227, metalness:1, roughness:0.18,
-    envMap: envMap, envMapIntensity:1.3, clearcoat:0.4
-  });
-
-  const group = new THREE.Group();
-  scene.add(group);
-
-  const knotGeo = new THREE.TorusKnotGeometry(1.55, 0.36, 220, 32, 2, 3);
-  const knot = new THREE.Mesh(knotGeo, chromeMat);
-  group.add(knot);
-
-  const ringGeo = new THREE.TorusGeometry(2.7, 0.035, 16, 120);
-  const ring = new THREE.Mesh(ringGeo, brassMat);
-  ring.rotation.x = Math.PI/2.4;
-  group.add(ring);
-
-  const ring2 = new THREE.Mesh(ringGeo.clone(), chromeMat);
-  ring2.rotation.x = Math.PI/1.7;
-  ring2.rotation.y = 0.6;
-  ring2.scale.setScalar(0.72);
-  group.add(ring2);
-
-  let t = 0;
-  let px = 0, py = 0;
+  const video = document.getElementById('heroVideo');
+  const frame = document.getElementById('heroVideoFrame');
+  if(!video || !frame) return;
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) return;
 
-  window.addEventListener('pointermove', (e)=>{
-    px = (e.clientX / window.innerWidth - 0.5) * 2;
-    py = (e.clientY / window.innerHeight - 0.5) * 2;
-  });
-
-  function animate(){
-    requestAnimationFrame(animate);
-    if(!reduced){
-      t += 0.0028;
-      group.rotation.y = t * 0.7 + px * 0.25;
-      group.rotation.x = Math.sin(t*0.5) * 0.15 + py * 0.12;
-      ring.rotation.z = -t * 0.4;
-      ring2.rotation.z = t * 0.55;
-      group.position.y = Math.sin(t*1.1) * 0.08;
-    }
-    renderer.render(scene, camera);
+  let ticking = false;
+  function updateParallax(){
+    ticking = false;
+    const rect = frame.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const center = rect.top + rect.height/2 - vh/2;
+    const shift = Math.max(-30, Math.min(30, center * 0.06));
+    video.style.transform = `translate(-50%, calc(-50% + ${shift}px))`;
   }
-  animate();
-
-  window.addEventListener('resize', ()=>{
-    const w = stage.clientWidth, h = stage.clientHeight;
-    camera.aspect = w/h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-  });
+  window.addEventListener('scroll', ()=>{
+    if(!ticking){ requestAnimationFrame(updateParallax); ticking = true; }
+  }, { passive:true });
+  updateParallax();
 })();
 </script>
 
