@@ -135,8 +135,11 @@ async function init(){
   const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', barberId).eq('is_active', true);
   servicesData = services || [];
 
-  const { data: photosData } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', barberId).order('position', { ascending:true });
-  const portfolioPhotos = photosData || [];
+  let portfolioPhotos = [];
+  try {
+    const { data } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', barberId).order('created_at', { ascending:false });
+    portfolioPhotos = data || [];
+  } catch(e){ console.warn('portfolio_photos fetch failed:', e); }
 
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(sessionData.session){
@@ -146,11 +149,6 @@ async function init(){
   }
 
   render(portfolioPhotos);
-}
-
-function portfolioPublicUrl(imagePath){
-  const { data } = supabaseClient.storage.from('barber-media').getPublicUrl(imagePath);
-  return data.publicUrl;
 }
 
 function render(portfolioPhotos){
@@ -171,7 +169,7 @@ function render(portfolioPhotos){
 
     ${portfolioPhotos.length > 0 ? `
       <div class="section-title">${t('portfolio')}</div>
-      <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(portfolioPublicUrl(p.image_path))}" alt="">`).join('')}</div>
+      <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(p.photo_url)}" alt="">`).join('')}</div>
     ` : ''}
 
     ${b.latitude && b.longitude && b.is_location_verified ? `
@@ -255,6 +253,14 @@ async function showDayPicker(serviceKey, duration){
     slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
       el.addEventListener('click', async ()=>{
         if(!currentUser){
+          const { data: sessionData } = await supabaseClient.auth.getSession();
+          if(sessionData.session){
+            currentUser = sessionData.session.user;
+            const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
+            currentClientProfile = client;
+          }
+        }
+        if(!currentUser || !currentClientProfile){
           slotGrid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
           return;
         }
@@ -265,7 +271,11 @@ async function showDayPicker(serviceKey, duration){
           client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
           start_time: iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration
         }]);
-        if(error){ slotGrid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}</div>`; return; }
+        if(error){
+          console.error('Booking insert failed:', error);
+          slotGrid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}${error.code !== '23505' ? `<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>` : ''}</div>`;
+          return;
+        }
         bookedIsoSet.add(iso);
         slotGrid.innerHTML = `<div class="booking-toast">${t('booking_confirmed')}</div>`;
       });

@@ -335,7 +335,6 @@ const I18N = {
     login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
     booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
     back:"Back", min:"min",
-    map_unavailable:"Map is temporarily unavailable. You can still browse and book from the list.",
     day_short:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] },
   uz:{ search_ph:"Sartarosh yoki xizmat qidiring", loc_ph:"Joylashuvingizni kiriting", search_btn:"Qidirish",
     loading:"Sartaroshlar yuklanmoqda...", view_list:"Ro'yxat", view_map:"Xarita",
@@ -347,7 +346,6 @@ const I18N = {
     login_prompt:"Band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
     booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.",
     back:"Orqaga", min:"daq",
-    map_unavailable:"Xarita vaqtincha ishlamayapti. Ro'yxatdan ko'rib, band qilishingiz mumkin.",
     day_short:['Ya','Du','Se','Ch','Pa','Ju','Sh'] },
   ru:{ search_ph:"Поиск барберов или услуг", loc_ph:"Введите ваше местоположение", search_btn:"Поиск",
     loading:"Загрузка барберов...", view_list:"Список", view_map:"Карта",
@@ -359,7 +357,6 @@ const I18N = {
     login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
     booking_confirmed:"Записано!", booking_failed:"Это время заняли — выберите другое.",
     back:"Назад", min:"мин",
-    map_unavailable:"Карта временно недоступна. Вы можете смотреть и записываться из списка.",
     day_short:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'] }
 };
 
@@ -377,10 +374,6 @@ function escapeHtml(s){ const d = document.createElement('div'); d.textContent =
 function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : ''; }
 function localizeSpecialty(s){ const i = SPECIALTIES_EN.indexOf(s); return i === -1 ? s : SPECIALTIES_LOCAL[currentLang][i]; }
 function initials(name){ return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
-function portfolioPublicUrl(imagePath){
-  const { data } = supabaseClient.storage.from('barber-media').getPublicUrl(imagePath);
-  return data.publicUrl;
-}
 function distKm(a, b){
   const R = 6371, dLat = (b.lat-a.lat)*Math.PI/180, dLng = (b.lng-a.lng)*Math.PI/180;
   const s = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
@@ -519,28 +512,15 @@ function renderSpecialtyChips(){
 
 /* ================= map ================= */
 function initMap(){
-  const container = document.getElementById('mapEl');
-  if(typeof L === 'undefined'){
-    console.error('Leaflet failed to load');
-    if(container) container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; padding:24px; text-align:center; color:var(--ink-dim); font-size:13.5px;">${t('map_unavailable')}</div>`;
-    return;
-  }
-  try{
-    map = L.map('mapEl', { zoomControl:true }).setView([41.2995, 69.2401], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution:'&copy; OpenStreetMap contributors', maxZoom:19
-    }).addTo(map);
-  } catch(err){
-    console.error('Failed to initialize map:', err);
-    map = null;
-    if(container) container.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; height:100%; padding:24px; text-align:center; color:var(--ink-dim); font-size:13.5px;">${t('map_unavailable')}</div>`;
-  }
+  map = L.map('mapEl', { zoomControl:true }).setView([41.2995, 69.2401], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'&copy; OpenStreetMap contributors', maxZoom:19
+  }).addTo(map);
 }
 function priceIcon(price, active){
   return L.divIcon({ className:'', html:`<div class="price-pin${active?' active':''}">${formatPrice(price)}</div>`, iconSize:null });
 }
 function renderMapPins(barbers){
-  if(!map) return;
   Object.values(markersById).forEach(m => map.removeLayer(m));
   markersById = {};
   const bounds = [];
@@ -623,7 +603,7 @@ function renderResults(){
     const photos = (photosByBarber[b.id] || []).slice(0,3);
     const photoCells = [0,1,2].map(i =>
       photos[i]
-        ? `<div class="ph"><img src="${escapeHtml(portfolioPublicUrl(photos[i].image_path))}" alt="" loading="lazy"></div>`
+        ? `<div class="ph"><img src="${escapeHtml(photos[i].photo_url)}" alt="" loading="lazy"></div>`
         : `<div class="ph">${i === 1 ? '✂' : initials(b.full_name)[i % 2] || '·'}</div>`
     ).join('');
     const price = lowestPrice(b.id);
@@ -661,7 +641,7 @@ function renderResults(){
       if(window.innerWidth <= 880){
         document.body.classList.add('map-mode');
         document.querySelectorAll('#viewToggle button').forEach(x=>x.classList.toggle('active', x.dataset.mode==='map'));
-        setTimeout(()=> map && map.invalidateSize(), 200);
+        setTimeout(()=> map.invalidateSize(), 200);
       }
     });
   });
@@ -672,7 +652,7 @@ function renderResults(){
       if(window.innerWidth <= 880){
         document.body.classList.add('map-mode');
         document.querySelectorAll('#viewToggle button').forEach(x=>x.classList.toggle('active', x.dataset.mode==='map'));
-        setTimeout(()=> map && map.invalidateSize(), 200);
+        setTimeout(()=> map.invalidateSize(), 200);
       }
     });
   });
@@ -693,7 +673,7 @@ function openProfilePop(b, jumpToBooking = false){
 
   pop.innerHTML = `
     <div class="pop-gallery" id="popGallery">
-      ${popPhotos.length ? `<img id="popGalleryImg" src="${escapeHtml(portfolioPublicUrl(popPhotos[0].image_path))}" alt="">` : `<div class="no-photo">${initials(b.full_name)}</div>`}
+      ${popPhotos.length ? `<img id="popGalleryImg" src="${escapeHtml(popPhotos[0].photo_url)}" alt="">` : `<div class="no-photo">${initials(b.full_name)}</div>`}
       <button class="pop-close" id="popClose">&times;</button>
       ${popPhotos.length > 1 ? `
         <button class="gal-arrow gal-prev" id="galPrev">‹</button>
@@ -722,7 +702,7 @@ function openProfilePop(b, jumpToBooking = false){
     const nav = document.getElementById('galNav');
     const show = (i)=>{
       popGalleryIndex = (i + popPhotos.length) % popPhotos.length;
-      img.src = portfolioPublicUrl(popPhotos[popGalleryIndex].image_path);
+      img.src = popPhotos[popGalleryIndex].photo_url;
       nav.textContent = (popGalleryIndex+1) + '/' + popPhotos.length;
     };
     document.getElementById('galPrev').addEventListener('click', ()=> show(popGalleryIndex-1));
@@ -793,7 +773,10 @@ async function showPopDayPicker(b, serviceKey, duration){
     grid.innerHTML = slots.map(s=>`<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('');
     grid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
       el.addEventListener('click', async ()=>{
-        if(!currentUser){
+        // re-check auth at click time (avoids race where page loaded before session resolved)
+        if(!currentUser) await checkAuth();
+        if(!currentUser || !currentClientProfile){
+          // not logged in, or logged in as a non-client account (e.g. a barber) — needs a client account to book
           grid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
           return;
         }
@@ -803,7 +786,13 @@ async function showPopDayPicker(b, serviceKey, duration){
           client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
           start_time: el.dataset.iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration
         }]);
-        if(error){ grid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}</div>`; return; }
+        if(error){
+          console.error('Booking insert failed:', error);
+          const msg = error.code === '23505' ? t('booking_failed')
+            : `${t('booking_failed')}<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>`;
+          grid.innerHTML = `<div class="no-slots-msg">${msg}</div>`;
+          return;
+        }
         bookedIsoSet.add(el.dataset.iso);
         grid.innerHTML = `<div class="booking-toast">${t('booking_confirmed')}</div>`;
       });
@@ -842,7 +831,7 @@ async function loadAll(){
       const ids = allBarbers.map(b => b.id);
       const [{ data: services }, photosRes] = await Promise.all([
         supabaseClient.from('services').select('*').in('barber_id', ids),
-        supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).order('position', { ascending:true }).then(r => r).catch(()=>({ data: [] }))
+        supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r => r).catch(()=>({ data: [] }))
       ]);
       servicesByBarber = {};
       (services||[]).forEach(s=>{ (servicesByBarber[s.barber_id] = servicesByBarber[s.barber_id] || []).push(s); });
