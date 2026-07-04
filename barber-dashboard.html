@@ -500,8 +500,8 @@ const I18N = {
     upload_photo:"Upload photo", add_photo:"Add photo",
     bookings_sub:"Everyone who's booked with you.",
     filter_all:"All", filter_pending:"Pending", filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
-    empty_bookings:"No bookings yet.", confirm:"Confirm", cancel_booking:"Cancel",
-    confirmed:"confirmed", cancelled:"cancelled", pending:"pending",
+    empty_bookings:"No bookings yet.", confirm:"Confirm", cancel_booking:"Cancel", mark_completed:"Mark completed",
+    confirmed:"confirmed", cancelled:"cancelled", pending:"pending", completed:"completed",
     day_mon:"Mon", day_tue:"Tue", day_wed:"Wed", day_thu:"Thu", day_fri:"Fri", day_sat:"Sat", day_sun:"Sun",
     min:"min"
   },
@@ -530,8 +530,8 @@ const I18N = {
     upload_photo:"Surat yuklash", add_photo:"Surat qo'shish",
     bookings_sub:"Siz bilan band qilganlarning barchasi.",
     filter_all:"Barchasi", filter_pending:"Kutilmoqda", filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
-    empty_bookings:"Hozircha bandlar yo'q.", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish",
-    confirmed:"tasdiqlangan", cancelled:"bekor qilingan", pending:"kutilmoqda",
+    empty_bookings:"Hozircha bandlar yo'q.", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish", mark_completed:"Bajarildi deb belgilash",
+    confirmed:"tasdiqlangan", cancelled:"bekor qilingan", pending:"kutilmoqda", completed:"bajarildi",
     day_mon:"Du", day_tue:"Se", day_wed:"Ch", day_thu:"Pa", day_fri:"Ju", day_sat:"Sh", day_sun:"Ya",
     min:"daq"
   },
@@ -560,8 +560,8 @@ const I18N = {
     upload_photo:"Загрузить фото", add_photo:"Добавить фото",
     bookings_sub:"Все, кто записался к вам.",
     filter_all:"Все", filter_pending:"Ожидают", filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
-    empty_bookings:"Записей пока нет.", confirm:"Подтвердить", cancel_booking:"Отменить",
-    confirmed:"подтверждено", cancelled:"отменено", pending:"ожидает",
+    empty_bookings:"Записей пока нет.", confirm:"Подтвердить", cancel_booking:"Отменить", mark_completed:"Отметить выполненным",
+    confirmed:"подтверждено", cancelled:"отменено", pending:"ожидает", completed:"выполнено",
     day_mon:"Пн", day_tue:"Вт", day_wed:"Ср", day_thu:"Чт", day_fri:"Пт", day_sat:"Сб", day_sun:"Вс",
     min:"мин"
   }
@@ -975,6 +975,10 @@ function bookingRowHtml(b, withActions = true){
           <button class="btn btn-primary" data-confirm="${b.id}">${t('confirm')}</button>
           <button class="btn btn-secondary" data-cancel="${b.id}">${t('cancel_booking')}</button>
         </div>
+      ` : withActions && b.status === 'confirmed' ? `
+        <div class="booking-actions">
+          <button class="btn btn-primary" data-complete="${b.id}" data-service-key="${b.service_key || ''}">${t('mark_completed')}</button>
+        </div>
       ` : `<span class="booking-status">${statusLabel}</span>`}
     </div>
   `;
@@ -999,6 +1003,28 @@ function renderBookingsList(){
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
       await supabaseClient.from('bookings').update({ status:'cancelled' }).eq('id', btn.dataset.cancel);
+      await refreshBookings();
+    });
+  });
+  area.querySelectorAll('[data-complete]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      const bookingId = btn.dataset.complete;
+      const serviceKey = btn.dataset.serviceKey;
+      // snapshot the CURRENT price for this service so commission reflects
+      // what was actually charged, even if the barber changes prices later
+      const service = servicesData.find(s => s.service_key === serviceKey);
+      const price = service ? (service.price || 0) : 0;
+      const flat = barberData.commission_flat ?? 1000;
+      const percent = barberData.commission_percent ?? 3;
+      const commission = flat + Math.round(price * percent / 100);
+      const { error } = await supabaseClient.from('bookings').update({
+        status: 'completed',
+        service_price: price,
+        commission_amount: commission,
+        completed_at: new Date().toISOString()
+      }).eq('id', bookingId);
+      if(error) console.error('Failed to mark booking completed:', error);
       await refreshBookings();
     });
   });
