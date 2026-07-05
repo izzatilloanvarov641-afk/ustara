@@ -279,7 +279,7 @@
       <div class="skel-stat"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
     </div>
     <div class="tile tile-map" id="mapTeaser" data-nav="map">
-      <div class="tile-map-label"><span class="pin-dot"></span><span data-i18n="map_title">Your barber's spot</span></div>
+      <div class="tile-map-label"><span class="pin-dot"></span><span id="mapTeaserText">Your barber's spot</span></div>
     </div>
   </div>
 </div>
@@ -352,6 +352,13 @@ const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const SERVICES_LOCAL = {
+  en: { haircut:"Haircut", beard_trim:"Beard trim", haircut_beard:"Haircut + Beard", kids_haircut:"Kids' haircut", lineup:"Line-up", coloring:"Hair coloring" },
+  uz: { haircut:"Soch olish", beard_trim:"Soqol olish", haircut_beard:"Soch + Soqol", kids_haircut:"Bolalar uchun", lineup:"Line-up", coloring:"Soch bo'yash" },
+  ru: { haircut:"Стрижка", beard_trim:"Оформление бороды", haircut_beard:"Стрижка + Борода", kids_haircut:"Детская стрижка", lineup:"Line-up", coloring:"Окрашивание" }
+};
+function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : ''; }
+
 const I18N = {
   en:{
     hero_eyebrow:"Ustara", hero_greeting:'Good to see you, <em id="nameInsert">there</em>',
@@ -360,6 +367,7 @@ const I18N = {
     map_soon_s:"You'll be able to see exactly where to go, right here.",
     map_no_booking:"Book an appointment to see your barber's location here.",
     map_no_location:"Your barber hasn't set their exact location yet.",
+    map_teaser_no_booking:"Book a cut to see it here", map_teaser_no_location:"Location coming soon",
     map_directions:"Get directions",
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
@@ -377,6 +385,7 @@ const I18N = {
     map_soon_s:"Qayerga borishni aniq shu yerda ko'rasiz.",
     map_no_booking:"Sartaroshingiz joylashuvini ko'rish uchun uchrashuvni band qiling.",
     map_no_location:"Sartaroshingiz hali aniq joylashuvni belgilamagan.",
+    map_teaser_no_booking:"Ko'rish uchun band qiling", map_teaser_no_location:"Joylashuv tez orada",
     map_directions:"Yo'nalishni ko'rish",
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
@@ -394,6 +403,7 @@ const I18N = {
     map_soon_s:"Здесь вы увидите, куда именно идти.",
     map_no_booking:"Запишитесь на приём, чтобы увидеть местоположение барбера здесь.",
     map_no_location:"Ваш барбер ещё не указал точное местоположение.",
+    map_teaser_no_booking:"Запишитесь, чтобы увидеть", map_teaser_no_location:"Локация скоро",
     map_directions:"Проложить маршрут",
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
@@ -432,6 +442,7 @@ function applyLang(lang){
   renderStatPills();
   renderHomeBookings();
   renderAllBookings();
+  renderMapTeaser();
   if(clientData) renderInfoCard();
 }
 
@@ -501,12 +512,15 @@ function avatarFor(barber){
 function bigTileHtml(b){
   const barber = b.barbers || {};
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
+  const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
+  const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   return `
     <div class="tile tile-big" data-booking-id="${b.id}">
       <span class="status-badge">${t(b.status) || b.status}</span>
       <div class="tag">${t('upcoming_title')}</div>
       <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
       <div class="meta">${new Date(b.start_time).toLocaleString()}${barber.district ? ' · ' + escapeHtml(barber.district) : ''}</div>
+      ${svcName ? `<div class="meta" style="color:var(--brass-soft); font-weight:700; margin-top:4px;">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
       ${canCancel ? `<button class="cancel-dark" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
     </div>
   `;
@@ -535,12 +549,15 @@ function bookingListRowHtml(b){
   const barber = b.barbers || {};
   const avatar = avatarFor(barber);
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
+  const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
+  const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   return `
     <div class="booking-list-row" data-booking-id="${b.id}">
       <div class="avatar">${avatar}</div>
       <div class="info">
         <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
         <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
+        ${svcName ? `<div class="meta" style="color:var(--brass); font-weight:700; margin-top:3px;">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
       </div>
       <div class="right">
         <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
@@ -583,6 +600,7 @@ async function refreshBookings(){
   renderStatPills();
   renderHomeBookings();
   renderAllBookings();
+  renderMapTeaser();
 }
 
 function renderHomeBookings(){
@@ -637,6 +655,21 @@ function renderInfoCard(){
     <div class="info-row"><span class="k">${t('rv_phone')}</span><span class="v">${escapeHtml(clientData.phone || '—')}</span></div>
     <div class="info-row"><span class="k">${t('rv_email')}</span><span class="v">${escapeHtml(userEmail)}</span></div>
   `;
+}
+
+function renderMapTeaser(){
+  const label = document.getElementById('mapTeaserText');
+  const booking = nextBookingWithBarber();
+  if(!booking){
+    label.textContent = t('map_teaser_no_booking');
+    return;
+  }
+  const barber = booking.barbers;
+  if(!barber.latitude || !barber.longitude || !barber.is_location_verified){
+    label.textContent = t('map_teaser_no_location');
+    return;
+  }
+  label.textContent = escapeHtml(barber.shop_name || barber.full_name) + (barber.district ? ' · ' + escapeHtml(barber.district) : '');
 }
 
 /* ---------- real map, lazy-initialized on first visit to Map tab ---------- */

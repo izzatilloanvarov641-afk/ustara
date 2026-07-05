@@ -197,13 +197,13 @@ function renderServiceChoices(){
     return;
   }
   area.innerHTML = servicesData.map(s => `
-    <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}">
+    <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
       <span>${SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
       <span class="svc-price">${formatPrice(s.price)}</span>
     </div>
   `).join('');
   area.querySelectorAll('.service-option').forEach(opt=>{
-    opt.addEventListener('click', ()=> showDayPicker(opt.dataset.key, parseInt(opt.dataset.duration)));
+    opt.addEventListener('click', ()=> showDayPicker(opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0));
   });
 }
 
@@ -225,7 +225,7 @@ function generateSlotsForDate(dateObj, duration, bookedIsoSet){
   return slots;
 }
 
-async function showDayPicker(serviceKey, duration){
+async function showDayPicker(serviceKey, duration, price){
   const area = document.getElementById('bookingArea');
   const rangeStart = new Date(); const rangeEnd = new Date(); rangeEnd.setDate(rangeEnd.getDate()+7);
   const { data: existing } = await supabaseClient.from('bookings').select('start_time').eq('barber_id', barberData.id)
@@ -269,7 +269,8 @@ async function showDayPicker(serviceKey, duration){
         const { error } = await supabaseClient.from('bookings').insert([{
           barber_id: barberData.id, client_id: currentUser.id,
           client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
-          start_time: iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration
+          start_time: iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
+          service_price: price
         }]);
         if(error){
           console.error('Booking insert failed:', error);

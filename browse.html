@@ -728,12 +728,12 @@ function renderPopServices(b){
   const active = (servicesByBarber[b.id] || []).filter(s => s.is_active);
   if(!active.length){ listEl.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
   listEl.innerHTML = active.map(s=>`
-    <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}">
+    <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
       <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
       <span class="svc-price">${formatPrice(s.price)}</span>
     </div>`).join('');
   listEl.querySelectorAll('.service-option').forEach(opt=>{
-    opt.addEventListener('click', ()=> showPopDayPicker(b, opt.dataset.key, parseInt(opt.dataset.duration)));
+    opt.addEventListener('click', ()=> showPopDayPicker(b, opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0));
   });
 }
 
@@ -755,7 +755,7 @@ function generateSlots(b, dateObj, duration, bookedIsoSet){
   return out;
 }
 
-async function showPopDayPicker(b, serviceKey, duration){
+async function showPopDayPicker(b, serviceKey, duration, price){
   const listEl = document.getElementById('popServiceList');
   const rs = new Date(); const re = new Date(); re.setDate(re.getDate()+7);
   const { data: existing } = await supabaseClient.from('bookings').select('start_time')
@@ -794,7 +794,8 @@ async function showPopDayPicker(b, serviceKey, duration){
         const { error } = await supabaseClient.from('bookings').insert([{
           barber_id: b.id, client_id: currentUser.id,
           client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
-          start_time: el.dataset.iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration
+          start_time: el.dataset.iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
+          service_price: price
         }]);
         if(error){
           console.error('Booking insert failed:', error);

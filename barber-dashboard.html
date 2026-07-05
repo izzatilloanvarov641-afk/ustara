@@ -993,7 +993,7 @@ function bookingRowHtml(b, withActions = true){
         </div>
       ` : withActions && b.status === 'confirmed' ? `
         <div class="booking-actions">
-          <button class="btn btn-primary" data-complete="${b.id}" data-service-key="${b.service_key || ''}">${t('mark_completed')}</button>
+          <button class="btn btn-primary" data-complete="${b.id}" data-service-key="${b.service_key || ''}" data-existing-price="${b.service_price ?? ''}">${t('mark_completed')}</button>
         </div>
       ` : `<span class="booking-status">${statusLabel}</span>`}
     </div>
@@ -1027,10 +1027,17 @@ function renderBookingsList(){
       btn.disabled = true;
       const bookingId = btn.dataset.complete;
       const serviceKey = btn.dataset.serviceKey;
-      // snapshot the CURRENT price for this service so commission reflects
-      // what was actually charged, even if the barber changes prices later
-      const service = servicesData.find(s => s.service_key === serviceKey);
-      const price = service ? (service.price || 0) : 0;
+      const existingPrice = btn.dataset.existingPrice;
+      // use the price the client was actually quoted at booking time; only
+      // fall back to the service's current price for older bookings made
+      // before prices were snapshotted at booking time
+      let price;
+      if(existingPrice !== '' && existingPrice !== 'null'){
+        price = parseInt(existingPrice) || 0;
+      } else {
+        const service = servicesData.find(s => s.service_key === serviceKey);
+        price = service ? (service.price || 0) : 0;
+      }
       const flat = barberData.commission_flat ?? 1000;
       const percent = barberData.commission_percent ?? 3;
       const commission = flat + Math.round(price * percent / 100);
