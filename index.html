@@ -284,6 +284,7 @@
     <div class="hero-cta-row">
       <a href="auth.html" class="btn-primary" data-i18n="hero_cta_client">I'm a client</a>
       <a href="auth.html?role=barber" class="btn-ghost" data-i18n="hero_cta_barber">I'm a barber</a>
+      <button type="button" id="installAppBtn" class="btn-ghost" style="display:none; cursor:pointer;">📲 Install app</button>
     </div>
   </div>
 
@@ -593,6 +594,30 @@ revealEls.forEach(el=>io.observe(el));
       navigator.serviceWorker.register('/sw.js').catch(console.warn);
     });
   }
+
+  let deferredInstallPrompt = null;
+  const installBtn = document.getElementById('installAppBtn');
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if (installBtn && !isStandalone) installBtn.style.display = 'inline-block';
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      installBtn.style.display = 'none';
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.style.display = 'none';
+  });
 </script>
 
 </body>
