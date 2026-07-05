@@ -164,6 +164,14 @@
   }
   .price-pin.active{ background:var(--brass); transform:scale(1.15); }
 
+  .pin-pop{ min-width:160px; font-family:inherit; }
+  .pin-pop-name{ font-weight:700; font-size:14px; color:var(--ink); }
+  .pin-pop-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .pin-pop-btn{
+    display:block; margin-top:8px; text-align:center; background:var(--ink); color:#fff;
+    font-size:12.5px; font-weight:700; padding:8px 10px; border-radius:10px; text-decoration:none;
+  }
+
   /* ================= PROFILE OVERLAY (over map, theCut style) ================= */
   .profile-pop{
     display:none; position:absolute; top:16px; left:16px; bottom:16px; width:min(400px, calc(100% - 32px));
@@ -330,7 +338,7 @@ const I18N = {
     results_one:"result", results_many:"results",
     empty_h:"No barbers found", empty_p:"Try a different area or clear your filters.",
     empty_none_h:"No barbers here yet", empty_none_p:"Ustara is opening in Tashkent. Be the first barber on the platform.",
-    empty_btn:"Join as a barber", years:"yrs", from:"from", km:"km", book:"Book appointment",
+    empty_btn:"Join as a barber", years:"yrs", from:"from", km:"km", book:"Book appointment", view_book:"View & book →",
     choose_service:"Choose a service", book_title:"Pick a time", no_slots:"No availability set yet",
     login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
     booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
@@ -341,7 +349,7 @@ const I18N = {
     results_one:"natija", results_many:"natija",
     empty_h:"Sartaroshlar topilmadi", empty_p:"Boshqa hududni sinab ko'ring yoki filtrlarni tozalang.",
     empty_none_h:"Hozircha sartaroshlar yo'q", empty_none_p:"Ustara Toshkentda ochilmoqda. Birinchi sartarosh bo'ling.",
-    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", from:"dan", km:"km", book:"Band qilish",
+    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", from:"dan", km:"km", book:"Band qilish", view_book:"Ko'rish va band qilish →",
     choose_service:"Xizmatni tanlang", book_title:"Vaqtni tanlang", no_slots:"Hali ish vaqti sozlanmagan",
     login_prompt:"Band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
     booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.",
@@ -352,7 +360,7 @@ const I18N = {
     results_one:"результат", results_many:"результатов",
     empty_h:"Барберы не найдены", empty_p:"Попробуйте другой район или сбросьте фильтры.",
     empty_none_h:"Барберов пока нет", empty_none_p:"Ustara открывается в Ташкенте. Станьте первым барбером.",
-    empty_btn:"Присоединиться как барбер", years:"лет", from:"от", km:"км", book:"Записаться",
+    empty_btn:"Присоединиться как барбер", years:"лет", from:"от", km:"км", book:"Записаться", view_book:"Смотреть и записаться →",
     choose_service:"Выберите услугу", book_title:"Выберите время", no_slots:"Рабочие часы не настроены",
     login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
     booking_confirmed:"Записано!", booking_failed:"Это время заняли — выберите другое.",
@@ -529,7 +537,14 @@ function renderMapPins(barbers){
     const price = lowestPrice(b.id);
     if(price === null) return;
     const marker = L.marker([b.latitude, b.longitude], { icon: priceIcon(price, false) }).addTo(map);
-    marker.on('click', ()=>{ highlightBarber(b.id); openProfilePop(b); });
+    marker.bindPopup(`
+      <div class="pin-pop">
+        <div class="pin-pop-name">${escapeHtml(b.full_name)}</div>
+        <div class="pin-pop-sub">${escapeHtml(b.shop_name || b.district || '')} · ${t('from')} ${formatPrice(price)}</div>
+        <a class="pin-pop-btn" href="profile.html?id=${b.id}">${t('view_book')}</a>
+      </div>
+    `);
+    marker.on('click', ()=> highlightBarber(b.id));
     markersById[b.id] = marker;
     bounds.push([b.latitude, b.longitude]);
   });
@@ -646,14 +661,9 @@ function renderResults(){
     });
   });
   area.querySelectorAll('[data-book]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const b = allBarbers.find(x => x.id === btn.dataset.book);
-      openProfilePop(b, true);
-      if(window.innerWidth <= 880){
-        document.body.classList.add('map-mode');
-        document.querySelectorAll('#viewToggle button').forEach(x=>x.classList.toggle('active', x.dataset.mode==='map'));
-        setTimeout(()=> map.invalidateSize(), 200);
-      }
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      window.location.href = 'profile.html?id=' + btn.dataset.book;
     });
   });
 
