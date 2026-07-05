@@ -127,6 +127,23 @@
   .chip{ border:1px solid var(--line); color:var(--ink-dim); padding:9px 15px; border-radius:20px; font-size:13px; cursor:pointer; background:var(--bg); }
   .chip.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
 
+  .day-block{ padding:16px 0; border-bottom:1px solid var(--line); }
+  .day-block:last-child{ border-bottom:none; }
+  .day-block-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .day-block-name{ font-weight:600; font-size:14px; }
+  .time-range-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .time-range-row input[type="time"]{ flex:1; padding:9px 10px; font-size:13px; }
+  .time-range-row .to-label{ font-size:12px; color:var(--ink-dim); flex-shrink:0; }
+  .remove-block-btn{
+    background:none; border:none; color:var(--err); font-size:18px; cursor:pointer; flex-shrink:0;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center;
+  }
+  .add-block-btn{
+    font-size:12px; color:var(--brass); font-weight:600; cursor:pointer; background:none; border:none;
+    font-family:'Inter', sans-serif; padding:4px 0;
+  }
+  .day-off-label{ font-size:12.5px; color:var(--ink-dim); font-style:italic; padding:4px 0; }
+
   .btn{ padding:12px 22px; border-radius:6px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
   .btn-primary{ background:var(--brass); color:#fff; }
   .btn-primary:hover{ background:var(--brass-soft); }
@@ -350,22 +367,9 @@
     <!-- ============ WORKING HOURS ============ -->
     <div class="view" data-view="hours">
       <h1 data-i18n="nav_hours">Working hours</h1>
-      <p class="page-sub" data-i18n="hours_sub">Which days and times you're open. Each service's own length controls how slots are spaced.</p>
+      <p class="page-sub" data-i18n="hours_sub_v2">Set one or more time blocks per day — add a second block to carve out a lunch break or time off.</p>
       <div class="card">
-        <div class="field-group">
-          <label data-i18n="l_days">Working days</label>
-          <div class="chip-grid" id="dayChips"></div>
-        </div>
-        <div class="row2">
-          <div class="field-group">
-            <label data-i18n="l_start">Opens at</label>
-            <input type="time" id="editWorkStart">
-          </div>
-          <div class="field-group">
-            <label data-i18n="l_end">Closes at</label>
-            <input type="time" id="editWorkEnd">
-          </div>
-        </div>
+        <div id="availabilityEditor"></div>
         <div class="btn-row">
           <button class="btn btn-primary" id="saveHoursBtn" data-i18n="save">Save changes</button>
         </div>
@@ -500,6 +504,8 @@ const I18N = {
     l_bio:"Short bio", save:"Save changes", cancel:"Cancel", saved:"Saved.",
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"years",
     hours_sub:"Which days and times you're open. Each service's own length controls how slots are spaced.",
+    hours_sub_v2:"Set one or more time blocks per day — add a second block to carve out a lunch break or time off.",
+    add_block:"Add block", to_label:"to", day_off:"Day off",
     l_days:"Working days", l_start:"Opens at", l_end:"Closes at",
     nav_location:"Location", location_sub:"Click on the map to place a pin exactly where your shop is. Clients use this to find and navigate to you.",
     l_shopname:"Shop name (optional)", location_not_set:"No location set yet — click the map to place a pin.",
@@ -532,6 +538,8 @@ const I18N = {
     l_bio:"Qisqa bio", save:"Saqlash", cancel:"Bekor qilish", saved:"Saqlandi.",
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
     hours_sub:"Qaysi kunlari va soatlarda ochiqsiz. Har bir xizmatning davomiyligi bo'sh joylarni belgilaydi.",
+    hours_sub_v2:"Har kun uchun bitta yoki bir nechta vaqt oralig'ini belgilang — tushlik yoki dam olish uchun ikkinchi oraliq qo'shing.",
+    add_block:"Oraliq qo'shish", to_label:"gacha", day_off:"Dam kuni",
     l_days:"Ish kunlari", l_start:"Ochilish vaqti", l_end:"Yopilish vaqti",
     nav_location:"Joylashuv", location_sub:"Do'koningiz aniq qayerda joylashganini belgilash uchun xaritani bosing. Mijozlar sizni topish va yo'l topish uchun shundan foydalanadi.",
     l_shopname:"Do'kon nomi (ixtiyoriy)", location_not_set:"Hali joylashuv belgilanmagan — pin qo'yish uchun xaritani bosing.",
@@ -564,6 +572,8 @@ const I18N = {
     l_bio:"Краткое био", save:"Сохранить", cancel:"Отмена", saved:"Сохранено.",
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
     hours_sub:"В какие дни и часы вы открыты. Длительность каждой услуги определяет интервалы записи.",
+    hours_sub_v2:"Задайте один или несколько временных блоков на день — добавьте второй блок для обеда или перерыва.",
+    add_block:"Добавить блок", to_label:"до", day_off:"Выходной",
     l_days:"Рабочие дни", l_start:"Открытие", l_end:"Закрытие",
     nav_location:"Локация", location_sub:"Нажмите на карту, чтобы отметить точное расположение вашего салона. Клиенты используют это, чтобы найти вас.",
     l_shopname:"Название салона (необязательно)", location_not_set:"Локация ещё не указана — нажмите на карту, чтобы поставить метку.",
@@ -593,7 +603,7 @@ let barberData = null;
 let servicesData = [];
 let bookingsData = [];
 let selectedSpecialties = [];
-let selectedDays = [];
+let availabilityData = []; // array of { day, start, end }
 let currentBookingFilter = 'all';
 
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
@@ -637,14 +647,24 @@ async function initInner(){
   }
   barberData = barber;
   selectedSpecialties = (barber.specialties || []).map(s => SPECIALTIES_EN.indexOf(s)).filter(i => i !== -1);
-  selectedDays = [...(barber.work_days || [])];
+  // migrate old single-range hours into the new block format only if the
+  // barber has never saved new-style availability yet
+  if(barber.availability && barber.availability.length > 0){
+    availabilityData = [...barber.availability];
+  } else if(barber.work_days && barber.work_days.length > 0){
+    availabilityData = barber.work_days.map(day => ({
+      day, start: (barber.work_start || '09:00').slice(0,5), end: (barber.work_end || '20:00').slice(0,5)
+    }));
+  } else {
+    availabilityData = [];
+  }
 
   document.getElementById('nameInsert').textContent = ', ' + barber.full_name.split(' ')[0];
 
   renderStatusBanner();
   renderProfileView();
   renderEditChips();
-  renderDayChips();
+  renderAvailabilityEditor();
   renderAvatar();
   setupProfileLink();
   setupLocationPicker();
@@ -799,44 +819,88 @@ document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
 });
 
 /* ---------- working hours ---------- */
-function renderDayChips(){
-  const grid = document.getElementById('dayChips');
-  grid.innerHTML = '';
-  DAY_KEYS.forEach(day=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip' + (selectedDays.includes(day) ? ' selected' : '');
-    chip.textContent = t('day_' + day.toLowerCase());
-    chip.addEventListener('click', ()=>{
-      if(selectedDays.includes(day)) selectedDays = selectedDays.filter(d=>d!==day);
-      else selectedDays.push(day);
-      renderDayChips();
+function renderAvailabilityEditor(){
+  const container = document.getElementById('availabilityEditor');
+  container.innerHTML = DAY_KEYS.map(day => {
+    const blocks = availabilityData.filter(b => b.day === day);
+    return `
+      <div class="day-block" data-day="${day}">
+        <div class="day-block-head">
+          <span class="day-block-name">${t('day_' + day.toLowerCase())}</span>
+          <span class="add-block-btn" data-add-day="${day}">+ ${t('add_block')}</span>
+        </div>
+        <div class="blocks-list">
+          ${blocks.length === 0
+            ? `<div class="day-off-label">${t('day_off')}</div>`
+            : blocks.map((b, i) => `
+                <div class="time-range-row" data-day="${day}" data-index="${i}">
+                  <input type="time" class="block-start" value="${b.start}">
+                  <span class="to-label">${t('to_label')}</span>
+                  <input type="time" class="block-end" value="${b.end}">
+                  <button class="remove-block-btn" data-remove-day="${day}" data-remove-index="${i}">&times;</button>
+                </div>
+              `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('[data-add-day]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const day = el.dataset.addDay;
+      const existing = availabilityData.filter(b => b.day === day);
+      const lastEnd = existing.length ? existing[existing.length-1].end : '09:00';
+      availabilityData.push({ day, start: lastEnd, end: '18:00' });
+      renderAvailabilityEditor();
     });
-    grid.appendChild(chip);
   });
-  document.getElementById('editWorkStart').value = (barberData.work_start || '09:00').slice(0,5);
-  document.getElementById('editWorkEnd').value = (barberData.work_end || '20:00').slice(0,5);
+  container.querySelectorAll('[data-remove-day]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const day = el.dataset.removeDay;
+      const idx = parseInt(el.dataset.removeIndex);
+      const dayBlocks = availabilityData.filter(b => b.day === day);
+      const toRemove = dayBlocks[idx];
+      availabilityData = availabilityData.filter(b => b !== toRemove);
+      renderAvailabilityEditor();
+    });
+  });
 }
+
+function collectAvailabilityFromEditor(){
+  const rows = document.querySelectorAll('.time-range-row');
+  const collected = [];
+  rows.forEach(row => {
+    const start = row.querySelector('.block-start').value;
+    const end = row.querySelector('.block-end').value;
+    if(start && end) collected.push({ day: row.dataset.day, start, end });
+  });
+  return collected;
+}
+
 document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('saveHoursBtn');
   const msg = document.getElementById('saveHoursMsg');
-  const startVal = document.getElementById('editWorkStart').value;
-  const endVal = document.getElementById('editWorkEnd').value;
-  if(startVal && endVal && endVal <= startVal){
+  const newAvailability = collectAvailabilityFromEditor();
+  const hasInvalidBlock = newAvailability.some(b => b.end <= b.start);
+  if(hasInvalidBlock){
     msg.style.color = 'var(--err)';
     msg.textContent = 'Closing time must be after opening time.';
     msg.style.display = 'block';
     return;
   }
   btn.disabled = true;
+  // keep work_days/work_start/work_end roughly in sync for any code that
+  // hasn't migrated to the new availability format yet
+  const daysWithBlocks = [...new Set(newAvailability.map(b => b.day))];
   const updates = {
-    work_days: selectedDays,
-    work_start: startVal,
-    work_end: endVal
+    availability: newAvailability,
+    work_days: daysWithBlocks
   };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
   if(!error){
     Object.assign(barberData, updates);
+    availabilityData = newAvailability;
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';

@@ -58,6 +58,13 @@
   .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
   .slot-btn{ background:var(--surface); border:1px solid var(--line); color:var(--ink); padding:10px 6px; border-radius:8px; font-size:13px; cursor:pointer; text-align:center; }
   .slot-btn:hover{ border-color:var(--brass); }
+  .slot-btn.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:700; }
+  .confirm-booking-btn{
+    grid-column:1/-1; margin-top:6px; background:var(--brass); color:#fff; border:none; padding:13px;
+    border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:'Inter', sans-serif;
+  }
+  .confirm-booking-btn:hover{ background:var(--brass-soft); }
+  .confirm-booking-btn:disabled{ opacity:0.6; cursor:not-allowed; }
   .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
   .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:13px; }
   .login-prompt a{ color:var(--brass); font-weight:600; }
@@ -99,16 +106,19 @@ const T = {
        portfolio:"Their work", book_title:"Book an appointment", choose_service:"Choose a service",
        no_slots:"No availability set yet", login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
        booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
+       confirm_booking_btn:"Book this time", booking_in_progress:"Booking...",
        back:"Back", location:"Location", min:"min" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
        no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
        booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
+       confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...",
        back:"Orqaga", location:"Joylashuv", min:"daq" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
        no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
        booking_confirmed:"Записано!", booking_failed:"Это время только что заняли — выберите другое.",
+       confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...",
        back:"Назад", location:"Локация", min:"мин" }
 };
 const browserLang = (navigator.language || 'en').slice(0,2);
@@ -207,21 +217,34 @@ function renderServiceChoices(){
   });
 }
 
+function blocksForDay(dayKey){
+  if(barberData.availability && barberData.availability.length > 0){
+    return barberData.availability.filter(block => block.day === dayKey);
+  }
+  if((barberData.work_days || []).includes(dayKey)){
+    return [{ start: (barberData.work_start || '09:00').slice(0,5), end: (barberData.work_end || '20:00').slice(0,5) }];
+  }
+  return [];
+}
+
 function generateSlotsForDate(dateObj, duration, bookedIsoSet){
   const dayKey = JS_DAY_TO_KEY[dateObj.getDay()];
-  if(!(barberData.work_days || []).includes(dayKey)) return [];
-  const [startH, startM] = (barberData.work_start || '09:00').split(':').map(Number);
-  const [endH, endM] = (barberData.work_end || '20:00').split(':').map(Number);
+  const blocks = blocksForDay(dayKey);
+  if(blocks.length === 0) return [];
   const slots = []; const now = new Date();
-  let cursor = new Date(dateObj); cursor.setHours(startH, startM, 0, 0);
-  const end = new Date(dateObj); end.setHours(endH, endM, 0, 0);
-  while(cursor < end){
-    if(cursor > now){
-      const iso = cursor.toISOString();
-      slots.push({ label: cursor.toLocaleTimeString(lang==='en'?'en-US':lang, { hour:'2-digit', minute:'2-digit' }), iso, taken: bookedIsoSet.has(iso) });
+  blocks.forEach(block => {
+    const [startH, startM] = block.start.split(':').map(Number);
+    const [endH, endM] = block.end.split(':').map(Number);
+    let cursor = new Date(dateObj); cursor.setHours(startH, startM, 0, 0);
+    const end = new Date(dateObj); end.setHours(endH, endM, 0, 0);
+    while(cursor < end){
+      if(cursor > now){
+        const iso = cursor.toISOString();
+        slots.push({ label: cursor.toLocaleTimeString(lang==='en'?'en-US':lang, { hour:'2-digit', minute:'2-digit' }), iso, taken: bookedIsoSet.has(iso) });
+      }
+      cursor = new Date(cursor.getTime() + duration*60000);
     }
-    cursor = new Date(cursor.getTime() + duration*60000);
-  }
+  });
   return slots;
 }
 
@@ -233,7 +256,7 @@ async function showDayPicker(serviceKey, duration, price){
   const bookedIsoSet = new Set((existing || []).map(x => new Date(x.start_time).toISOString()));
 
   const days = [];
-  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if((barberData.work_days||[]).includes(JS_DAY_TO_KEY[d.getDay()])) days.push(d); }
+  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
 
   area.innerHTML = `
     <span class="back-link" id="backBtn">← ${t('back')}</span>
@@ -245,41 +268,55 @@ async function showDayPicker(serviceKey, duration, price){
   const dayTabs = document.getElementById('dayTabs');
   const slotGrid = document.getElementById('slotGrid');
 
+  let selectedSlotIso = null;
+
   function selectDay(idx){
+    selectedSlotIso = null;
     document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
     const slots = generateSlotsForDate(days[idx], duration, bookedIsoSet);
     if(slots.length === 0){ slotGrid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
-    slotGrid.innerHTML = slots.map(s => `<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('');
+    slotGrid.innerHTML = slots.map(s => `<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
+      + `<button class="confirm-booking-btn" id="confirmBookingBtn" style="display:none;">${t('confirm_booking_btn')}</button>`;
+    const confirmBtn = document.getElementById('confirmBookingBtn');
+
     slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
-      el.addEventListener('click', async ()=>{
-        if(!currentUser){
-          const { data: sessionData } = await supabaseClient.auth.getSession();
-          if(sessionData.session){
-            currentUser = sessionData.session.user;
-            const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
-            currentClientProfile = client;
-          }
-        }
-        if(!currentUser || !currentClientProfile){
-          slotGrid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
-          return;
-        }
-        const iso = el.dataset.iso;
-        el.style.opacity = '0.5';
-        const { error } = await supabaseClient.from('bookings').insert([{
-          barber_id: barberData.id, client_id: currentUser.id,
-          client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
-          start_time: iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-          service_price: price
-        }]);
-        if(error){
-          console.error('Booking insert failed:', error);
-          slotGrid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}${error.code !== '23505' ? `<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>` : ''}</div>`;
-          return;
-        }
-        bookedIsoSet.add(iso);
-        slotGrid.innerHTML = `<div class="booking-toast">${t('booking_confirmed')}</div>`;
+      el.addEventListener('click', ()=>{
+        slotGrid.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSlotIso = el.dataset.iso;
+        confirmBtn.style.display = 'block';
+        confirmBtn.textContent = t('confirm_booking_btn') + ' — ' + el.textContent;
       });
+    });
+
+    confirmBtn.addEventListener('click', async ()=>{
+      if(!selectedSlotIso) return;
+      if(!currentUser){
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        if(sessionData.session){
+          currentUser = sessionData.session.user;
+          const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
+          currentClientProfile = client;
+        }
+      }
+      if(!currentUser || !currentClientProfile){
+        slotGrid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
+        return;
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = t('booking_in_progress');
+      const { error } = await supabaseClient.from('bookings').insert([{
+        barber_id: barberData.id, client_id: currentUser.id,
+        client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
+        start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
+        service_price: price
+      }]);
+      if(error){
+        console.error('Booking insert failed:', error);
+        slotGrid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}${error.code !== '23505' ? `<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>` : ''}</div>`;
+        return;
+      }
+      window.location.href = 'client-dashboard.html';
     });
   }
   dayTabs.innerHTML = days.map(d => `<div class="day-tab">${d.toLocaleDateString(lang==='en'?'en-US':lang,{weekday:'short',day:'numeric'})}</div>`).join('');

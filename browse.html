@@ -238,6 +238,13 @@
   }
   .slot-btn:hover{ border-color:var(--brass); }
   .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .slot-btn.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:700; }
+  .confirm-booking-btn{
+    grid-column:1/-1; margin-top:6px; background:var(--brass); color:#fff; border:none; padding:13px;
+    border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:'Inter', sans-serif;
+  }
+  .confirm-booking-btn:hover{ background:var(--brass-soft); }
+  .confirm-booking-btn:disabled{ opacity:0.6; cursor:not-allowed; }
   .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:12.5px; }
   .login-prompt a{ color:var(--brass); font-weight:700; }
   .booking-toast{ grid-column:1/-1; text-align:center; font-size:13.5px; color:var(--brass); padding:12px; font-family:'Fraunces', serif; font-style:italic; }
@@ -342,6 +349,7 @@ const I18N = {
     choose_service:"Choose a service", book_title:"Pick a time", no_slots:"No availability set yet",
     login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
     booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
+    confirm_booking_btn:"Book this time", booking_in_progress:"Booking...",
     back:"Back", min:"min",
     day_short:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] },
   uz:{ search_ph:"Sartarosh yoki xizmat qidiring", loc_ph:"Joylashuvingizni kiriting", search_btn:"Qidirish",
@@ -353,6 +361,7 @@ const I18N = {
     choose_service:"Xizmatni tanlang", book_title:"Vaqtni tanlang", no_slots:"Hali ish vaqti sozlanmagan",
     login_prompt:"Band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
     booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.",
+    confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...",
     back:"Orqaga", min:"daq",
     day_short:['Ya','Du','Se','Ch','Pa','Ju','Sh'] },
   ru:{ search_ph:"Поиск барберов или услуг", loc_ph:"Введите ваше местоположение", search_btn:"Поиск",
@@ -364,6 +373,7 @@ const I18N = {
     choose_service:"Выберите услугу", book_title:"Выберите время", no_slots:"Рабочие часы не настроены",
     login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
     booking_confirmed:"Записано!", booking_failed:"Это время заняли — выберите другое.",
+    confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...",
     back:"Назад", min:"мин",
     day_short:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'] }
 };
@@ -737,21 +747,35 @@ function renderPopServices(b){
   });
 }
 
+function blocksForDay(b, dayKey){
+  if(b.availability && b.availability.length > 0){
+    return b.availability.filter(block => block.day === dayKey);
+  }
+  // fallback for barbers who haven't saved new-style availability yet
+  if((b.work_days || []).includes(dayKey)){
+    return [{ start: (b.work_start || '09:00').slice(0,5), end: (b.work_end || '20:00').slice(0,5) }];
+  }
+  return [];
+}
+
 function generateSlots(b, dateObj, duration, bookedIsoSet){
   const dayKey = JS_DAY_TO_KEY[dateObj.getDay()];
-  if(!(b.work_days || []).includes(dayKey)) return [];
-  const [sh, sm] = (b.work_start || '09:00').split(':').map(Number);
-  const [eh, em] = (b.work_end || '20:00').split(':').map(Number);
+  const blocks = blocksForDay(b, dayKey);
+  if(blocks.length === 0) return [];
   const out = []; const now = new Date();
-  let cur = new Date(dateObj); cur.setHours(sh, sm, 0, 0);
-  const end = new Date(dateObj); end.setHours(eh, em, 0, 0);
-  while(cur < end){
-    if(cur > now){
-      const iso = cur.toISOString();
-      out.push({ label: cur.toLocaleTimeString(currentLang==='en'?'en-US':currentLang, {hour:'2-digit',minute:'2-digit'}), iso, taken: bookedIsoSet.has(iso) });
+  blocks.forEach(block => {
+    const [sh, sm] = block.start.split(':').map(Number);
+    const [eh, em] = block.end.split(':').map(Number);
+    let cur = new Date(dateObj); cur.setHours(sh, sm, 0, 0);
+    const end = new Date(dateObj); end.setHours(eh, em, 0, 0);
+    while(cur < end){
+      if(cur > now){
+        const iso = cur.toISOString();
+        out.push({ label: cur.toLocaleTimeString(currentLang==='en'?'en-US':currentLang, {hour:'2-digit',minute:'2-digit'}), iso, taken: bookedIsoSet.has(iso) });
+      }
+      cur = new Date(cur.getTime() + duration*60000);
     }
-    cur = new Date(cur.getTime() + duration*60000);
-  }
+  });
   return out;
 }
 
@@ -764,7 +788,7 @@ async function showPopDayPicker(b, serviceKey, duration, price){
   const bookedIsoSet = new Set((existing||[]).map(x => new Date(x.start_time).toISOString()));
 
   const days = [];
-  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if((b.work_days||[]).includes(JS_DAY_TO_KEY[d.getDay()])) days.push(d); }
+  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(b, JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
 
   listEl.innerHTML = `
     <span class="back-link" id="popBack">← ${t('back')}</span>
@@ -776,37 +800,53 @@ async function showPopDayPicker(b, serviceKey, duration, price){
 
   const tabs = document.getElementById('popDayTabs');
   const grid = document.getElementById('popSlotGrid');
+  let selectedSlotIso = null;
+
   function selectDay(idx){
     tabs.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
+    selectedSlotIso = null;
     const slots = generateSlots(b, days[idx], duration, bookedIsoSet);
     if(!slots.length){ grid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
-    grid.innerHTML = slots.map(s=>`<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('');
+    grid.innerHTML = slots.map(s=>`<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
+      + `<button class="confirm-booking-btn" id="confirmBookingBtn" style="display:none;">${t('confirm_booking_btn')}</button>`;
+    const confirmBtn = document.getElementById('confirmBookingBtn');
+
     grid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
-      el.addEventListener('click', async ()=>{
-        // re-check auth at click time (avoids race where page loaded before session resolved)
-        if(!currentUser) await checkAuth();
-        if(!currentUser || !currentClientProfile){
-          // not logged in, or logged in as a non-client account (e.g. a barber) — needs a client account to book
-          grid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
-          return;
-        }
-        el.style.opacity = '0.5';
-        const { error } = await supabaseClient.from('bookings').insert([{
-          barber_id: b.id, client_id: currentUser.id,
-          client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
-          start_time: el.dataset.iso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-          service_price: price
-        }]);
-        if(error){
-          console.error('Booking insert failed:', error);
-          const msg = error.code === '23505' ? t('booking_failed')
-            : `${t('booking_failed')}<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>`;
-          grid.innerHTML = `<div class="no-slots-msg">${msg}</div>`;
-          return;
-        }
-        bookedIsoSet.add(el.dataset.iso);
-        grid.innerHTML = `<div class="booking-toast">${t('booking_confirmed')}</div>`;
+      el.addEventListener('click', ()=>{
+        grid.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSlotIso = el.dataset.iso;
+        confirmBtn.style.display = 'block';
+        confirmBtn.textContent = t('confirm_booking_btn') + ' — ' + el.textContent;
       });
+    });
+
+    confirmBtn.addEventListener('click', async ()=>{
+      if(!selectedSlotIso) return;
+      // re-check auth at click time (avoids race where page loaded before session resolved)
+      if(!currentUser) await checkAuth();
+      if(!currentUser || !currentClientProfile){
+        // not logged in, or logged in as a non-client account (e.g. a barber) — needs a client account to book
+        grid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
+        return;
+      }
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = t('booking_in_progress');
+      const { error } = await supabaseClient.from('bookings').insert([{
+        barber_id: b.id, client_id: currentUser.id,
+        client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
+        start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
+        service_price: price
+      }]);
+      if(error){
+        console.error('Booking insert failed:', error);
+        const msg = error.code === '23505' ? t('booking_failed')
+          : `${t('booking_failed')}<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>`;
+        grid.innerHTML = `<div class="no-slots-msg">${msg}</div>`;
+        return;
+      }
+      // booking succeeded — send the client straight to their dashboard to see it
+      window.location.href = 'client-dashboard.html';
     });
   }
   tabs.innerHTML = days.map(d=>`<div class="day-tab">${t('day_short')[d.getDay()]} ${d.getDate()}</div>`).join('');
