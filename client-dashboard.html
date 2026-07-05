@@ -14,9 +14,8 @@
     --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E9E2D3;
     --ink:#1C1A17; --ink-dim:#8A8175; --brass:#A67C1A; --brass-soft:#C79A2E;
     --err:#B3432B; --err-bg:#FBEDE9; --ok:#3F7A54; --ok-bg:#EBF5EE; --warn-bg:#FCF3E3; --warn:#96701A;
-    --r-sm:12px; --r-md:18px; --r-lg:24px; --r-xl:28px;
+    --r-sm:12px; --r-md:18px; --r-lg:20px;
     --sh-sm:0 1px 2px rgba(28,26,23,0.05), 0 1px 1px rgba(28,26,23,0.04);
-    --sh-md:0 6px 20px rgba(28,26,23,0.07), 0 2px 6px rgba(28,26,23,0.04);
     --sh-lg:0 16px 40px rgba(28,26,23,0.12);
   }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -39,8 +38,8 @@
 
   /* ================= HERO ================= */
   .hero-card{
-    position:relative; margin:16px 16px 0; border-radius:var(--r-xl); overflow:hidden;
-    height:230px; display:flex; align-items:flex-end; box-shadow:var(--sh-lg);
+    position:relative; margin:16px 16px 0; border-radius:26px; overflow:hidden;
+    height:190px; display:flex; align-items:flex-end; box-shadow:var(--sh-lg);
     background:linear-gradient(135deg, #3A3226, #1C1A17);
   }
   .hero-card video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.78; }
@@ -54,79 +53,68 @@
   @keyframes heroShift{ 0%{ background-position:0 0, 0% 50%; } 50%{ background-position:0 0, 100% 50%; } 100%{ background-position:0 0, 0% 50%; } }
   .hero-card::after{
     content:''; position:absolute; inset:0;
-    background:linear-gradient(to top, rgba(15,13,11,0.92), rgba(15,13,11,0.15) 55%, transparent);
+    background:linear-gradient(to top, rgba(15,13,11,0.9), rgba(15,13,11,0.1) 55%, transparent);
   }
-  .hero-content{ position:relative; z-index:2; padding:24px 24px 22px; color:#FBF9F5; width:100%; }
+  .hero-content{ position:relative; z-index:2; padding:20px 22px 18px; color:#FBF9F5; width:100%; }
   .hero-eyebrow{
     font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brass-soft);
-    font-weight:700; margin-bottom:7px; display:flex; align-items:center; gap:6px;
+    font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;
   }
   .hero-eyebrow::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--brass-soft); display:inline-block; }
-  .hero-greeting{ font-family:'Fraunces', serif; font-size:25px; font-weight:500; line-height:1.2; letter-spacing:-0.01em; }
+  .hero-greeting{ font-family:'Fraunces', serif; font-size:22px; font-weight:500; line-height:1.2; letter-spacing:-0.01em; }
   .hero-greeting em{ font-style:italic; color:var(--brass-soft); }
 
-  /* ================= SECTIONS ================= */
-  section{ padding:32px 0 4px; }
-  .section-title{
-    font-family:'Fraunces', serif; font-size:18px; font-weight:500; letter-spacing:-0.01em;
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
-  }
-  .see-all{
-    font-size:12.5px; color:var(--brass); font-weight:700; display:flex; align-items:center; gap:3px;
-    cursor:pointer;
-  }
-  .see-all::after{ content:'→'; font-size:12px; transition:transform .15s; }
-  .see-all:active::after{ transform:translateX(2px); }
+  /* ================= BENTO GRID ================= */
+  .bento-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px 16px 4px; }
+  .tile{ border-radius:var(--r-lg); }
 
-  /* ================= STAT PILLS ================= */
-  .pill-row{ display:flex; gap:12px; overflow-x:auto; padding:2px 20px 8px; margin:0 -20px 4px; }
-  .pill{
-    flex-shrink:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
-    padding:16px 20px; min-width:118px; box-shadow:var(--sh-sm); position:relative;
+  .tile-big{
+    grid-column:span 2; background:var(--ink); color:#fff; padding:22px; position:relative;
+    overflow:hidden; box-shadow:var(--sh-lg);
   }
-  .pill .num{ font-family:'Fraunces', serif; font-size:24px; color:var(--brass); font-weight:500; letter-spacing:-0.01em; }
-  .pill .label{ font-size:11.5px; color:var(--ink-dim); margin-top:3px; font-weight:500; }
+  .tile-big::after{
+    content:''; position:absolute; top:-40px; right:-40px; width:150px; height:150px; border-radius:50%;
+    background:radial-gradient(circle, rgba(199,154,46,0.32), transparent 70%);
+  }
+  .tile-big .tag{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--brass-soft); font-weight:700; margin-bottom:10px; position:relative; z-index:1; }
+  .tile-big .name{ font-family:'Fraunces', serif; font-size:21px; margin-bottom:4px; position:relative; z-index:1; letter-spacing:-0.01em; }
+  .tile-big .meta{ font-size:12.5px; color:rgba(255,255,255,0.62); position:relative; z-index:1; font-weight:500; }
+  .tile-big .status-badge{
+    position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.14); padding:5px 13px;
+    border-radius:20px; font-size:10px; font-weight:700; text-transform:capitalize; z-index:1;
+  }
+  .tile-big .cancel-dark{
+    margin-top:14px; font-size:10.5px; font-weight:700; color:#fff; background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.2); padding:6px 13px; border-radius:20px; cursor:pointer;
+    font-family:'Inter', sans-serif; position:relative; z-index:1;
+  }
+  .tile-big .cancel-dark:disabled{ opacity:0.5; }
 
-  /* ================= SKELETON LOADING ================= */
-  .skel-pill{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 20px; min-width:118px; }
-  .skel-line{
-    height:14px; border-radius:6px;
-    background:linear-gradient(90deg, var(--surface-alt) 25%, #F5F0E5 50%, var(--surface-alt) 75%);
-    background-size:200% 100%; animation:shimmer 1.4s infinite;
-  }
-  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
-  .skel-line.w40{ width:40%; height:20px; margin-bottom:6px; }
-  .skel-line.w60{ width:60%; height:11px; }
-  .skel-card-row{
-    display:flex; gap:14px; align-items:center; background:var(--surface); border:1px solid var(--line);
-    border-radius:var(--r-lg); padding:16px; margin-bottom:12px; box-shadow:var(--sh-sm);
-  }
-  .skel-avatar{ width:52px; height:52px; border-radius:50%; flex-shrink:0;
-    background:linear-gradient(90deg, var(--surface-alt) 25%, #F5F0E5 50%, var(--surface-alt) 75%);
-    background-size:200% 100%; animation:shimmer 1.4s infinite; }
-  .skel-card-body{ flex:1; }
-  .skel-card-body .skel-line{ margin-bottom:8px; }
-  .skel-card-body .skel-line:last-child{ margin-bottom:0; }
-
-  /* ================= BOOKING CARD ================= */
-  .booking-card{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
-    padding:16px; margin-bottom:12px; display:flex; gap:14px; align-items:center;
-    transition:transform .15s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease; position:relative; overflow:hidden;
+  .tile-stat{
+    background:var(--surface); border:1px solid var(--line); text-align:left; padding:16px 18px;
     box-shadow:var(--sh-sm);
   }
-  .booking-card:active{ transform:scale(0.98); box-shadow:var(--sh-sm); }
-  .booking-card .avatar{
-    width:52px; height:52px; border-radius:50%; background:var(--surface-alt); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif;
-    font-style:italic; color:var(--brass); font-size:18px; overflow:hidden; border:1px solid var(--line);
+  .tile-stat .num{ font-family:'Fraunces', serif; font-size:26px; color:var(--brass); font-weight:500; letter-spacing:-0.01em; }
+  .tile-stat .label{ font-size:11px; color:var(--ink-dim); margin-top:3px; font-weight:600; }
+
+  .tile-next{
+    grid-column:span 2; background:var(--surface); border:1px solid var(--line);
+    display:flex; align-items:center; gap:12px; padding:14px 16px; box-shadow:var(--sh-sm);
+    margin-bottom:0;
   }
-  .booking-card .avatar img{ width:100%; height:100%; object-fit:cover; }
-  .booking-info{ flex:1; min-width:0; }
-  .booking-info .name{ font-weight:700; font-size:14.5px; letter-spacing:-0.005em; }
-  .booking-info .meta{ font-size:12.5px; color:var(--ink-dim); margin-top:3px; font-weight:500; }
+  .tile-next .avatar{
+    width:42px; height:42px; border-radius:50%; background:var(--surface-alt); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif;
+    font-style:italic; color:var(--brass); font-size:14px; overflow:hidden; border:1px solid var(--line);
+  }
+  .tile-next .avatar img{ width:100%; height:100%; object-fit:cover; }
+  .tile-next .info{ flex:1; min-width:0; }
+  .tile-next .name{ font-weight:700; font-size:13.5px; }
+  .tile-next .meta{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; font-weight:500; }
+  .tile-next .right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+
   .booking-status{
-    font-size:10.5px; padding:5px 11px; border-radius:20px; text-transform:capitalize;
+    font-size:10px; padding:4px 10px; border-radius:20px; text-transform:capitalize;
     background:var(--surface-alt); flex-shrink:0; font-weight:700; letter-spacing:0.01em;
   }
   .booking-status.confirmed{ background:var(--ok-bg); color:var(--ok); }
@@ -135,15 +123,78 @@
   .booking-status.completed{ background:var(--surface-alt); color:var(--ink-dim); }
 
   .cancel-booking-btn{
-    font-size:10.5px; font-weight:700; color:var(--err); background:none; border:1px solid #ECC9BE;
-    padding:5px 12px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif;
+    font-size:10px; font-weight:700; color:var(--err); background:none; border:1px solid #ECC9BE;
+    padding:4px 11px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif;
     transition:background .15s ease;
   }
   .cancel-booking-btn:hover{ background:var(--err-bg); }
   .cancel-booking-btn:active{ transform:scale(0.95); }
   .cancel-booking-btn:disabled{ opacity:0.5; cursor:not-allowed; }
 
-  /* ================= EMPTY STATE ================= */
+  .tile-empty{
+    grid-column:span 2; text-align:center; padding:32px 22px; border:1.5px dashed var(--line);
+    color:var(--ink-dim); font-size:13px; background:var(--surface);
+  }
+  .tile-empty .icon{
+    font-size:22px; margin:0 auto 12px; width:46px; height:46px; border-radius:50%;
+    background:var(--surface-alt); display:flex; align-items:center; justify-content:center;
+  }
+  .tile-empty strong{ font-family:'Fraunces', serif; font-size:15px; font-weight:500; color:var(--ink); display:block; margin-bottom:4px; }
+  .tile-empty .btn{
+    display:inline-block; margin-top:14px; background:var(--brass); color:#fff; padding:11px 20px;
+    border-radius:22px; font-size:12.5px; font-weight:700; box-shadow:0 4px 14px rgba(166,124,26,0.28);
+  }
+  .tile-empty .btn:active{ transform:scale(0.96); }
+
+  .tile-map{
+    grid-column:span 2; position:relative; height:130px; overflow:hidden; cursor:pointer;
+    background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:22px 22px; background-color:var(--surface-alt); border:1px solid var(--line); box-shadow:var(--sh-sm);
+  }
+  .tile-map-label{
+    position:absolute; bottom:14px; left:16px; right:16px; background:var(--surface); padding:10px 14px;
+    border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,0.08); font-size:12.5px; font-weight:700;
+    display:flex; align-items:center; gap:8px;
+  }
+  .tile-map-label .pin-dot{
+    width:8px; height:8px; border-radius:50%; background:var(--brass); flex-shrink:0;
+    box-shadow:0 0 0 4px rgba(166,124,26,0.15); animation:pinPulse 2s ease-in-out infinite;
+  }
+  @keyframes pinPulse{ 0%,100%{ box-shadow:0 0 0 4px rgba(166,124,26,0.15); } 50%{ box-shadow:0 0 0 7px rgba(166,124,26,0.08); } }
+
+  /* skeleton */
+  .skel-line{ height:14px; border-radius:6px; background:linear-gradient(90deg, var(--surface-alt) 25%, #F5F0E5 50%, var(--surface-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
+  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
+  .skel-big{ grid-column:span 2; background:#2B2620; border-radius:var(--r-lg); padding:22px; }
+  .skel-big .skel-line{ background:linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.08) 75%); background-size:200% 100%; }
+  .skel-big .skel-line.w40{ width:40%; height:11px; margin-bottom:10px; }
+  .skel-big .skel-line.w70{ width:70%; height:20px; }
+  .skel-stat{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:16px 18px; }
+  .skel-stat .skel-line.w40{ width:40%; height:22px; margin-bottom:6px; }
+  .skel-stat .skel-line.w60{ width:60%; height:10px; }
+
+  /* ================= SECTIONS (bookings/account views) ================= */
+  section{ padding:28px 0 4px; }
+  .section-title{
+    font-family:'Fraunces', serif; font-size:18px; font-weight:500; letter-spacing:-0.01em;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+  }
+
+  .booking-list-row{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+    padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; box-shadow:var(--sh-sm);
+  }
+  .booking-list-row .avatar{
+    width:44px; height:44px; border-radius:50%; background:var(--surface-alt); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif;
+    font-style:italic; color:var(--brass); font-size:15px; overflow:hidden; border:1px solid var(--line);
+  }
+  .booking-list-row .avatar img{ width:100%; height:100%; object-fit:cover; }
+  .booking-list-row .info{ flex:1; min-width:0; }
+  .booking-list-row .name{ font-weight:700; font-size:13.5px; }
+  .booking-list-row .meta{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; font-weight:500; }
+  .booking-list-row .right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+
   .empty-state{
     text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-lg);
     color:var(--ink-dim); font-size:13.5px;
@@ -156,35 +207,18 @@
   .empty-state .btn{
     display:inline-block; margin-top:16px; background:var(--brass); color:#fff; padding:12px 22px;
     border-radius:24px; font-size:13px; font-weight:700; box-shadow:0 4px 14px rgba(166,124,26,0.28);
-    transition:transform .15s ease, box-shadow .15s ease;
   }
   .empty-state .btn:active{ transform:scale(0.96); }
 
-  /* ================= MAP TEASER ================= */
-  .map-teaser{
-    position:relative; border-radius:var(--r-lg); overflow:hidden; height:176px;
-    background:var(--surface-alt); border:1px solid var(--line); margin-bottom:8px; box-shadow:var(--sh-sm);
+  .lang-btn{
+    flex:1; padding:12px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--surface);
+    color:var(--ink-dim); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s ease;
   }
-  .map-teaser svg{ position:absolute; inset:0; width:100%; height:100%; opacity:0.45; }
-  .map-teaser .teaser-content{
-    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
-    justify-content:center; text-align:center; padding:20px; gap:6px;
-    background:linear-gradient(to top, rgba(247,244,239,0.94), rgba(247,244,239,0.5));
-  }
-  .map-teaser .teaser-content strong{ font-family:'Fraunces', serif; font-size:16.5px; font-weight:500; }
-  .map-teaser .teaser-content span{ font-size:12.5px; color:var(--ink-dim); }
-  .map-pin-anim{
-    width:36px; height:36px; border-radius:50% 50% 50% 0; background:var(--brass);
-    transform:rotate(-45deg); position:relative; margin-bottom:8px; animation:pinBounce 2.6s ease-in-out infinite;
-    box-shadow:0 4px 10px rgba(166,124,26,0.3);
-  }
-  .map-pin-anim::after{
-    content:''; position:absolute; width:13px; height:13px; background:#fff; border-radius:50%;
-    top:50%; left:50%; transform:translate(-50%,-50%) rotate(45deg);
-  }
-  @keyframes pinBounce{ 0%,100%{ transform:rotate(-45deg) translateY(0); } 50%{ transform:rotate(-45deg) translateY(-7px); } }
+  .lang-btn.active{ background:var(--brass); border-color:var(--brass); color:#fff; box-shadow:0 3px 10px rgba(166,124,26,0.25); }
+  .lang-row{ display:flex; gap:8px; margin-top:16px; }
+  .filter-tabs{ display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; }
+  .filter-tabs .lang-btn{ flex:none; white-space:nowrap; }
 
-  /* ================= ACCOUNT ================= */
   .info-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:4px 20px; box-shadow:var(--sh-sm); }
   .info-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); font-size:14px; }
   .info-row:last-child{ border-bottom:none; }
@@ -199,13 +233,6 @@
   .logout-btn:hover{ background:var(--err-bg); border-color:#ECC9BE; }
   .logout-btn:active{ transform:scale(0.98); }
 
-  .lang-row{ display:flex; gap:8px; margin-top:16px; }
-  .lang-btn{
-    flex:1; padding:12px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--surface);
-    color:var(--ink-dim); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s ease;
-  }
-  .lang-btn.active{ background:var(--brass); border-color:var(--brass); color:#fff; box-shadow:0 3px 10px rgba(166,124,26,0.25); }
-
   /* ================= BOTTOM NAV ================= */
   .bottom-nav{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%);
@@ -217,7 +244,7 @@
   .nav-btn{
     flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px;
     background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:10.5px;
-    font-weight:700; cursor:pointer; border-radius:14px; position:relative; transition:color .15s ease;
+    font-weight:700; cursor:pointer; border-radius:14px; transition:color .15s ease;
   }
   .nav-btn.active{ color:var(--brass); }
   .nav-btn svg{ width:21px; height:21px; transition:transform .15s ease; }
@@ -243,40 +270,17 @@
     </div>
   </div>
 
-  <div class="pill-row" id="statPills">
-    <div class="skel-pill"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
-    <div class="skel-pill"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
-  </div>
-
-  <div class="wrap">
-    <section>
-      <div class="section-title">
-        <span data-i18n="upcoming_title">Upcoming</span>
-        <span class="see-all" data-nav="bookings" data-i18n="see_all">See all</span>
-      </div>
-      <div id="homeBookings">
-        <div class="skel-card-row"><div class="skel-avatar"></div><div class="skel-card-body"><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
-      </div>
-    </section>
-
-    <section>
-      <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
-      <div class="map-teaser" id="mapTeaser" data-nav="map" style="cursor:pointer;">
-        <svg viewBox="0 0 300 170" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="40" x2="300" y2="40" stroke="#D8CDB4" stroke-width="1"/>
-          <line x1="0" y1="90" x2="300" y2="90" stroke="#D8CDB4" stroke-width="1"/>
-          <line x1="0" y1="135" x2="300" y2="135" stroke="#D8CDB4" stroke-width="1"/>
-          <line x1="60" y1="0" x2="60" y2="170" stroke="#D8CDB4" stroke-width="1"/>
-          <line x1="150" y1="0" x2="150" y2="170" stroke="#D8CDB4" stroke-width="1"/>
-          <line x1="230" y1="0" x2="230" y2="170" stroke="#D8CDB4" stroke-width="1"/>
-        </svg>
-        <div class="teaser-content">
-          <div class="map-pin-anim"></div>
-          <strong data-i18n="map_soon_h">Map coming soon</strong>
-          <span data-i18n="map_soon_s">You'll be able to see exactly where to go, right here.</span>
-        </div>
-      </div>
-    </section>
+  <div class="bento-grid">
+    <div id="homeBookings" style="display:contents">
+      <div class="skel-big"><div class="skel-line w40"></div><div class="skel-line w70"></div></div>
+    </div>
+    <div id="statPills" style="display:contents">
+      <div class="skel-stat"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+      <div class="skel-stat"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+    </div>
+    <div class="tile tile-map" id="mapTeaser" data-nav="map">
+      <div class="tile-map-label"><span class="pin-dot"></span><span data-i18n="map_title">Your barber's spot</span></div>
+    </div>
   </div>
 </div>
 
@@ -284,11 +288,11 @@
 <div class="view" data-view="bookings">
   <div class="wrap" style="padding-top:26px;">
     <div class="section-title"><span data-i18n="bookings_title">Your bookings</span></div>
-    <div class="filter-tabs" style="display:flex; gap:8px; margin-bottom:20px; overflow-x:auto;" id="bookingFilterTabs">
-      <div class="lang-btn active" data-status="all" style="white-space:nowrap;" data-i18n="filter_all">All</div>
-      <div class="lang-btn" data-status="pending" style="white-space:nowrap;" data-i18n="filter_pending">Pending</div>
-      <div class="lang-btn" data-status="confirmed" style="white-space:nowrap;" data-i18n="filter_confirmed">Confirmed</div>
-      <div class="lang-btn" data-status="cancelled" style="white-space:nowrap;" data-i18n="filter_cancelled">Cancelled</div>
+    <div class="filter-tabs" id="bookingFilterTabs">
+      <div class="lang-btn active" data-status="all" data-i18n="filter_all">All</div>
+      <div class="lang-btn" data-status="pending" data-i18n="filter_pending">Pending</div>
+      <div class="lang-btn" data-status="confirmed" data-i18n="filter_confirmed">Confirmed</div>
+      <div class="lang-btn" data-status="cancelled" data-i18n="filter_cancelled">Cancelled</div>
     </div>
     <div id="allBookingsArea"></div>
   </div>
@@ -354,7 +358,6 @@ const I18N = {
     upcoming_title:"Upcoming", see_all:"See all",
     map_title:"Your barber's spot", map_soon_h:"Map coming soon",
     map_soon_s:"You'll be able to see exactly where to go, right here.",
-    map_soon_s2:"We're finishing this up — soon you'll see your barber's exact location here.",
     map_no_booking:"Book an appointment to see your barber's location here.",
     map_no_location:"Your barber hasn't set their exact location yet.",
     map_directions:"Get directions",
@@ -372,7 +375,6 @@ const I18N = {
     upcoming_title:"Kelgusi", see_all:"Barchasi",
     map_title:"Sartaroshingiz joylashuvi", map_soon_h:"Xarita tez orada",
     map_soon_s:"Qayerga borishni aniq shu yerda ko'rasiz.",
-    map_soon_s2:"Tugatmoqdamiz — tez orada sartaroshingizning aniq manzilini shu yerda ko'rasiz.",
     map_no_booking:"Sartaroshingiz joylashuvini ko'rish uchun uchrashuvni band qiling.",
     map_no_location:"Sartaroshingiz hali aniq joylashuvni belgilamagan.",
     map_directions:"Yo'nalishni ko'rish",
@@ -390,7 +392,6 @@ const I18N = {
     upcoming_title:"Предстоящие", see_all:"Все",
     map_title:"Место вашего барбера", map_soon_h:"Карта скоро",
     map_soon_s:"Здесь вы увидите, куда именно идти.",
-    map_soon_s2:"Мы почти закончили — скоро здесь появится точное местоположение барбера.",
     map_no_booking:"Запишитесь на приём, чтобы увидеть местоположение барбера здесь.",
     map_no_location:"Ваш барбер ещё не указал точное местоположение.",
     map_directions:"Проложить маршрут",
@@ -481,30 +482,67 @@ async function init(){
   setupClientMap();
 }
 
-/* ---------- home ---------- */
+/* ---------- home: bento grid ---------- */
 function renderStatPills(){
   const now = new Date();
   const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled').length;
   const total = bookingsData.filter(b => b.status === 'confirmed').length;
   document.getElementById('statPills').innerHTML = `
-    <div class="pill"><div class="num">${upcoming}</div><div class="label">${t('stat_upcoming')}</div></div>
-    <div class="pill"><div class="num">${total}</div><div class="label">${t('stat_total')}</div></div>
+    <div class="tile tile-stat"><div class="num">${upcoming}</div><div class="label">${t('stat_upcoming')}</div></div>
+    <div class="tile tile-stat"><div class="num">${total}</div><div class="label">${t('stat_total')}</div></div>
+  `;
+}
+
+function avatarFor(barber){
+  const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  return barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
+}
+
+function bigTileHtml(b){
+  const barber = b.barbers || {};
+  const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
+  return `
+    <div class="tile tile-big" data-booking-id="${b.id}">
+      <span class="status-badge">${t(b.status) || b.status}</span>
+      <div class="tag">${t('upcoming_title')}</div>
+      <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
+      <div class="meta">${new Date(b.start_time).toLocaleString()}${barber.district ? ' · ' + escapeHtml(barber.district) : ''}</div>
+      ${canCancel ? `<button class="cancel-dark" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+    </div>
   `;
 }
 
 function bookingCardHtml(b){
   const barber = b.barbers || {};
-  const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  const avatar = barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
+  const avatar = avatarFor(barber);
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   return `
-    <div class="booking-card" data-booking-id="${b.id}">
+    <div class="tile tile-next" data-booking-id="${b.id}">
       <div class="avatar">${avatar}</div>
-      <div class="booking-info">
+      <div class="info">
         <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
         <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
       </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:7px;">
+      <div class="right">
+        <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
+        ${canCancel ? `<button class="cancel-booking-btn" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function bookingListRowHtml(b){
+  const barber = b.barbers || {};
+  const avatar = avatarFor(barber);
+  const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
+  return `
+    <div class="booking-list-row" data-booking-id="${b.id}">
+      <div class="avatar">${avatar}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
+        <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
+      </div>
+      <div class="right">
         <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
         ${canCancel ? `<button class="cancel-booking-btn" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
       </div>
@@ -553,15 +591,16 @@ function renderHomeBookings(){
   const area = document.getElementById('homeBookings');
   if(upcoming.length === 0){
     area.innerHTML = `
-      <div class="empty-state">
+      <div class="tile tile-empty">
         <div class="icon">✂️</div>
         <strong>${t('empty_h')}</strong>
-        <span style="font-size:12.5px;">${t('empty_p')}</span><br>
+        <span style="font-size:12px;">${t('empty_p')}</span><br>
         <a href="browse.html" class="btn">${t('empty_btn')}</a>
       </div>`;
     return;
   }
-  area.innerHTML = upcoming.map(bookingCardHtml).join('');
+  const [first, ...rest] = upcoming;
+  area.innerHTML = bigTileHtml(first) + rest.map(bookingCardHtml).join('');
   attachCancelHandlers(area);
 }
 
@@ -573,13 +612,13 @@ function renderAllBookings(){
     area.innerHTML = `
       <div class="empty-state">
         <div class="icon">✂️</div>
-        <strong>${t('empty_h')}</strong>
+        <strong>${t('empty_h')}</strong><br>
         <span style="font-size:12.5px;">${t('empty_p')}</span><br>
         <a href="browse.html" class="btn">${t('empty_btn')}</a>
       </div>`;
     return;
   }
-  area.innerHTML = filtered.map(bookingCardHtml).join('');
+  area.innerHTML = filtered.map(bookingListRowHtml).join('');
   attachCancelHandlers(area);
 }
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
@@ -635,10 +674,9 @@ function setupClientMap(){
     `<strong>${escapeHtml(barber.shop_name || barber.full_name)}</strong> · ${escapeHtml(barber.district || '')}<br>` +
     `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" style="color:var(--brass); font-weight:600;">${t('map_directions')} →</a>`;
 
-  // Actual Leaflet init only happens once the tab is genuinely visible
   const tryInit = () => {
     const el = document.getElementById('clientMapEl');
-    if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; } // wait until visible
+    if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; }
     if(!mapInitialized){
       clientMap = L.map('clientMapEl').setView([barber.latitude, barber.longitude], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -653,7 +691,6 @@ function setupClientMap(){
     }
   };
 
-  // if Map tab is currently active, init now; otherwise init on first nav to it
   if(document.querySelector('.view[data-view="map"]').classList.contains('active')){
     tryInit();
   } else {
