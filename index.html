@@ -526,6 +526,20 @@ const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+(async function checkExistingSession(){
+  const { data } = await supabaseClient.auth.getSession();
+  if(!data.session) return; // not logged in — show the landing page normally
+
+  const userId = data.session.user.id;
+  const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
+  if(client){ window.location.replace('client-dashboard.html'); return; }
+
+  const { data: barber } = await supabaseClient.from('barbers').select('id').eq('id', userId).single();
+  if(barber){ window.location.replace('barber-dashboard.html'); return; }
+  // if neither matches (edge case: auth user with no profile row), fall
+  // through and just show the landing page normally
+})();
+
 let currentLang = 'en';
 
 function applyLang(lang){

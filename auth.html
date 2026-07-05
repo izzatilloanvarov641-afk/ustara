@@ -171,11 +171,11 @@ setRole(signupRole);
 
 async function redirectByRole(userId, { silent } = {}){
   const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
-  if(client){ window.location.href = 'client-dashboard.html'; return; }
+  if(client){ window.location.replace('client-dashboard.html'); return; }
 
   const { data: barber } = await supabaseClient.from('barbers').select('is_approved').eq('id', userId).single();
   if(barber){
-    if(barber.is_approved){ window.location.href = 'barber-dashboard.html'; return; }
+    if(barber.is_approved){ window.location.replace('barber-dashboard.html'); return; }
     await supabaseClient.auth.signOut();
     if(!silent) document.getElementById('pendingError').style.display = 'block';
     return;
