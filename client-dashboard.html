@@ -239,6 +239,40 @@
 
   @media (min-width:561px){ body{ box-shadow:0 0 60px rgba(17,17,17,0.08); } }
 
+  /* map avatar-photo pins */
+  .photo-pin{
+    width:44px; height:44px; border-radius:50%; overflow:hidden; border:3px solid #fff;
+    box-shadow:0 3px 10px rgba(0,0,0,0.3); background:#141414; display:flex; align-items:center;
+    justify-content:center; transition:transform .12s ease, border-color .12s ease;
+  }
+  .photo-pin img{ width:100%; height:100%; object-fit:cover; }
+  .photo-pin span{ color:var(--gold-soft); font-family:'Instrument Serif', serif; font-style:italic; font-size:14px; }
+  .photo-pin.active{ border-color:var(--gold); transform:scale(1.2); }
+
+  /* ================= BOOKING DETAILS MODAL ================= */
+  .details-modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; display:flex;
+    align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px);
+  }
+  .details-modal{
+    background:var(--surface); border-radius:var(--r-card); padding:28px 24px; max-width:340px; width:100%;
+    text-align:center; position:relative; box-shadow:0 30px 70px rgba(0,0,0,0.3);
+  }
+  .details-modal-close{
+    position:absolute; top:14px; right:14px; background:var(--surface-alt); border:none; width:30px; height:30px;
+    border-radius:50%; font-size:16px; color:var(--ink-dim); cursor:pointer;
+  }
+  .details-modal-avatar{
+    width:64px; height:64px; border-radius:50%; margin:0 auto 12px; background:var(--surface-alt);
+    display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic;
+    color:var(--gold); font-size:22px; overflow:hidden;
+  }
+  .details-modal-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .details-modal-name{ font-family:'Instrument Serif', serif; font-style:italic; font-size:19px; margin-bottom:14px; }
+  .details-modal-row{ font-size:13.5px; color:var(--ink); text-align:left; padding:8px 0; border-top:1px solid var(--line); display:flex; gap:10px; align-items:center; }
+  .details-modal-row a{ color:var(--gold); font-weight:700; }
+  .details-modal-directions{ display:inline-block; margin-top:16px; color:var(--gold); font-weight:700; font-size:13px; }
+
   /* skeleton */
   .skel-line{ height:14px; border-radius:6px; background:linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
   @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
@@ -366,6 +400,7 @@ const I18N = {
     upcoming_title:"Upcoming", see_all:"See all",
     map_title:"Your barber's spot",
     map_no_booking:"Book an appointment to see your barber's location here.",
+    map_browse_hint:"Tap any barber on the map to view their profile and book.",
     map_no_location:"Your barber hasn't set their exact location yet.",
     map_directions:"Get directions",
     map_teaser_no_booking:"Book a cut to see it here", map_teaser_no_location:"Location coming soon",
@@ -387,6 +422,7 @@ const I18N = {
     upcoming_title:"Kelgusi", see_all:"Barchasi",
     map_title:"Sartaroshingiz joylashuvi",
     map_no_booking:"Sartaroshingiz joylashuvini ko'rish uchun uchrashuvni band qiling.",
+    map_browse_hint:"Profilini ko'rish va band qilish uchun xaritadagi istalgan sartaroshga bosing.",
     map_no_location:"Sartaroshingiz hali aniq joylashuvni belgilamagan.",
     map_directions:"Yo'nalishni ko'rish",
     map_teaser_no_booking:"Ko'rish uchun band qiling", map_teaser_no_location:"Joylashuv tez orada",
@@ -408,6 +444,7 @@ const I18N = {
     upcoming_title:"Предстоящие", see_all:"Все",
     map_title:"Место вашего барбера",
     map_no_booking:"Запишитесь на приём, чтобы увидеть местоположение барбера здесь.",
+    map_browse_hint:"Нажмите на любого барбера на карте, чтобы посмотреть профиль и записаться.",
     map_no_location:"Ваш барбер ещё не указал точное местоположение.",
     map_directions:"Проложить маршрут",
     map_teaser_no_booking:"Запишитесь, чтобы увидеть", map_teaser_no_location:"Локация скоро",
@@ -496,7 +533,7 @@ async function init(){
 
   const { data: bookings } = await supabaseClient
     .from('bookings')
-    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district)')
+    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district, phone)')
     .eq('client_id', user.id)
     .order('start_time', { ascending:true });
   bookingsData = bookings || [];
@@ -635,7 +672,7 @@ function attachCalendarHandlers(container){
 async function refreshBookings(){
   const { data: bookings } = await supabaseClient
     .from('bookings')
-    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district)')
+    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district, phone)')
     .eq('client_id', clientData.id)
     .order('start_time', { ascending:true });
   bookingsData = bookings || [];
@@ -662,6 +699,7 @@ function renderHomeBookings(){
   area.innerHTML = upcoming.map(bigTileHtml).join('');
   attachCancelHandlers(area);
   attachCalendarHandlers(area);
+  attachViewDetailsHandlers(area);
 }
 
 /* ---------- home: loyalty / streak / favorite tiles (derived from real data, no new schema) ---------- */
@@ -789,6 +827,34 @@ function renderInfoCard(){
 function renderMapTeaser(){ /* no-op: home no longer shows a map teaser tile, per new design reference */ }
 
 /* ---------- real map, lazy-initialized on first visit to Map tab ---------- */
+let clientMapMarkers = {};
+
+function renderClientMapPins(myBarberId){
+  Object.values(clientMapMarkers).forEach(m => clientMap.removeLayer(m));
+  clientMapMarkers = {};
+  allBarbersForMap.forEach(b => {
+    const isMine = b.id === myBarberId;
+    const avatarHtml = b.avatar_url
+      ? `<img src="${escapeHtml(b.avatar_url)}" alt="">`
+      : `<span>${(b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</span>`;
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="photo-pin${isMine ? ' active' : ''}">${avatarHtml}</div>`,
+      iconSize: null
+    });
+    const marker = L.marker([b.latitude, b.longitude], { icon }).addTo(clientMap);
+    const popupHtml = `
+      <div style="min-width:170px; font-family:'Inter',sans-serif;">
+        <div style="font-family:'Instrument Serif',serif; font-style:italic; font-weight:600; font-size:14px; margin-bottom:2px;">${escapeHtml(b.full_name)}</div>
+        <div style="font-size:11.5px; color:#6F6F6F; margin-bottom:8px;">${escapeHtml(b.shop_name || '')}${b.shop_name && b.district ? ' · ' : ''}${escapeHtml(b.district || '')}</div>
+        <a href="profile.html?id=${b.id}" style="display:block; text-align:center; background:#141414; color:#D4A94A; padding:8px; border-radius:10px; font-size:12px; font-weight:700; text-decoration:none;">View & book →</a>
+      </div>
+    `;
+    marker.bindPopup(popupHtml);
+    clientMapMarkers[b.id] = marker;
+  });
+}
+
 let clientMap = null;
 let mapInitialized = false;
 
@@ -800,44 +866,63 @@ function nextBookingWithBarber(){
   return upcoming[0] || null;
 }
 
-function setupClientMap(){
+let allBarbersForMap = [];
+
+async function setupClientMap(){
   const statusMsg = document.getElementById('mapStatusMsg');
   const mapWrap = document.getElementById('clientMapWrap');
-  const booking = nextBookingWithBarber();
+  const myBooking = nextBookingWithBarber();
+  const myBarberId = myBooking ? myBooking.barber_id : null;
 
-  if(!booking){
-    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('map_no_booking')}</div>`;
+  const { data: barbers, error } = await supabaseClient
+    .from('barbers').select('id, full_name, avatar_url, shop_name, district, latitude, longitude, is_location_verified, phone')
+    .eq('is_published', true).eq('is_approved', true);
+
+  if(error){
+    console.error('Failed to load barbers for map:', error);
+    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>Could not load the map: ${escapeHtml(error.message)}</div>`;
     mapWrap.style.display = 'none';
     return;
   }
-  const barber = booking.barbers;
-  if(!barber.latitude || !barber.longitude || !barber.is_location_verified){
-    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('map_no_location')}</div>`;
+
+  allBarbersForMap = (barbers || []).filter(b => b.latitude && b.longitude && b.is_location_verified);
+
+  if(allBarbersForMap.length === 0){
+    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('map_no_booking')}</div>`;
     mapWrap.style.display = 'none';
     return;
   }
 
   statusMsg.innerHTML = '';
   mapWrap.style.display = 'block';
-  document.getElementById('mapBarberLabel').innerHTML =
-    `<strong>${escapeHtml(barber.shop_name || barber.full_name)}</strong> · ${escapeHtml(barber.district || '')}<br>` +
-    `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" style="color:var(--gold); font-weight:600;">${t('map_directions')} →</a>`;
+
+  const myBarber = myBarberId ? allBarbersForMap.find(b => b.id === myBarberId) : null;
+  if(myBarber){
+    document.getElementById('mapBarberLabel').innerHTML =
+      `<strong>${escapeHtml(myBarber.shop_name || myBarber.full_name)}</strong> · ${escapeHtml(myBarber.district || '')}<br>` +
+      `<a href="https://www.openstreetmap.org/directions?to=${myBarber.latitude},${myBarber.longitude}" target="_blank" style="color:var(--gold); font-weight:600;">${t('map_directions')} →</a>`;
+  } else {
+    document.getElementById('mapBarberLabel').innerHTML = `<span style="color:var(--ink-dim);">${t('map_browse_hint')}</span>`;
+  }
 
   const tryInit = () => {
     const el = document.getElementById('clientMapEl');
     if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; }
     if(!mapInitialized){
-      clientMap = L.map('clientMapEl').setView([barber.latitude, barber.longitude], 15);
+      clientMap = L.map('clientMapEl').setView([41.2995, 69.2401], 12);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
       }).addTo(clientMap);
-      L.marker([barber.latitude, barber.longitude]).addTo(clientMap)
-        .bindPopup(escapeHtml(barber.shop_name || barber.full_name));
       mapInitialized = true;
-    } else {
-      clientMap.invalidateSize();
-      clientMap.setView([barber.latitude, barber.longitude], 15);
     }
+    renderClientMapPins(myBarberId);
+    if(myBarber){
+      clientMap.setView([myBarber.latitude, myBarber.longitude], 15);
+    } else {
+      const bounds = allBarbersForMap.map(b => [b.latitude, b.longitude]);
+      clientMap.fitBounds(bounds, { padding:[40,40], maxZoom:14 });
+    }
+    clientMap.invalidateSize();
   };
 
   if(document.querySelector('.view[data-view="map"]').classList.contains('active')){
@@ -914,6 +999,40 @@ function renderRebookNudge(){
       <a href="profile.html?id=${target.barber_id}" class="cta">${t('rebook_cta')}</a>
     </div>
   `;
+}
+
+function attachViewDetailsHandlers(container){
+  container.querySelectorAll('[data-view-booking]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const b = bookingsData.find(x => x.id === btn.dataset.viewBooking);
+      if(b) showBookingDetailsModal(b);
+    });
+  });
+}
+
+function showBookingDetailsModal(b){
+  const barber = b.barbers || {};
+  const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
+  const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
+  const hasLocation = barber.latitude && barber.longitude && barber.is_location_verified;
+  const overlay = document.createElement('div');
+  overlay.className = 'details-modal-overlay';
+  overlay.innerHTML = `
+    <div class="details-modal">
+      <button class="details-modal-close">&times;</button>
+      <div class="details-modal-avatar">${avatarFor(barber)}</div>
+      <div class="details-modal-name">${escapeHtml(barber.full_name || 'Barber')}</div>
+      <div class="details-modal-row"><span>📅</span> ${new Date(b.start_time).toLocaleString()}</div>
+      ${svcName ? `<div class="details-modal-row"><span>✂️</span> ${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
+      ${barber.phone ? `<div class="details-modal-row"><span>📞</span> <a href="tel:${escapeHtml(barber.phone)}">${escapeHtml(barber.phone)}</a></div>` : ''}
+      <div class="details-modal-row"><span>📍</span> ${escapeHtml(barber.shop_name || '')}${barber.shop_name && barber.district ? ' · ' : ''}${escapeHtml(barber.district || '')}</div>
+      ${hasLocation ? `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" class="details-modal-directions">${t('map_directions')} →</a>` : ''}
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('.details-modal-close').addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(); });
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{

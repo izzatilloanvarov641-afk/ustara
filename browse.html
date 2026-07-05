@@ -166,13 +166,15 @@
   .empty .btn{ display:inline-block; background:#141414; color:var(--gold-soft); padding:12px 22px; border-radius:var(--r-btn); font-size:12.5px; font-weight:700; }
   .loading{ text-align:center; padding:60px 18px; color:var(--ink-dim); font-size:13px; }
 
-  /* map price pins */
-  .price-pin{
-    background:#141414; color:var(--gold-soft); font-size:11.5px; font-weight:800; padding:7px 12px;
-    border-radius:16px; white-space:nowrap; box-shadow:0 3px 10px rgba(0,0,0,0.28); border:2px solid #fff;
-    transition:transform .12s ease;
+  /* map avatar-photo pins */
+  .photo-pin{
+    width:46px; height:46px; border-radius:50%; overflow:hidden; border:3px solid #fff;
+    box-shadow:0 3px 10px rgba(0,0,0,0.3); background:#141414; display:flex; align-items:center;
+    justify-content:center; transition:transform .12s ease, border-color .12s ease;
   }
-  .price-pin.active{ background:var(--gold); color:#141414; transform:scale(1.15); }
+  .photo-pin img{ width:100%; height:100%; object-fit:cover; }
+  .photo-pin span{ color:var(--gold-soft); font-family:'Instrument Serif', serif; font-style:italic; font-size:15px; }
+  .photo-pin.active{ border-color:var(--gold); transform:scale(1.2); }
 
   /* ================= PROFILE OVERLAY (light, per map screen reference) ================= */
   .profile-pop{
@@ -549,8 +551,15 @@ function initMap(){
     attribution:'&copy; OpenStreetMap contributors', maxZoom:19
   }).addTo(map);
 }
-function priceIcon(price, active){
-  return L.divIcon({ className:'', html:`<div class="price-pin${active?' active':''}">${formatPrice(price)}</div>`, iconSize:null });
+function photoIcon(barber, active){
+  const html = barber.avatar_url
+    ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">`
+    : `<span>${initials(barber.full_name)}</span>`;
+  return L.divIcon({
+    className: '',
+    html: `<div class="photo-pin${active ? ' active' : ''}">${html}</div>`,
+    iconSize: null
+  });
 }
 function renderMapPins(barbers){
   Object.values(markersById).forEach(m => map.removeLayer(m));
@@ -558,17 +567,18 @@ function renderMapPins(barbers){
   const bounds = [];
   barbers.forEach(b=>{
     if(!b.latitude || !b.longitude || !b.is_location_verified) return;
-    const price = lowestPrice(b.id);
-    if(price === null) return;
-    const marker = L.marker([b.latitude, b.longitude], { icon: priceIcon(price, false) }).addTo(map);
-    marker.on('click', ()=> highlightBarber(b.id));
+    const marker = L.marker([b.latitude, b.longitude], { icon: photoIcon(b, false) }).addTo(map);
+    marker.on('click', ()=>{ highlightBarber(b.id); openProfilePop(b); });
     markersById[b.id] = marker;
     bounds.push([b.latitude, b.longitude]);
   });
   if(!userLoc && bounds.length > 0) map.fitBounds(bounds, { padding:[50,50], maxZoom:14 });
 }
 function highlightBarber(id){
-  Object.entries(markersById).forEach(([mid, m])=> m.setIcon(priceIcon(lowestPrice(mid), mid === id)));
+  Object.entries(markersById).forEach(([mid, m])=>{
+    const b = allBarbers.find(x => x.id === mid);
+    if(b) m.setIcon(photoIcon(b, mid === id));
+  });
   document.querySelectorAll('.card').forEach(c => c.classList.toggle('highlighted', c.dataset.id === id));
 }
 
@@ -685,9 +695,14 @@ function renderResults(){
     });
   });
   area.querySelectorAll('[data-book]').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      window.location.href = 'profile.html?id=' + btn.dataset.book;
+    btn.addEventListener('click', ()=>{
+      const b = allBarbers.find(x => x.id === btn.dataset.book);
+      openProfilePop(b, true);
+      if(window.innerWidth <= 880){
+        document.body.classList.add('map-mode');
+        document.querySelectorAll('#viewToggle button').forEach(x=>x.classList.toggle('active', x.dataset.mode==='map'));
+        setTimeout(()=> map.invalidateSize(), 200);
+      }
     });
   });
 
