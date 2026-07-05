@@ -252,6 +252,48 @@
   .nav-btn:active{ transform:scale(0.92); }
 
   @media (min-width:561px){ body{ box-shadow:0 0 50px rgba(28,26,23,0.07); } }
+
+  /* ================= NOTIFICATION BELL ================= */
+  .notif-bell{
+    position:absolute; top:16px; right:16px; z-index:3; width:38px; height:38px; border-radius:50%;
+    background:rgba(255,255,255,0.15); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.2);
+    color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .notif-badge{
+    position:absolute; top:-4px; right:-4px; background:#C23B3B; color:#fff; font-size:9.5px; font-weight:800;
+    min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    padding:0 3px; border:2px solid var(--ink);
+  }
+  .notification-row{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:14px 16px;
+    margin-bottom:10px; font-size:13px; box-shadow:var(--sh-sm); position:relative;
+  }
+  .notification-row.unread{ border-left:3px solid var(--brass); }
+  .notification-row .n-time{ font-size:11px; color:var(--ink-dim); margin-top:4px; }
+
+  /* ================= FAVORITES ================= */
+  .fav-row{ display:flex; gap:14px; overflow-x:auto; padding:2px 2px 8px; }
+  .fav-item{ flex-shrink:0; text-align:center; width:64px; cursor:pointer; }
+  .fav-avatar{
+    width:56px; height:56px; border-radius:50%; background:var(--surface-alt); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-style:italic;
+    color:var(--brass); font-size:18px; overflow:hidden; margin:0 auto 6px; box-shadow:var(--sh-sm);
+  }
+  .fav-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .fav-item .fav-name{ font-size:10.5px; font-weight:600; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* ================= REBOOK NUDGE ================= */
+  .rebook-nudge{
+    margin:16px 16px 0; background:linear-gradient(135deg, #FBF3E3, #F7F4EF); border:1px solid #E8D5A8;
+    border-radius:20px; padding:16px 18px; display:flex; align-items:center; gap:14px;
+  }
+  .rebook-nudge .icon{ font-size:24px; flex-shrink:0; }
+  .rebook-nudge .text{ flex:1; font-size:12.5px; color:var(--ink); font-weight:500; }
+  .rebook-nudge .text strong{ font-family:'Fraunces', serif; font-weight:500; font-style:italic; }
+  .rebook-nudge .cta{
+    flex-shrink:0; background:var(--brass); color:#fff; padding:9px 16px; border-radius:18px;
+    font-size:11.5px; font-weight:700;
+  }
 </style>
 </head>
 <body>
@@ -264,11 +306,16 @@
            onerror="document.getElementById('heroFallback').style.display='block'; this.style.display='none';">
       <source src="https://gbvfesorkmsxugpvcuqy.supabase.co/storage/v1/object/public/site-assets/mixkit-barber-doing-a-fashion-cut-to-a-man-43229-hd-ready.mp4" type="video/mp4">
     </video>
+    <button class="notif-bell" id="notifBellBtn">
+      🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+    </button>
     <div class="hero-content">
       <div class="hero-eyebrow" data-i18n="hero_eyebrow">Ustara</div>
       <div class="hero-greeting" data-i18n-html="hero_greeting">Good to see you, <em id="nameInsert">there</em></div>
     </div>
   </div>
+
+  <div id="rebookNudge"></div>
 
   <div class="bento-grid">
     <div id="homeBookings" style="display:contents">
@@ -281,6 +328,24 @@
     <div class="tile tile-map" id="mapTeaser" data-nav="map">
       <div class="tile-map-label"><span class="pin-dot"></span><span id="mapTeaserText">Your barber's spot</span></div>
     </div>
+  </div>
+
+  <div class="wrap">
+    <section id="favoritesSection" style="display:none;">
+      <div class="section-title"><span data-i18n="favorites_title">Your favorites</span></div>
+      <div class="fav-row" id="favRow"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ NOTIFICATIONS ============ -->
+<div class="view" data-view="notifications">
+  <div class="wrap" style="padding-top:26px;">
+    <div class="section-title">
+      <span data-i18n="notifications_title">Notifications</span>
+      <span class="see-all" data-nav="home" data-i18n="close_label">Close</span>
+    </div>
+    <div id="notificationsArea"></div>
   </div>
 </div>
 
@@ -376,7 +441,9 @@ const I18N = {
     nav_home:"Home", nav_bookings:"Bookings", nav_map:"Map", nav_account:"Account",
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
     empty_btn:"Browse barbers", rv_name:"Name", rv_phone:"Phone", rv_email:"Email",
-    stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed"
+    stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed",
+    favorites_title:"Your favorites", notifications_title:"Notifications", close_label:"Close", no_notifications:"No notifications yet.",
+    rebook_nudge:"It's been a while since your last visit with {barber} — ready for another?", rebook_cta:"Book again"
   },
   uz:{
     hero_eyebrow:"Ustara", hero_greeting:'Xush kelibsiz, <em id="nameInsert">u yerda</em>',
@@ -394,7 +461,9 @@ const I18N = {
     nav_home:"Bosh sahifa", nav_bookings:"Bandlar", nav_map:"Xarita", nav_account:"Hisob",
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
     empty_btn:"Sartaroshlarni ko'rish", rv_name:"Ism", rv_phone:"Telefon", rv_email:"Email",
-    stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi"
+    stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi",
+    favorites_title:"Sevimlilaringiz", notifications_title:"Bildirishnomalar", close_label:"Yopish", no_notifications:"Hozircha bildirishnoma yo'q.",
+    rebook_nudge:"{barber} bilan oxirgi tashrifingizdan beri vaqt o'tdi — yana borasizmi?", rebook_cta:"Qayta band qilish"
   },
   ru:{
     hero_eyebrow:"Ustara", hero_greeting:'Рады видеть вас, <em id="nameInsert">снова</em>',
@@ -412,7 +481,9 @@ const I18N = {
     nav_home:"Главная", nav_bookings:"Записи", nav_map:"Карта", nav_account:"Аккаунт",
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
     empty_btn:"Смотреть барберов", rv_name:"Имя", rv_phone:"Телефон", rv_email:"Email",
-    stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено"
+    stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено",
+    favorites_title:"Ваши избранные", notifications_title:"Уведомления", close_label:"Закрыть", no_notifications:"Уведомлений пока нет.",
+    rebook_nudge:"Прошло время с последнего визита к {barber} — не пора ли снова?", rebook_cta:"Записаться снова"
   }
 };
 
@@ -421,6 +492,8 @@ let clientData = null;
 let userEmail = '';
 let bookingsData = [];
 let currentFilter = 'all';
+let favoritesData = [];
+let notificationsData = [];
 
 function t(key){ return I18N[currentLang][key]; }
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
@@ -489,8 +562,19 @@ async function init(){
     .order('start_time', { ascending:true });
   bookingsData = bookings || [];
 
+  const { data: favs } = await supabaseClient
+    .from('favorites').select('*, barbers(id, full_name, avatar_url)').eq('client_id', user.id);
+  favoritesData = favs || [];
+
+  const { data: notifs } = await supabaseClient
+    .from('notifications').select('*').eq('client_id', user.id).order('created_at', { ascending:false });
+  notificationsData = notifs || [];
+
   applyLang(currentLang);
   setupClientMap();
+  renderFavorites();
+  renderNotifBadge();
+  renderRebookNudge();
 }
 
 /* ---------- home: bento grid ---------- */
@@ -581,6 +665,7 @@ function attachCancelHandlers(container){
       }).eq('id', btn.dataset.cancelId);
       if(error){
         console.error('Cancel failed:', error);
+        alert('Could not cancel: ' + error.message);
         btn.disabled = false;
         btn.textContent = t('cancel_booking');
         return;
@@ -729,6 +814,95 @@ function setupClientMap(){
   } else {
     document.querySelector('.nav-btn[data-view="map"]').addEventListener('click', tryInit, { once:true });
   }
+}
+
+/* ---------- favorites ---------- */
+function renderFavorites(){
+  const section = document.getElementById('favoritesSection');
+  const row = document.getElementById('favRow');
+  if(favoritesData.length === 0){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  row.innerHTML = favoritesData.map(f => {
+    const barber = f.barbers;
+    if(!barber) return '';
+    const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const avatar = barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
+    return `
+      <a href="profile.html?id=${barber.id}" class="fav-item">
+        <div class="fav-avatar">${avatar}</div>
+        <div class="fav-name">${escapeHtml(barber.full_name.split(' ')[0])}</div>
+      </a>
+    `;
+  }).join('');
+}
+
+/* ---------- notifications ---------- */
+function renderNotifBadge(){
+  const unreadCount = notificationsData.filter(n => !n.is_read).length;
+  const badge = document.getElementById('notifBadge');
+  if(unreadCount === 0){ badge.style.display = 'none'; }
+  else { badge.style.display = 'flex'; badge.textContent = unreadCount > 9 ? '9+' : unreadCount; }
+}
+
+function renderNotificationsPanel(){
+  const area = document.getElementById('notificationsArea');
+  if(notificationsData.length === 0){
+    area.innerHTML = `<div class="empty-state"><div class="icon">🔔</div><strong>${t('no_notifications')}</strong></div>`;
+    return;
+  }
+  area.innerHTML = notificationsData.map(n => `
+    <div class="notification-row ${n.is_read ? '' : 'unread'}">
+      <div>${escapeHtml(n.message)}</div>
+      <div class="n-time">${new Date(n.created_at).toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('notifBellBtn').addEventListener('click', async ()=>{
+  goToView('notifications');
+  renderNotificationsPanel();
+  const unreadIds = notificationsData.filter(n => !n.is_read).map(n => n.id);
+  if(unreadIds.length > 0){
+    await supabaseClient.from('notifications').update({ is_read: true }).in('id', unreadIds);
+    notificationsData.forEach(n => n.is_read = true);
+    renderNotifBadge();
+  }
+});
+
+/* ---------- rebooking nudge ---------- */
+function renderRebookNudge(){
+  const el = document.getElementById('rebookNudge');
+  const completed = bookingsData.filter(b => b.status === 'completed' && b.completed_at && b.barbers);
+  if(completed.length === 0){ el.innerHTML = ''; return; }
+
+  const lastVisitByBarber = {};
+  completed.forEach(b => {
+    const id = b.barber_id;
+    if(!lastVisitByBarber[id] || new Date(b.completed_at) > new Date(lastVisitByBarber[id].completed_at)){
+      lastVisitByBarber[id] = b;
+    }
+  });
+
+  const now = new Date();
+  const overdue = Object.values(lastVisitByBarber)
+    .map(b => ({ booking: b, daysSince: Math.floor((now - new Date(b.completed_at)) / 86400000) }))
+    .filter(x => x.daysSince >= 21)
+    .sort((a,b) => b.daysSince - a.daysSince);
+
+  if(overdue.length === 0){ el.innerHTML = ''; return; }
+  const target = overdue[0].booking;
+  const barberName = target.barbers.full_name;
+
+  el.innerHTML = `
+    <div class="rebook-nudge">
+      <div class="icon">✂️</div>
+      <div class="text">${t('rebook_nudge').replace('{barber}', `<strong>${escapeHtml(barberName)}</strong>`)}</div>
+      <a href="profile.html?id=${target.barber_id}" class="cta">${t('rebook_cta')}</a>
+    </div>
+  `;
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{

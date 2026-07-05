@@ -25,7 +25,13 @@
 
   .loading, .error-state{ text-align:center; padding:100px 20px; color:var(--ink-dim); }
 
-  .hero{ padding:32px 0 20px; text-align:center; }
+  .hero{ padding:32px 0 20px; text-align:center; position:relative; }
+  .fav-btn-profile{
+    position:absolute; top:0; right:0; width:36px; height:36px; border-radius:50%;
+    background:var(--surface); border:1px solid var(--line); cursor:pointer; font-size:17px;
+    color:var(--ink-dim); display:flex; align-items:center; justify-content:center;
+  }
+  .fav-btn-profile.favorited{ color:#C23B3B; border-color:#ECC9BE; }
   .avatar{
     width:100px; height:100px; border-radius:50%; margin:0 auto 16px; background:var(--surface-alt);
     display:flex; align-items:center; justify-content:center; overflow:hidden;
@@ -65,6 +71,12 @@
   }
   .confirm-booking-btn:hover{ background:var(--brass-soft); }
   .confirm-booking-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .ref-photo-row{ grid-column:1/-1; margin-top:8px; }
+  .ref-photo-label{
+    display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-dim); cursor:pointer;
+    padding:8px 12px; border:1px dashed var(--line); border-radius:8px; justify-content:center;
+  }
+  .ref-photo-label:hover{ border-color:var(--brass); color:var(--brass); }
   .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
   .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:13px; }
   .login-prompt a{ color:var(--brass); font-weight:600; }
@@ -106,19 +118,19 @@ const T = {
        portfolio:"Their work", book_title:"Book an appointment", choose_service:"Choose a service",
        no_slots:"No availability set yet", login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
        booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
-       confirm_booking_btn:"Book this time", booking_in_progress:"Booking...",
+       confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
        back:"Back", location:"Location", min:"min" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
        no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
        booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
-       confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...",
+       confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
        back:"Orqaga", location:"Joylashuv", min:"daq" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
        no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
        booking_confirmed:"Записано!", booking_failed:"Это время только что заняли — выберите другое.",
-       confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...",
+       confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
        back:"Назад", location:"Локация", min:"мин" }
 };
 const browserLang = (navigator.language || 'en').slice(0,2);
@@ -130,6 +142,7 @@ function localizeSpecialty(s){ const i = SPECIALTIES_EN.indexOf(s); return i ===
 function initials(name){ return (name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
 
 let currentUser = null, currentClientProfile = null, barberData = null, servicesData = [];
+let favoriteIds = new Set();
 
 async function init(){
   const params = new URLSearchParams(window.location.search);
@@ -156,6 +169,10 @@ async function init(){
     currentUser = sessionData.session.user;
     const { data: client } = await supabaseClient.from('clients').select('*').eq('id', currentUser.id).single();
     currentClientProfile = client;
+    if(currentClientProfile){
+      const { data: favs } = await supabaseClient.from('favorites').select('barber_id').eq('client_id', currentUser.id);
+      favoriteIds = new Set((favs || []).map(f => f.barber_id));
+    }
   }
 
   render(portfolioPhotos);
@@ -169,7 +186,8 @@ function render(portfolioPhotos){
   document.title = `${b.full_name} — Ustara`;
 
   document.getElementById('content').innerHTML = `
-    <div class="hero">
+    <div class="hero" style="position:relative;">
+      <button class="fav-btn-profile" id="favBtnProfile">${favoriteIds.has(b.id) ? '♥' : '♡'}</button>
       <div class="avatar">${avatar}</div>
       <h1>${escapeHtml(b.full_name)}</h1>
       <div class="meta">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
@@ -198,6 +216,7 @@ function render(portfolioPhotos){
   }
 
   renderServiceChoices();
+  document.getElementById('favBtnProfile').addEventListener('click', ()=> toggleFavorite(b.id));
 }
 
 function renderServiceChoices(){
@@ -269,21 +288,34 @@ async function showDayPicker(serviceKey, duration, price){
   const slotGrid = document.getElementById('slotGrid');
 
   let selectedSlotIso = null;
+  let selectedRefPhoto = null;
 
   function selectDay(idx){
     selectedSlotIso = null;
+    selectedRefPhoto = null;
     document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
     const slots = generateSlotsForDate(days[idx], duration, bookedIsoSet);
     if(slots.length === 0){ slotGrid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
     slotGrid.innerHTML = slots.map(s => `<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
-      + `<button class="confirm-booking-btn" id="confirmBookingBtn" style="display:none;">${t('confirm_booking_btn')}</button>`;
+      + `<div class="ref-photo-row" id="refPhotoRow" style="display:none;">
+           <label class="ref-photo-label" for="refPhotoInput">📎 <span id="refPhotoLabelText">${t('attach_reference')}</span></label>
+           <input type="file" id="refPhotoInput" accept="image/*" style="display:none;">
+         </div>
+         <button class="confirm-booking-btn" id="confirmBookingBtn" style="display:none;">${t('confirm_booking_btn')}</button>`;
     const confirmBtn = document.getElementById('confirmBookingBtn');
+    const refRow = document.getElementById('refPhotoRow');
+    const refInput = document.getElementById('refPhotoInput');
+    refInput.addEventListener('change', ()=>{
+      selectedRefPhoto = refInput.files[0] || null;
+      document.getElementById('refPhotoLabelText').textContent = selectedRefPhoto ? selectedRefPhoto.name : t('attach_reference');
+    });
 
     slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
       el.addEventListener('click', ()=>{
         slotGrid.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('selected'));
         el.classList.add('selected');
         selectedSlotIso = el.dataset.iso;
+        refRow.style.display = 'flex';
         confirmBtn.style.display = 'block';
         confirmBtn.textContent = t('confirm_booking_btn') + ' — ' + el.textContent;
       });
@@ -305,11 +337,25 @@ async function showDayPicker(serviceKey, duration, price){
       }
       confirmBtn.disabled = true;
       confirmBtn.textContent = t('booking_in_progress');
+
+      let referencePhotoUrl = null;
+      if(selectedRefPhoto){
+        const ext = selectedRefPhoto.name.split('.').pop();
+        const path = `${currentUser.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabaseClient.storage.from('booking-references').upload(path, selectedRefPhoto);
+        if(!uploadError){
+          const { data: urlData } = supabaseClient.storage.from('booking-references').getPublicUrl(path);
+          referencePhotoUrl = urlData.publicUrl;
+        } else {
+          console.warn('Reference photo upload failed, continuing without it:', uploadError);
+        }
+      }
+
       const { error } = await supabaseClient.from('bookings').insert([{
         barber_id: barberData.id, client_id: currentUser.id,
         client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
         start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-        service_price: price
+        service_price: price, reference_photo_url: referencePhotoUrl
       }]);
       if(error){
         console.error('Booking insert failed:', error);
@@ -322,6 +368,21 @@ async function showDayPicker(serviceKey, duration, price){
   dayTabs.innerHTML = days.map(d => `<div class="day-tab">${d.toLocaleDateString(lang==='en'?'en-US':lang,{weekday:'short',day:'numeric'})}</div>`).join('');
   Array.from(dayTabs.children).forEach((el,i)=> el.addEventListener('click', ()=> selectDay(i)));
   selectDay(0);
+}
+
+async function toggleFavorite(barberId){
+  if(!currentUser || !currentClientProfile){ window.location.href = 'auth.html'; return; }
+  const btn = document.getElementById('favBtnProfile');
+  const isFav = favoriteIds.has(barberId);
+  btn.disabled = true;
+  if(isFav){
+    const { error } = await supabaseClient.from('favorites').delete().eq('client_id', currentUser.id).eq('barber_id', barberId);
+    if(!error){ favoriteIds.delete(barberId); btn.classList.remove('favorited'); btn.textContent = '♡'; }
+  } else {
+    const { error } = await supabaseClient.from('favorites').insert([{ client_id: currentUser.id, barber_id: barberId }]);
+    if(!error){ favoriteIds.add(barberId); btn.classList.add('favorited'); btn.textContent = '♥'; }
+  }
+  btn.disabled = false;
 }
 
 init();
