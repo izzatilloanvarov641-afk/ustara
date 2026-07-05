@@ -6,6 +6,8 @@
 <title>Ustara — Your dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
@@ -96,6 +98,13 @@
   .booking-status.confirmed{ background:#EEF5EE; color:var(--ok); }
   .booking-status.pending{ background:#FBF3E3; color:#8A6A1E; }
   .booking-status.cancelled{ background:#F5E9E5; color:var(--err); }
+
+  .cancel-booking-btn{
+    font-size:10.5px; font-weight:600; color:var(--err); background:none; border:1px solid #E0B8AC;
+    padding:4px 10px; border-radius:12px; cursor:pointer; font-family:'Inter', sans-serif;
+  }
+  .cancel-booking-btn:hover{ background:#FBF0ED; }
+  .cancel-booking-btn:disabled{ opacity:0.5; cursor:not-allowed; }
 
   .empty-state{
     text-align:center; padding:36px 20px; border:1px dashed var(--line); border-radius:16px; color:var(--ink-dim); font-size:13.5px;
@@ -199,7 +208,7 @@
 
     <section>
       <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
-      <div class="map-teaser" id="mapTeaser">
+      <div class="map-teaser" id="mapTeaser" data-nav="map" style="cursor:pointer;">
         <svg viewBox="0 0 300 170" xmlns="http://www.w3.org/2000/svg">
           <line x1="0" y1="40" x2="300" y2="40" stroke="#D8CDB4" stroke-width="1"/>
           <line x1="0" y1="90" x2="300" y2="90" stroke="#D8CDB4" stroke-width="1"/>
@@ -236,22 +245,10 @@
 <div class="view" data-view="map">
   <div class="wrap" style="padding-top:24px;">
     <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
-    <div class="map-teaser" style="height:280px;">
-      <svg viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
-        <line x1="0" y1="40" x2="300" y2="40" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="0" y1="90" x2="300" y2="90" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="0" y1="140" x2="300" y2="140" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="0" y1="190" x2="300" y2="190" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="0" y1="240" x2="300" y2="240" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="60" y1="0" x2="60" y2="280" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="150" y1="0" x2="150" y2="280" stroke="#D8CDB4" stroke-width="1"/>
-        <line x1="230" y1="0" x2="230" y2="280" stroke="#D8CDB4" stroke-width="1"/>
-      </svg>
-      <div class="teaser-content">
-        <div class="map-pin-anim"></div>
-        <strong data-i18n="map_soon_h">Map coming soon</strong>
-        <span data-i18n="map_soon_s2">We're finishing this up — soon you'll see your barber's exact location here.</span>
-      </div>
+    <div id="mapStatusMsg"></div>
+    <div id="clientMapWrap" style="display:none;">
+      <div id="clientMapEl" style="height:320px; border-radius:18px; overflow:hidden; border:1px solid var(--line);"></div>
+      <div id="mapBarberLabel" style="margin-top:12px; font-size:13.5px; color:var(--ink-dim);"></div>
     </div>
   </div>
 </div>
@@ -305,8 +302,12 @@ const I18N = {
     map_title:"Your barber's spot", map_soon_h:"Map coming soon",
     map_soon_s:"You'll be able to see exactly where to go, right here.",
     map_soon_s2:"We're finishing this up — soon you'll see your barber's exact location here.",
+    map_no_booking:"Book an appointment to see your barber's location here.",
+    map_no_location:"Your barber hasn't set their exact location yet.",
+    map_directions:"Get directions",
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
+    cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.",
     account_title:"Account", language_title:"Language", logout:"Log out",
     nav_home:"Home", nav_bookings:"Bookings", nav_map:"Map", nav_account:"Account",
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
@@ -319,8 +320,12 @@ const I18N = {
     map_title:"Sartaroshingiz joylashuvi", map_soon_h:"Xarita tez orada",
     map_soon_s:"Qayerga borishni aniq shu yerda ko'rasiz.",
     map_soon_s2:"Tugatmoqdamiz — tez orada sartaroshingizning aniq manzilini shu yerda ko'rasiz.",
+    map_no_booking:"Sartaroshingiz joylashuvini ko'rish uchun uchrashuvni band qiling.",
+    map_no_location:"Sartaroshingiz hali aniq joylashuvni belgilamagan.",
+    map_directions:"Yo'nalishni ko'rish",
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
+    cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.",
     account_title:"Hisob", language_title:"Til", logout:"Chiqish",
     nav_home:"Bosh sahifa", nav_bookings:"Bandlar", nav_map:"Xarita", nav_account:"Hisob",
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
@@ -333,8 +338,12 @@ const I18N = {
     map_title:"Место вашего барбера", map_soon_h:"Карта скоро",
     map_soon_s:"Здесь вы увидите, куда именно идти.",
     map_soon_s2:"Мы почти закончили — скоро здесь появится точное местоположение барбера.",
+    map_no_booking:"Запишитесь на приём, чтобы увидеть местоположение барбера здесь.",
+    map_no_location:"Ваш барбер ещё не указал точное местоположение.",
+    map_directions:"Проложить маршрут",
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
+    cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.",
     account_title:"Аккаунт", language_title:"Язык", logout:"Выйти",
     nav_home:"Главная", nav_bookings:"Записи", nav_map:"Карта", nav_account:"Аккаунт",
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
@@ -410,12 +419,13 @@ async function init(){
 
   const { data: bookings } = await supabaseClient
     .from('bookings')
-    .select('*, barbers(full_name, avatar_url, shop_name)')
+    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district)')
     .eq('client_id', user.id)
     .order('start_time', { ascending:true });
   bookingsData = bookings || [];
 
   applyLang(currentLang);
+  setupClientMap();
 }
 
 /* ---------- home ---------- */
@@ -433,16 +443,55 @@ function bookingCardHtml(b){
   const barber = b.barbers || {};
   const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const avatar = barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
+  const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   return `
-    <div class="booking-card">
+    <div class="booking-card" data-booking-id="${b.id}">
       <div class="avatar">${avatar}</div>
       <div class="booking-info">
         <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
         <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
       </div>
-      <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
+        ${canCancel ? `<button class="cancel-booking-btn" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+      </div>
     </div>
   `;
+}
+
+function attachCancelHandlers(container){
+  container.querySelectorAll('[data-cancel-id]').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      if(!confirm(t('cancel_confirm'))) return;
+      btn.disabled = true;
+      btn.textContent = '...';
+      const { error } = await supabaseClient.from('bookings').update({
+        status: 'cancelled',
+        cancelled_by: 'client',
+        barber_seen_cancellation: false
+      }).eq('id', btn.dataset.cancelId);
+      if(error){
+        console.error('Cancel failed:', error);
+        btn.disabled = false;
+        btn.textContent = t('cancel_booking');
+        return;
+      }
+      await refreshBookings();
+    });
+  });
+}
+
+async function refreshBookings(){
+  const { data: bookings } = await supabaseClient
+    .from('bookings')
+    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district)')
+    .eq('client_id', clientData.id)
+    .order('start_time', { ascending:true });
+  bookingsData = bookings || [];
+  renderStatPills();
+  renderHomeBookings();
+  renderAllBookings();
 }
 
 function renderHomeBookings(){
@@ -460,6 +509,7 @@ function renderHomeBookings(){
     return;
   }
   area.innerHTML = upcoming.map(bookingCardHtml).join('');
+  attachCancelHandlers(area);
 }
 
 /* ---------- bookings tab ---------- */
@@ -477,6 +527,7 @@ function renderAllBookings(){
     return;
   }
   area.innerHTML = filtered.map(bookingCardHtml).join('');
+  attachCancelHandlers(area);
 }
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('[data-status]');
@@ -494,6 +545,65 @@ function renderInfoCard(){
     <div class="info-row"><span class="k">${t('rv_phone')}</span><span class="v">${escapeHtml(clientData.phone || '—')}</span></div>
     <div class="info-row"><span class="k">${t('rv_email')}</span><span class="v">${escapeHtml(userEmail)}</span></div>
   `;
+}
+
+/* ---------- real map, lazy-initialized on first visit to Map tab ---------- */
+let clientMap = null;
+let mapInitialized = false;
+
+function nextBookingWithBarber(){
+  const now = new Date();
+  const upcoming = bookingsData
+    .filter(b => new Date(b.start_time) > now && b.status !== 'cancelled' && b.barbers)
+    .sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+  return upcoming[0] || null;
+}
+
+function setupClientMap(){
+  const statusMsg = document.getElementById('mapStatusMsg');
+  const mapWrap = document.getElementById('clientMapWrap');
+  const booking = nextBookingWithBarber();
+
+  if(!booking){
+    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('map_no_booking')}</div>`;
+    mapWrap.style.display = 'none';
+    return;
+  }
+  const barber = booking.barbers;
+  if(!barber.latitude || !barber.longitude || !barber.is_location_verified){
+    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('map_no_location')}</div>`;
+    mapWrap.style.display = 'none';
+    return;
+  }
+
+  statusMsg.innerHTML = '';
+  mapWrap.style.display = 'block';
+  document.getElementById('mapBarberLabel').innerHTML =
+    `<strong>${escapeHtml(barber.shop_name || barber.full_name)}</strong> · ${escapeHtml(barber.district || '')}<br>` +
+    `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" style="color:var(--brass); font-weight:600;">${t('map_directions')} →</a>`;
+
+  const tryInit = () => {
+    const el = document.getElementById('clientMapEl');
+    if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; }
+    if(!mapInitialized){
+      clientMap = L.map('clientMapEl').setView([barber.latitude, barber.longitude], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+      }).addTo(clientMap);
+      L.marker([barber.latitude, barber.longitude]).addTo(clientMap)
+        .bindPopup(escapeHtml(barber.shop_name || barber.full_name));
+      mapInitialized = true;
+    } else {
+      clientMap.invalidateSize();
+      clientMap.setView([barber.latitude, barber.longitude], 15);
+    }
+  };
+
+  if(document.querySelector('.view[data-view="map"]').classList.contains('active')){
+    tryInit();
+  } else {
+    document.querySelector('.nav-btn[data-view="map"]').addEventListener('click', tryInit, { once:true });
+  }
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{

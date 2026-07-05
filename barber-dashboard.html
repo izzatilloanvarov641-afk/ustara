@@ -239,9 +239,10 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
         <span data-i18n="nav_photos">Photos</span>
       </button>
-      <button class="nav-item" data-view="bookings">
+      <button class="nav-item" data-view="bookings" style="position:relative;">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
         <span data-i18n="nav_bookings">Bookings</span>
+        <span id="bookingsNavBadge" style="display:none; position:absolute; top:6px; left:26px; width:8px; height:8px; border-radius:50%; background:var(--err);"></span>
       </button>
     </nav>
     <div class="sidebar-foot">
@@ -265,6 +266,14 @@
           <input type="checkbox" id="publishToggle">
           <span class="toggle-slider"></span>
         </label>
+      </div>
+
+      <div class="status-banner" id="cancellationAlert" style="display:none; background:#F5E9E5; border-color:#E0B8AC; cursor:pointer;">
+        <div class="status-dot" style="background:var(--err);"></div>
+        <div style="flex:1;">
+          <strong id="cancellationAlertText"></strong>
+          <span data-i18n="cancellation_alert_sub">Tap to review.</span>
+        </div>
       </div>
 
       <div class="stat-row">
@@ -480,6 +489,8 @@ const I18N = {
     nav_photos:"Photos", nav_bookings:"Bookings", logout:"Log out",
     ov_title:"Welcome back", ov_sub:"Here's where things stand today.",
     stat_upcoming:"Upcoming bookings", stat_pending:"Awaiting your confirmation", stat_services:"Active services",
+    cancellation_alert_one:"A client cancelled their booking.", cancellation_alert_many:"{n} clients cancelled their bookings.",
+    cancellation_alert_sub:"Tap to review.",
     ov_next:"Next up",
     status_live_h:"You're live", status_live_s:"Clients can find and book you.",
     status_pending_h:"Pending review", status_pending_s:"We'll notify you once the founder approves your profile.",
@@ -510,6 +521,8 @@ const I18N = {
     nav_photos:"Suratlar", nav_bookings:"Bandlar", logout:"Chiqish",
     ov_title:"Xush kelibsiz", ov_sub:"Bugungi holat shu yerda.",
     stat_upcoming:"Kelgusi bandlar", stat_pending:"Tasdiqlashingizni kutmoqda", stat_services:"Faol xizmatlar",
+    cancellation_alert_one:"Mijoz o'z bandini bekor qildi.", cancellation_alert_many:"{n} mijoz o'z bandlarini bekor qildi.",
+    cancellation_alert_sub:"Ko'rish uchun bosing.",
     ov_next:"Navbatdagi",
     status_live_h:"Siz faolsiz", status_live_s:"Mijozlar sizni topib, band qilishlari mumkin.",
     status_pending_h:"Ko'rib chiqilmoqda", status_pending_s:"Asoschi profilingizni tasdiqlagach xabar beramiz.",
@@ -540,6 +553,8 @@ const I18N = {
     nav_photos:"Фото", nav_bookings:"Записи", logout:"Выйти",
     ov_title:"С возвращением", ov_sub:"Вот как обстоят дела сегодня.",
     stat_upcoming:"Предстоящие записи", stat_pending:"Ждут вашего подтверждения", stat_services:"Активные услуги",
+    cancellation_alert_one:"Клиент отменил свою запись.", cancellation_alert_many:"{n} клиентов отменили свои записи.",
+    cancellation_alert_sub:"Нажмите, чтобы посмотреть.",
     ov_next:"Далее",
     status_live_h:"Вы активны", status_live_s:"Клиенты могут найти и записаться к вам.",
     status_pending_h:"На рассмотрении", status_pending_s:"Сообщим, как только основатель одобрит профиль.",
@@ -643,6 +658,7 @@ async function initInner(){
   renderOverviewStats();
   renderOverviewBookings();
   renderBookingsList();
+  renderCancellationAlert();
 
   const { data: photos } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', userId).order('position', { ascending:true });
   renderPortfolio(photos || []);
@@ -1036,6 +1052,36 @@ async function refreshBookings(){
   renderOverviewStats();
   renderOverviewBookings();
   renderBookingsList();
+  renderCancellationAlert();
+}
+
+function renderCancellationAlert(){
+  const unseen = bookingsData.filter(b => b.status === 'cancelled' && b.cancelled_by === 'client' && b.barber_seen_cancellation === false);
+  const alertEl = document.getElementById('cancellationAlert');
+  const badge = document.getElementById('bookingsNavBadge');
+  if(unseen.length === 0){
+    alertEl.style.display = 'none';
+    badge.style.display = 'none';
+    return;
+  }
+  alertEl.style.display = 'flex';
+  badge.style.display = 'block';
+  const text = document.getElementById('cancellationAlertText');
+  text.textContent = unseen.length === 1
+    ? t('cancellation_alert_one')
+    : t('cancellation_alert_many').replace('{n}', unseen.length);
+  alertEl.onclick = async ()=>{
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.querySelector('.nav-item[data-view="bookings"]').classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.dataset.view === 'bookings'));
+    document.querySelectorAll('#bookingFilterTabs .filter-tab').forEach(tb=> tb.classList.toggle('active', tb.dataset.status === 'cancelled'));
+    currentBookingFilter = 'cancelled';
+    renderBookingsList();
+    const ids = unseen.map(b => b.id);
+    await supabaseClient.from('bookings').update({ barber_seen_cancellation: true }).in('id', ids);
+    unseen.forEach(b => b.barber_seen_cancellation = true);
+    renderCancellationAlert();
+  };
 }
 
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
