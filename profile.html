@@ -5,93 +5,133 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ustara — Barber profile</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E2DACB;
-    --ink:#1C1A17; --ink-dim:#7A7264; --brass:#A67C1A; --brass-soft:#C79A2E;
+    --bg:#141414; --surface:#1E1C19; --surface-2:#242220; --line:rgba(255,255,255,0.09);
+    --ink:#F5F3EF; --ink-dim:#9B9691; --gold:#B88A2A; --gold-soft:#D4A94A;
+    --success:#1FA971; --r-card:26px;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
-  body{ background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.5; }
+  body{ background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.5; padding-bottom:100px; }
   a{ color:inherit; text-decoration:none; }
   .wrap{ max-width:640px; margin:0 auto; padding:0 20px; }
+  .serif{ font-family:'Instrument Serif', serif; font-style:italic; }
 
-  nav{ border-bottom:1px solid var(--line); padding:16px 0; background:var(--surface); }
-  .logo{ font-family:'Fraunces', serif; font-size:19px; }
-  .logo em{ font-style:italic; color:var(--brass); }
+  nav{ padding:16px 0; }
+  .logo{ font-family:'Instrument Serif', serif; font-style:italic; font-size:20px; color:var(--ink); }
+  .logo em{ font-style:normal; color:var(--gold-soft); }
 
   .loading, .error-state{ text-align:center; padding:100px 20px; color:var(--ink-dim); }
 
-  .hero{ padding:32px 0 20px; text-align:center; position:relative; }
-  .fav-btn-profile{
-    position:absolute; top:0; right:0; width:36px; height:36px; border-radius:50%;
-    background:var(--surface); border:1px solid var(--line); cursor:pointer; font-size:17px;
-    color:var(--ink-dim); display:flex; align-items:center; justify-content:center;
+  /* ================= HERO ================= */
+  .hero-photo{
+    width:100%; height:260px; position:relative; overflow:hidden; background:var(--surface-2);
   }
-  .fav-btn-profile.favorited{ color:#C23B3B; border-color:#ECC9BE; }
+  .hero-photo img{ width:100%; height:100%; object-fit:cover; }
+  .hero-photo::after{
+    content:''; position:absolute; inset:0; background:linear-gradient(to bottom, rgba(20,20,20,0.15), var(--bg) 92%);
+  }
+  .hero-photo .no-photo-bg{
+    width:100%; height:100%;
+    background:radial-gradient(circle at 30% 20%, rgba(184,138,42,0.18), transparent 55%), linear-gradient(160deg, #2B2620, #141414);
+  }
+
+  .hero{ padding:0 20px 20px; text-align:center; margin-top:-64px; position:relative; z-index:2; }
   .avatar{
-    width:100px; height:100px; border-radius:50%; margin:0 auto 16px; background:var(--surface-alt);
+    width:112px; height:112px; border-radius:50%; margin:0 auto 14px; background:var(--surface-2);
     display:flex; align-items:center; justify-content:center; overflow:hidden;
-    font-family:'Fraunces', serif; font-size:34px; color:var(--brass); font-style:italic;
-    border:3px solid var(--surface); box-shadow:0 2px 12px rgba(0,0,0,0.08);
+    font-family:'Instrument Serif', serif; font-style:italic; font-size:36px; color:var(--gold-soft);
+    border:4px solid var(--bg); box-shadow:0 12px 34px rgba(0,0,0,0.4); position:relative;
   }
   .avatar img{ width:100%; height:100%; object-fit:cover; }
-  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; }
-  .meta{ font-size:13.5px; color:var(--ink-dim); margin-top:4px; }
-  .tags{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:14px; }
-  .tag{ font-size:11.5px; border:1px solid var(--line); color:var(--ink-dim); padding:5px 12px; border-radius:20px; background:var(--surface); }
-  .bio{ font-size:14.5px; line-height:1.7; text-align:center; max-width:480px; margin:18px auto 0; }
+  .verified-badge{
+    position:absolute; bottom:6px; right:2px; width:26px; height:26px; border-radius:50%; background:var(--gold);
+    display:flex; align-items:center; justify-content:center; border:3px solid var(--bg); font-size:12px; color:#141414;
+  }
+  h1{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:27px; }
+  .meta{ font-size:13px; color:var(--ink-dim); margin-top:5px; }
+  .trust-row{ display:flex; justify-content:center; gap:22px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
+  .trust-item{ text-align:center; }
+  .trust-num{ font-family:'Instrument Serif', serif; font-style:italic; font-size:19px; color:var(--gold-soft); }
+  .trust-label{ font-size:10px; color:var(--ink-dim); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
 
-  .section-title{ font-family:'Fraunces', serif; font-size:17px; font-weight:500; margin:32px 0 14px; }
+  .tags{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:16px; }
+  .tag{ font-size:11.5px; border:1px solid var(--line); color:var(--ink-dim); padding:6px 13px; border-radius:20px; background:var(--surface); }
+  .bio{ font-size:14px; line-height:1.7; text-align:center; max-width:480px; margin:18px auto 0; color:var(--ink-dim); }
 
-  .portfolio-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
-  .portfolio-grid img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:8px; }
+  .section-title{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:19px; margin:32px 0 14px; }
+
+  .portfolio-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+  .portfolio-grid img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:16px; }
 
   .service-option{
-    display:flex; justify-content:space-between; align-items:center; padding:14px 16px;
-    border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; font-size:14px;
-    background:var(--surface);
+    display:flex; justify-content:space-between; align-items:center; padding:15px 17px;
+    border:1px solid var(--line); border-radius:18px; margin-bottom:9px; cursor:pointer; font-size:14px;
+    background:var(--surface); transition:border-color .15s ease;
   }
-  .service-option:hover, .service-option.selected{ border-color:var(--brass); background:#FBF7EE; }
-  .svc-price{ font-weight:700; color:var(--brass); }
+  .service-option:hover, .service-option.selected{ border-color:var(--gold); }
+  .svc-price{ font-weight:800; color:var(--gold-soft); }
 
   .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin:14px 0; }
-  .day-tab{ flex-shrink:0; background:var(--surface); border:1px solid var(--line); color:var(--ink-dim); padding:8px 12px; border-radius:8px; font-size:12px; cursor:pointer; min-width:52px; text-align:center; }
-  .day-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
+  .day-tab{ flex-shrink:0; background:var(--surface); border:1.5px solid var(--line); color:var(--ink-dim); padding:9px 13px; border-radius:14px; font-size:12px; cursor:pointer; min-width:52px; text-align:center; font-weight:700; }
+  .day-tab.active{ background:var(--gold); border-color:var(--gold); color:#141414; }
   .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
-  .slot-btn{ background:var(--surface); border:1px solid var(--line); color:var(--ink); padding:10px 6px; border-radius:8px; font-size:13px; cursor:pointer; text-align:center; }
-  .slot-btn:hover{ border-color:var(--brass); }
-  .slot-btn.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:700; }
+  .slot-btn{ background:var(--surface); border:1.5px solid var(--line); color:var(--ink); padding:11px 6px; border-radius:14px; font-size:13px; cursor:pointer; text-align:center; font-weight:700; }
+  .slot-btn:hover{ border-color:var(--gold); }
+  .slot-btn.selected{ background:var(--gold); border-color:var(--gold); color:#141414; }
+  .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:13px; }
+  .login-prompt a{ color:var(--gold-soft); font-weight:700; }
+  .booking-toast{ grid-column:1/-1; text-align:center; font-size:14px; color:var(--gold-soft); padding:10px; font-family:'Instrument Serif', serif; font-style:italic; }
+  .back-link{ font-size:12.5px; color:var(--ink-dim); cursor:pointer; margin-bottom:10px; display:inline-block; }
   .confirm-booking-btn{
-    grid-column:1/-1; margin-top:6px; background:var(--brass); color:#fff; border:none; padding:13px;
-    border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:'Inter', sans-serif;
+    grid-column:1/-1; margin-top:6px; background:var(--gold); color:#141414; border:none; padding:14px;
+    border-radius:20px; font-size:13.5px; font-weight:800; cursor:pointer; font-family:'Inter', sans-serif;
   }
-  .confirm-booking-btn:hover{ background:var(--brass-soft); }
+  .confirm-booking-btn:hover{ background:var(--gold-soft); }
   .confirm-booking-btn:disabled{ opacity:0.6; cursor:not-allowed; }
   .ref-photo-row{ grid-column:1/-1; margin-top:8px; }
   .ref-photo-label{
     display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-dim); cursor:pointer;
-    padding:8px 12px; border:1px dashed var(--line); border-radius:8px; justify-content:center;
+    padding:9px 12px; border:1px dashed var(--line); border-radius:14px; justify-content:center;
   }
-  .ref-photo-label:hover{ border-color:var(--brass); color:var(--brass); }
-  .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
-  .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:13px; }
-  .login-prompt a{ color:var(--brass); font-weight:600; }
-  .booking-toast{ grid-column:1/-1; text-align:center; font-size:14px; color:var(--brass); padding:10px; font-family:'Fraunces', serif; font-style:italic; }
-  .back-link{ font-size:12.5px; color:var(--ink-dim); cursor:pointer; margin-bottom:10px; display:inline-block; }
+  .ref-photo-label:hover{ border-color:var(--gold-soft); color:var(--gold-soft); }
 
-  #locationMapEl{ height:220px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
-  footer{ padding:40px 0 60px; text-align:center; }
+  #locationMapEl{ height:220px; border-radius:20px; overflow:hidden; border:1px solid var(--line); }
+
+  .fav-btn-profile{
+    position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:50%;
+    background:rgba(20,20,20,0.5); border:1px solid rgba(255,255,255,0.2); cursor:pointer; font-size:17px;
+    color:#fff; display:flex; align-items:center; justify-content:center; z-index:3; backdrop-filter:blur(6px);
+  }
+  .fav-btn-profile.favorited{ color:#E05252; }
+  .back-btn{
+    position:absolute; top:16px; left:16px; width:38px; height:38px; border-radius:50%;
+    background:rgba(20,20,20,0.5); border:1px solid rgba(255,255,255,0.2); cursor:pointer; font-size:16px;
+    color:#fff; display:flex; align-items:center; justify-content:center; z-index:3; backdrop-filter:blur(6px);
+  }
+
+  .sticky-book-bar{
+    position:fixed; bottom:0; left:0; right:0; background:rgba(20,20,20,0.9); backdrop-filter:blur(20px);
+    border-top:1px solid var(--line); padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+    z-index:40; display:flex; justify-content:center;
+  }
+  .sticky-book-btn{
+    width:100%; max-width:600px; background:var(--gold); color:#141414; border:none; padding:16px;
+    border-radius:20px; font-size:14px; font-weight:800; cursor:pointer; font-family:'Inter', sans-serif;
+  }
+  .sticky-book-btn:hover{ background:var(--gold-soft); }
+
+  footer{ padding:20px 0 20px; text-align:center; }
 </style>
 </head>
 <body>
 
-<nav><div class="wrap"><a href="index.html" class="logo">ust<em>a</em>ra</a></div></nav>
-
-<div class="wrap" id="content">
+<div id="content">
   <div class="loading" id="loadingMsg">Loading...</div>
 </div>
 
@@ -119,19 +159,22 @@ const T = {
        no_slots:"No availability set yet", login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
        booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
        confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
-       back:"Back", location:"Location", min:"min" },
+       back:"Back", location:"Location", min:"min",
+       trust_clients:"Clients", trust_years:"Years exp.", trust_verified:"Verified", sticky_book:"Book with {name}" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
        no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
        booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
        confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
-       back:"Orqaga", location:"Joylashuv", min:"daq" },
+       back:"Orqaga", location:"Joylashuv", min:"daq",
+       trust_clients:"Mijozlar", trust_years:"Tajriba", trust_verified:"Tasdiqlangan", sticky_book:"{name} bilan band qilish" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
        no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
        booking_confirmed:"Записано!", booking_failed:"Это время только что заняли — выберите другое.",
        confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
-       back:"Назад", location:"Локация", min:"мин" }
+       back:"Назад", location:"Локация", min:"мин",
+       trust_clients:"Клиентов", trust_years:"Опыт", trust_verified:"Проверен", sticky_book:"Записаться к {name}" }
 };
 const browserLang = (navigator.language || 'en').slice(0,2);
 const lang = T[browserLang] ? browserLang : 'en';
@@ -164,6 +207,11 @@ async function init(){
     portfolioPhotos = data || [];
   } catch(e){ console.warn('portfolio_photos fetch failed:', e); }
 
+  // real, honest trust indicator — no fake ratings since there's no reviews system yet
+  const { count: completedCount } = await supabaseClient
+    .from('bookings').select('*', { count: 'exact', head: true })
+    .eq('barber_id', barberId).eq('status', 'completed');
+
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(sessionData.session){
     currentUser = sessionData.session.user;
@@ -175,38 +223,64 @@ async function init(){
     }
   }
 
-  render(portfolioPhotos);
+  render(portfolioPhotos, completedCount || 0);
 }
 
-function render(portfolioPhotos){
+function render(portfolioPhotos, completedCount){
   const b = barberData;
   const specs = (b.specialties || []).map(s => `<span class="tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
   const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials(b.full_name);
+  const heroPhoto = portfolioPhotos[0]
+    ? `<img src="${escapeHtml(portfolioPhotos[0].photo_url)}" alt="">`
+    : `<div class="no-photo-bg"></div>`;
 
   document.title = `${b.full_name} — Ustara`;
 
   document.getElementById('content').innerHTML = `
-    <div class="hero" style="position:relative;">
+    <div class="hero-photo">
+      ${heroPhoto}
+      <button class="back-btn" onclick="window.location.href='browse.html'">←</button>
       <button class="fav-btn-profile" id="favBtnProfile">${favoriteIds.has(b.id) ? '♥' : '♡'}</button>
-      <div class="avatar">${avatar}</div>
+    </div>
+
+    <div class="hero">
+      <div class="avatar">
+        ${avatar}
+        ${b.is_approved ? `<div class="verified-badge">✓</div>` : ''}
+      </div>
       <h1>${escapeHtml(b.full_name)}</h1>
       <div class="meta">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
+
+      <div class="trust-row">
+        <div class="trust-item"><div class="trust-num">${completedCount}+</div><div class="trust-label">${t('trust_clients')}</div></div>
+        ${b.years_experience ? `<div class="trust-item"><div class="trust-num">${b.years_experience}</div><div class="trust-label">${t('trust_years')}</div></div>` : ''}
+        ${b.is_approved ? `<div class="trust-item"><div class="trust-num">✓</div><div class="trust-label">${t('trust_verified')}</div></div>` : ''}
+      </div>
+
       <div class="tags">${specs}</div>
       ${b.bio ? `<div class="bio">${escapeHtml(b.bio)}</div>` : ''}
     </div>
 
-    ${portfolioPhotos.length > 0 ? `
-      <div class="section-title">${t('portfolio')}</div>
-      <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(p.photo_url)}" alt="">`).join('')}</div>
-    ` : ''}
+    <div class="wrap">
+      ${portfolioPhotos.length > 0 ? `
+        <div class="section-title">${t('portfolio')}</div>
+        <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(p.photo_url)}" alt="">`).join('')}</div>
+      ` : ''}
 
-    ${b.latitude && b.longitude && b.is_location_verified ? `
-      <div class="section-title">${t('location')}</div>
-      <div id="locationMapEl"></div>
-    ` : ''}
+      ${b.latitude && b.longitude && b.is_location_verified ? `
+        <div class="section-title">${t('location')}</div>
+        <div id="locationMapEl"></div>
+      ` : ''}
 
-    <div class="section-title">${t('book_title')}</div>
-    <div id="bookingArea"></div>
+      <div class="section-title" id="bookingSectionTitle">${t('book_title')}</div>
+      <div id="bookingArea"></div>
+    </div>
+
+    <div class="sticky-book-bar">
+      <button class="sticky-book-btn" onclick="document.getElementById('bookingSectionTitle').scrollIntoView({behavior:'smooth'})">
+        ${t('sticky_book').replace('{name}', escapeHtml(b.full_name.split(' ')[0]))}
+      </button>
+    </div>
   `;
 
   if(b.latitude && b.longitude && b.is_location_verified){

@@ -5,15 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ustara — Find your barber</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E2DACB;
-    --ink:#1C1A17; --ink-dim:#7A7264; --brass:#A67C1A; --brass-soft:#C79A2E;
-    --err:#B3432B; --ok:#4a7c59;
+    --bg:#F8F7F4; --surface:#FFFFFF; --surface-alt:#F1EFEA; --line:#ECE8E2;
+    --ink:#111111; --ink-dim:#6F6F6F; --gold:#B88A2A; --gold-soft:#D4A94A;
+    --success:#1FA971; --success-bg:#E4F5EE; --warning:#E8A63B; --danger:#E05252;
+    --r-card:24px; --r-btn:20px; --r-input:18px;
+    --sh-soft:0 20px 50px rgba(17,17,17,0.06), 0 4px 12px rgba(17,17,17,0.04);
   }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body{
@@ -22,22 +24,23 @@
     display:flex; flex-direction:column;
   }
   a{ color:inherit; text-decoration:none; }
+  .serif{ font-family:'Instrument Serif', serif; font-style:italic; }
 
   /* ================= NAV / SEARCH BAR ================= */
   nav{
     border-bottom:1px solid var(--line); background:var(--surface); z-index:60; flex-shrink:0;
   }
   .nav-inner{
-    max-width:1400px; margin:0 auto; padding:12px 20px;
+    max-width:1400px; margin:0 auto; padding:14px 20px;
     display:flex; align-items:center; gap:12px; flex-wrap:wrap;
   }
-  .logo{ font-family:'Fraunces', serif; font-size:20px; flex-shrink:0; margin-right:6px; }
-  .logo em{ font-style:italic; color:var(--brass); }
+  .logo{ font-family:'Instrument Serif', serif; font-style:italic; font-size:22px; flex-shrink:0; margin-right:6px; }
+  .logo em{ font-style:normal; color:var(--gold); }
 
   .search-group{ display:flex; gap:8px; flex:1; min-width:0; flex-wrap:wrap; }
   .search-box{
-    display:flex; align-items:center; gap:9px; background:var(--bg); border:1px solid var(--line);
-    border-radius:24px; padding:11px 16px; flex:1.2; min-width:170px; position:relative;
+    display:flex; align-items:center; gap:9px; background:var(--surface-alt); border:1px solid var(--line);
+    border-radius:var(--r-btn); padding:12px 16px; flex:1.2; min-width:170px; position:relative;
   }
   .search-box svg{ opacity:0.45; flex-shrink:0; }
   .search-box input{
@@ -53,23 +56,23 @@
   .loc-box.has-value .loc-clear{ display:block; }
 
   .search-btn{
-    background:var(--brass); color:#fff; border:none; border-radius:24px; padding:11px 24px;
+    background:#141414; color:var(--gold-soft); border:none; border-radius:var(--r-btn); padding:12px 24px;
     font-size:13px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer;
     font-family:'Inter', sans-serif; flex-shrink:0; transition:background .15s;
   }
-  .search-btn:hover{ background:var(--brass-soft); }
+  .search-btn:hover{ background:#000; }
 
   .lang-switch{ display:flex; border:1px solid var(--line); border-radius:20px; padding:3px; flex-shrink:0; }
   .lang-switch button{
     background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif;
     font-size:11.5px; font-weight:600; padding:6px 10px; border-radius:16px; cursor:pointer;
   }
-  .lang-switch button.active{ background:var(--brass); color:#fff; }
+  .lang-switch button.active{ background:#141414; color:var(--gold-soft); }
 
   /* location suggestions dropdown */
   .suggestions{
     position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface);
-    border:1px solid var(--line); border-radius:14px; box-shadow:0 8px 28px rgba(28,26,23,0.12);
+    border:1px solid var(--line); border-radius:16px; box-shadow:var(--sh-soft);
     overflow:hidden; display:none; z-index:100; max-height:280px; overflow-y:auto;
   }
   .suggestions.open{ display:block; }
@@ -92,36 +95,36 @@
 
   .results-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; padding:0 2px; }
   .results-count{
-    font-size:13px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+    font-size:13px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-dim);
   }
   .chips-scroll{ display:flex; gap:8px; overflow-x:auto; padding:2px 2px 12px; margin-bottom:6px; scrollbar-width:none; }
   .chips-scroll::-webkit-scrollbar{ display:none; }
   .chip{
-    flex-shrink:0; border:1px solid var(--line); color:var(--ink-dim); padding:8px 14px; border-radius:20px;
-    font-size:12px; cursor:pointer; background:var(--surface); white-space:nowrap; font-weight:500;
+    flex-shrink:0; border:1px solid var(--line); color:var(--ink-dim); padding:9px 15px; border-radius:20px;
+    font-size:12px; cursor:pointer; background:var(--surface); white-space:nowrap; font-weight:600;
   }
-  .chip.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:700; }
+  .chip.selected{ background:#141414; border-color:#141414; color:var(--gold-soft); font-weight:700; }
 
   /* ================= BARBER CARD ================= */
   .card{
-    background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:14px;
-    margin-bottom:14px; cursor:pointer; transition:border-color .15s ease, box-shadow .15s ease;
-    position:relative;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:14px;
+    margin-bottom:14px; cursor:pointer; transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    box-shadow:var(--sh-soft); position:relative;
   }
-  .card:hover, .card.highlighted{ border-color:var(--brass); box-shadow:0 4px 18px rgba(166,124,26,0.12); }
+  .card:hover, .card.highlighted{ border-color:var(--gold); transform:translateY(-2px); }
   .fav-btn{
     position:absolute; top:14px; right:14px; z-index:5; width:32px; height:32px; border-radius:50%;
     background:rgba(255,255,255,0.9); border:1px solid var(--line); cursor:pointer; font-size:16px;
     color:var(--ink-dim); display:flex; align-items:center; justify-content:center;
     backdrop-filter:blur(4px);
   }
-  .fav-btn.favorited{ color:#C23B3B; border-color:#ECC9BE; }
+  .fav-btn.favorited{ color:var(--danger); border-color:#F3CFCF; }
 
   .card-photos{ display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:12px; }
   .card-photos .ph{
-    aspect-ratio:1; border-radius:10px; overflow:hidden; background:var(--surface-alt);
+    aspect-ratio:1; border-radius:14px; overflow:hidden; background:var(--surface-alt);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-style:italic; color:var(--brass); font-size:22px;
+    font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:22px;
   }
   .card-photos .ph img{ width:100%; height:100%; object-fit:cover; }
 
@@ -129,15 +132,14 @@
   .card-avatar{
     width:44px; height:44px; border-radius:50%; overflow:hidden; flex-shrink:0; background:var(--surface-alt);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-style:italic; color:var(--brass); font-size:15px;
-    border:2px solid var(--line);
+    font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:15px;
+    border:1px solid var(--line);
   }
-  .card-avatar img{ width:100%; height:100%; object-fit:cover; }
   .card-who{ flex:1; min-width:0; }
   .card-name{ font-weight:700; font-size:15px; }
   .card-sub{ font-size:11.5px; color:var(--ink-dim); }
   .card-right{ text-align:right; flex-shrink:0; }
-  .card-price{ font-size:13px; font-weight:800; color:var(--brass); }
+  .card-price{ font-size:13px; font-weight:800; color:var(--gold); }
   .card-dist{ font-size:11px; color:var(--ink-dim); }
 
   .avail-row{ display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; scrollbar-width:none; }
@@ -148,43 +150,35 @@
     width:32px; height:32px; margin:0 auto; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:12.5px; font-weight:600; border:1.5px solid var(--line); color:var(--ink-dim);
   }
-  .avail-day.open .d-num{ border-color:var(--brass); color:var(--brass); }
+  .avail-day.open .d-num{ border-color:var(--gold); color:var(--gold); }
 
   .book-btn{
-    width:100%; background:var(--ink); color:#fff; border:none; border-radius:24px; padding:13px;
+    width:100%; background:#141414; color:var(--gold-soft); border:none; border-radius:var(--r-btn); padding:13px;
     font-size:12.5px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer;
     font-family:'Inter', sans-serif; transition:background .15s;
   }
-  .book-btn:hover{ background:var(--brass); }
+  .book-btn:hover{ background:#000; }
 
   .empty{ text-align:center; padding:60px 18px; }
   .empty .icon{ font-size:34px; margin-bottom:14px; }
-  .empty h3{ font-family:'Fraunces', serif; font-weight:500; font-size:20px; margin-bottom:8px; }
+  .empty h3{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:21px; margin-bottom:8px; }
   .empty p{ color:var(--ink-dim); font-size:13px; max-width:300px; margin:0 auto 20px; }
-  .empty .btn{ display:inline-block; background:var(--brass); color:#fff; padding:12px 22px; border-radius:22px; font-size:12.5px; font-weight:700; }
+  .empty .btn{ display:inline-block; background:#141414; color:var(--gold-soft); padding:12px 22px; border-radius:var(--r-btn); font-size:12.5px; font-weight:700; }
   .loading{ text-align:center; padding:60px 18px; color:var(--ink-dim); font-size:13px; }
 
   /* map price pins */
   .price-pin{
-    background:var(--ink); color:#fff; font-size:11.5px; font-weight:800; padding:7px 12px;
-    border-radius:16px; white-space:nowrap; box-shadow:0 3px 8px rgba(0,0,0,0.28); border:2px solid #fff;
+    background:#141414; color:var(--gold-soft); font-size:11.5px; font-weight:800; padding:7px 12px;
+    border-radius:16px; white-space:nowrap; box-shadow:0 3px 10px rgba(0,0,0,0.28); border:2px solid #fff;
     transition:transform .12s ease;
   }
-  .price-pin.active{ background:var(--brass); transform:scale(1.15); }
+  .price-pin.active{ background:var(--gold); color:#141414; transform:scale(1.15); }
 
-  .pin-pop{ min-width:160px; font-family:inherit; }
-  .pin-pop-name{ font-weight:700; font-size:14px; color:var(--ink); }
-  .pin-pop-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
-  .pin-pop-btn{
-    display:block; margin-top:8px; text-align:center; background:var(--ink); color:#fff;
-    font-size:12.5px; font-weight:700; padding:8px 10px; border-radius:10px; text-decoration:none;
-  }
-
-  /* ================= PROFILE OVERLAY (over map, theCut style) ================= */
+  /* ================= PROFILE OVERLAY (light, per map screen reference) ================= */
   .profile-pop{
     display:none; position:absolute; top:16px; left:16px; bottom:16px; width:min(400px, calc(100% - 32px));
-    background:var(--surface); border-radius:20px; z-index:50; overflow-y:auto;
-    box-shadow:0 12px 44px rgba(28,26,23,0.22);
+    background:var(--surface); border-radius:var(--r-card); z-index:50; overflow-y:auto;
+    box-shadow:0 20px 60px rgba(17,17,17,0.18);
   }
   .profile-pop.open{ display:block; animation:popIn .22s ease; }
   @keyframes popIn{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
@@ -192,20 +186,20 @@
   .pop-gallery img{ width:100%; height:100%; object-fit:cover; }
   .pop-gallery .no-photo{
     width:100%; height:100%; display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-style:italic; color:var(--brass); font-size:44px;
+    font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:44px;
   }
   .pop-close{
     position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%;
-    background:rgba(28,26,23,0.55); color:#fff; border:none; cursor:pointer; font-size:17px;
+    background:rgba(20,20,20,0.55); color:#fff; border:none; cursor:pointer; font-size:17px;
     display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);
   }
   .gal-nav{
-    position:absolute; bottom:12px; right:12px; background:rgba(28,26,23,0.55); color:#fff;
+    position:absolute; bottom:12px; right:12px; background:rgba(20,20,20,0.55); color:#fff;
     font-size:11px; padding:4px 10px; border-radius:12px; backdrop-filter:blur(4px);
   }
   .gal-arrow{
     position:absolute; top:50%; transform:translateY(-50%); width:32px; height:32px; border-radius:50%;
-    background:rgba(28,26,23,0.45); color:#fff; border:none; cursor:pointer; font-size:15px;
+    background:rgba(20,20,20,0.45); color:#fff; border:none; cursor:pointer; font-size:15px;
     display:none; align-items:center; justify-content:center;
   }
   .pop-gallery:hover .gal-arrow{ display:flex; }
@@ -216,64 +210,66 @@
   .pop-avatar{
     width:52px; height:52px; border-radius:50%; overflow:hidden; background:var(--surface-alt); flex-shrink:0;
     display:flex; align-items:center; justify-content:center; border:2px solid var(--line);
-    font-family:'Fraunces', serif; font-style:italic; color:var(--brass); font-size:17px;
+    font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:17px;
   }
   .pop-avatar img{ width:100%; height:100%; object-fit:cover; }
-  .pop-name{ font-family:'Fraunces', serif; font-weight:600; font-size:20px; }
+  .pop-name{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:22px; }
   .pop-sub{ font-size:12px; color:var(--ink-dim); }
   .pop-bio{ font-size:13px; line-height:1.6; margin:10px 0 4px; color:var(--ink); }
   .pop-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
   .pop-tag{ font-size:10.5px; border:1px solid var(--line); color:var(--ink-dim); padding:4px 9px; border-radius:20px; }
 
-  .pop-section-t{ font-family:'Fraunces', serif; font-size:15px; font-weight:600; margin:16px 0 10px; }
+  .pop-section-t{ font-family:'Instrument Serif', serif; font-style:italic; font-size:16px; font-weight:400; margin:16px 0 10px; }
   .service-option{
     display:flex; justify-content:space-between; align-items:center; padding:12px 14px;
-    border:1px solid var(--line); border-radius:12px; margin-bottom:8px; cursor:pointer; font-size:13px;
+    border:1px solid var(--line); border-radius:14px; margin-bottom:8px; cursor:pointer; font-size:13px;
   }
-  .service-option:hover{ border-color:var(--brass); background:#FBF7EE; }
-  .svc-price{ font-weight:800; color:var(--brass); }
+  .service-option:hover{ border-color:var(--gold); background:#FBF7EE; }
+  .svc-price{ font-weight:800; color:var(--gold); }
   .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin:12px 0; scrollbar-width:none; }
   .day-tabs::-webkit-scrollbar{ display:none; }
   .day-tab{
-    flex-shrink:0; background:var(--bg); border:1.5px solid var(--line); color:var(--ink-dim);
-    padding:8px 12px; border-radius:10px; font-size:11.5px; cursor:pointer; min-width:50px; text-align:center; font-weight:600;
+    flex-shrink:0; background:var(--surface-alt); border:1.5px solid var(--line); color:var(--ink-dim);
+    padding:8px 12px; border-radius:12px; font-size:11.5px; cursor:pointer; min-width:50px; text-align:center; font-weight:700;
   }
-  .day-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; }
+  .day-tab.active{ background:#141414; border-color:#141414; color:var(--gold-soft); }
   .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
   .slot-btn{
-    background:var(--bg); border:1.5px solid var(--line); color:var(--ink); padding:10px 4px;
-    border-radius:10px; font-size:12.5px; cursor:pointer; text-align:center; font-weight:600;
+    background:var(--surface-alt); border:1.5px solid var(--line); color:var(--ink); padding:10px 4px;
+    border-radius:14px; font-size:12.5px; cursor:pointer; text-align:center; font-weight:700;
+    transition:border-color .12s ease, background .12s ease, transform .1s ease;
   }
-  .slot-btn:hover{ border-color:var(--brass); }
+  .slot-btn:hover{ border-color:var(--gold); }
+  .slot-btn:not(.taken):active{ transform:scale(0.94); }
+  .slot-btn.selected{ background:var(--gold); border-color:var(--gold); color:#141414; font-weight:800; }
   .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
-  .slot-btn.selected{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:700; }
+  .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:12.5px; }
+  .login-prompt a{ color:var(--gold); font-weight:700; }
+  .booking-toast{ grid-column:1/-1; text-align:center; font-size:13.5px; color:var(--gold); padding:12px; font-family:'Instrument Serif', serif; font-style:italic; }
+  .back-link{ font-size:12px; color:var(--ink-dim); cursor:pointer; display:inline-block; margin-bottom:8px; font-weight:600; }
   .confirm-booking-btn{
-    grid-column:1/-1; margin-top:6px; background:var(--brass); color:#fff; border:none; padding:13px;
-    border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:'Inter', sans-serif;
+    grid-column:1/-1; margin-top:6px; background:#141414; color:var(--gold-soft); border:none; padding:14px;
+    border-radius:var(--r-btn); font-size:13.5px; font-weight:700; cursor:pointer; font-family:'Inter', sans-serif;
   }
-  .confirm-booking-btn:hover{ background:var(--brass-soft); }
+  .confirm-booking-btn:hover{ background:#000; }
   .confirm-booking-btn:disabled{ opacity:0.6; cursor:not-allowed; }
   .ref-photo-row{ grid-column:1/-1; margin-top:8px; }
   .ref-photo-label{
     display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-dim); cursor:pointer;
-    padding:8px 12px; border:1px dashed var(--line); border-radius:8px; justify-content:center;
+    padding:9px 12px; border:1px dashed var(--line); border-radius:14px; justify-content:center;
   }
-  .ref-photo-label:hover{ border-color:var(--brass); color:var(--brass); }
-  .no-slots-msg, .login-prompt{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:12.5px; }
-  .login-prompt a{ color:var(--brass); font-weight:700; }
-  .booking-toast{ grid-column:1/-1; text-align:center; font-size:13.5px; color:var(--brass); padding:12px; font-family:'Fraunces', serif; font-style:italic; }
-  .back-link{ font-size:12px; color:var(--ink-dim); cursor:pointer; display:inline-block; margin-bottom:8px; font-weight:600; }
+  .ref-photo-label:hover{ border-color:var(--gold); color:var(--gold); }
 
   /* ================= MOBILE ================= */
   .view-toggle{
     display:none; position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:70;
-    background:var(--ink); border-radius:26px; padding:5px; box-shadow:0 6px 22px rgba(0,0,0,0.3);
+    background:#141414; border-radius:26px; padding:5px; box-shadow:0 20px 50px rgba(0,0,0,0.35);
   }
   .view-toggle button{
-    background:none; border:none; color:rgba(255,255,255,0.65); font-family:'Inter', sans-serif;
+    background:none; border:none; color:rgba(245,243,239,0.55); font-family:'Inter', sans-serif;
     font-size:12.5px; font-weight:700; padding:10px 22px; border-radius:22px; cursor:pointer;
   }
-  .view-toggle button.active{ background:var(--brass); color:#fff; }
+  .view-toggle button.active{ background:var(--gold); color:#141414; }
 
   @media (max-width:880px){
     body{ overflow:auto; height:auto; }
@@ -322,7 +318,10 @@
       <span class="results-count" id="resultsCount"></span>
     </div>
     <div class="chips-scroll" id="specialtyChips"></div>
-    <div id="resultsArea"><div class="loading" data-i18n="loading">Loading barbers...</div></div>
+    <div id="resultsArea">
+      <div class="skel-card"><div class="skel-photos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div><div class="skel skel-btn"></div></div>
+      <div class="skel-card"><div class="skel-photos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div><div class="skel skel-btn"></div></div>
+    </div>
   </div>
   <div class="map-panel">
     <div id="mapEl"></div>
@@ -359,7 +358,7 @@ const I18N = {
     results_one:"result", results_many:"results",
     empty_h:"No barbers found", empty_p:"Try a different area or clear your filters.",
     empty_none_h:"No barbers here yet", empty_none_p:"Ustara is opening in Tashkent. Be the first barber on the platform.",
-    empty_btn:"Join as a barber", years:"yrs", from:"from", km:"km", book:"Book appointment", view_book:"View & book →",
+    empty_btn:"Join as a barber", years:"yrs", from:"from", km:"km", book:"Book appointment",
     choose_service:"Choose a service", book_title:"Pick a time", no_slots:"No availability set yet",
     login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
     booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
@@ -371,7 +370,7 @@ const I18N = {
     results_one:"natija", results_many:"natija",
     empty_h:"Sartaroshlar topilmadi", empty_p:"Boshqa hududni sinab ko'ring yoki filtrlarni tozalang.",
     empty_none_h:"Hozircha sartaroshlar yo'q", empty_none_p:"Ustara Toshkentda ochilmoqda. Birinchi sartarosh bo'ling.",
-    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", from:"dan", km:"km", book:"Band qilish", view_book:"Ko'rish va band qilish →",
+    empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", from:"dan", km:"km", book:"Band qilish",
     choose_service:"Xizmatni tanlang", book_title:"Vaqtni tanlang", no_slots:"Hali ish vaqti sozlanmagan",
     login_prompt:"Band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
     booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.",
@@ -383,7 +382,7 @@ const I18N = {
     results_one:"результат", results_many:"результатов",
     empty_h:"Барберы не найдены", empty_p:"Попробуйте другой район или сбросьте фильтры.",
     empty_none_h:"Барберов пока нет", empty_none_p:"Ustara открывается в Ташкенте. Станьте первым барбером.",
-    empty_btn:"Присоединиться как барбер", years:"лет", from:"от", km:"км", book:"Записаться", view_book:"Смотреть и записаться →",
+    empty_btn:"Присоединиться как барбер", years:"лет", from:"от", km:"км", book:"Записаться",
     choose_service:"Выберите услугу", book_title:"Выберите время", no_slots:"Рабочие часы не настроены",
     login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
     booking_confirmed:"Записано!", booking_failed:"Это время заняли — выберите другое.",
@@ -562,13 +561,6 @@ function renderMapPins(barbers){
     const price = lowestPrice(b.id);
     if(price === null) return;
     const marker = L.marker([b.latitude, b.longitude], { icon: priceIcon(price, false) }).addTo(map);
-    marker.bindPopup(`
-      <div class="pin-pop">
-        <div class="pin-pop-name">${escapeHtml(b.full_name)}</div>
-        <div class="pin-pop-sub">${escapeHtml(b.shop_name || b.district || '')} · ${t('from')} ${formatPrice(price)}</div>
-        <a class="pin-pop-btn" href="profile.html?id=${b.id}">${t('view_book')}</a>
-      </div>
-    `);
     marker.on('click', ()=> highlightBarber(b.id));
     markersById[b.id] = marker;
     bounds.push([b.latitude, b.longitude]);
@@ -826,9 +818,9 @@ async function showPopDayPicker(b, serviceKey, duration, price){
   let selectedRefPhoto = null;
 
   function selectDay(idx){
-    tabs.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
     selectedSlotIso = null;
     selectedRefPhoto = null;
+    tabs.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
     const slots = generateSlots(b, days[idx], duration, bookedIsoSet);
     if(!slots.length){ grid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
     grid.innerHTML = slots.map(s=>`<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
