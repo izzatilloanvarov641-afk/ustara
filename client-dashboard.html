@@ -5,178 +5,226 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Ustara — Your dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E2DACB;
-    --ink:#1C1A17; --ink-dim:#7A7264; --brass:#A67C1A; --brass-soft:#C79A2E;
-    --err:#B3432B; --ok:#4a7c59;
+    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E9E2D3;
+    --ink:#1C1A17; --ink-dim:#8A8175; --brass:#A67C1A; --brass-soft:#C79A2E;
+    --err:#B3432B; --err-bg:#FBEDE9; --ok:#3F7A54; --ok-bg:#EBF5EE; --warn-bg:#FCF3E3; --warn:#96701A;
+    --r-sm:12px; --r-md:18px; --r-lg:24px; --r-xl:28px;
+    --sh-sm:0 1px 2px rgba(28,26,23,0.05), 0 1px 1px rgba(28,26,23,0.04);
+    --sh-md:0 6px 20px rgba(28,26,23,0.07), 0 2px 6px rgba(28,26,23,0.04);
+    --sh-lg:0 16px 40px rgba(28,26,23,0.12);
   }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html{ scroll-behavior:smooth; }
   body{
     background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif;
-    line-height:1.5; -webkit-font-smoothing:antialiased;
-    padding-bottom:calc(72px + env(safe-area-inset-bottom));
+    line-height:1.5; -webkit-font-smoothing:antialiased; font-feature-settings:"cv11","ss01";
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
     max-width:560px; margin:0 auto;
     min-height:100vh; position:relative;
   }
   a{ color:inherit; text-decoration:none; }
+  ::selection{ background:var(--brass); color:#fff; }
 
   .view{ display:none; }
-  .view.active{ display:block; animation:fadein .35s ease; }
-  @keyframes fadein{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .view.active{ display:block; animation:fadein .4s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
 
   .wrap{ padding:0 20px; }
 
-  /* ---------- hero ---------- */
+  /* ================= HERO ================= */
   .hero-card{
-    position:relative; margin:16px 16px 0; border-radius:20px; overflow:hidden;
-    height:220px; display:flex; align-items:flex-end;
+    position:relative; margin:16px 16px 0; border-radius:var(--r-xl); overflow:hidden;
+    height:230px; display:flex; align-items:flex-end; box-shadow:var(--sh-lg);
     background:linear-gradient(135deg, #3A3226, #1C1A17);
   }
-  .hero-card video{
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.75;
-  }
+  .hero-card video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.78; }
   .hero-card .hero-fallback-anim{
     position:absolute; inset:0;
-    background:linear-gradient(120deg, #2B2620, #4A3B1F, #1C1A17, #3A3226);
-    background-size:300% 300%; animation:heroShift 12s ease infinite; opacity:0.9;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(199,154,46,0.35), transparent 55%),
+      linear-gradient(120deg, #2B2620, #4A3B1F, #1C1A17, #3A3226);
+    background-size:auto, 300% 300%; animation:heroShift 14s ease infinite; opacity:0.95;
   }
-  @keyframes heroShift{
-    0%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } 100%{ background-position:0% 50%; }
-  }
+  @keyframes heroShift{ 0%{ background-position:0 0, 0% 50%; } 50%{ background-position:0 0, 100% 50%; } 100%{ background-position:0 0, 0% 50%; } }
   .hero-card::after{
     content:''; position:absolute; inset:0;
-    background:linear-gradient(to top, rgba(18,16,13,0.88), rgba(18,16,13,0.15) 55%, transparent);
+    background:linear-gradient(to top, rgba(15,13,11,0.92), rgba(15,13,11,0.15) 55%, transparent);
   }
-  .hero-content{ position:relative; z-index:2; padding:22px 22px 20px; color:#F7F4EF; width:100%; }
-  .hero-eyebrow{ font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--brass-soft); font-weight:600; margin-bottom:6px; }
-  .hero-greeting{ font-family:'Fraunces', serif; font-size:24px; font-weight:500; line-height:1.15; }
+  .hero-content{ position:relative; z-index:2; padding:24px 24px 22px; color:#FBF9F5; width:100%; }
+  .hero-eyebrow{
+    font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brass-soft);
+    font-weight:700; margin-bottom:7px; display:flex; align-items:center; gap:6px;
+  }
+  .hero-eyebrow::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--brass-soft); display:inline-block; }
+  .hero-greeting{ font-family:'Fraunces', serif; font-size:25px; font-weight:500; line-height:1.2; letter-spacing:-0.01em; }
   .hero-greeting em{ font-style:italic; color:var(--brass-soft); }
 
-  /* ---------- sections ---------- */
-  section{ padding:28px 0 4px; }
+  /* ================= SECTIONS ================= */
+  section{ padding:32px 0 4px; }
   .section-title{
-    font-family:'Fraunces', serif; font-size:17px; font-weight:500;
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;
+    font-family:'Fraunces', serif; font-size:18px; font-weight:500; letter-spacing:-0.01em;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
   }
-  .see-all{ font-size:12.5px; color:var(--brass); font-weight:600; }
+  .see-all{
+    font-size:12.5px; color:var(--brass); font-weight:700; display:flex; align-items:center; gap:3px;
+    cursor:pointer;
+  }
+  .see-all::after{ content:'→'; font-size:12px; transition:transform .15s; }
+  .see-all:active::after{ transform:translateX(2px); }
 
-  /* ---------- stat pills ---------- */
-  .pill-row{ display:flex; gap:10px; overflow-x:auto; padding:2px 20px 6px; margin:0 -20px 4px; }
+  /* ================= STAT PILLS ================= */
+  .pill-row{ display:flex; gap:12px; overflow-x:auto; padding:2px 20px 8px; margin:0 -20px 4px; }
   .pill{
-    flex-shrink:0; background:var(--surface); border:1px solid var(--line); border-radius:14px;
-    padding:14px 18px; min-width:110px;
+    flex-shrink:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md);
+    padding:16px 20px; min-width:118px; box-shadow:var(--sh-sm); position:relative;
   }
-  .pill .num{ font-family:'Fraunces', serif; font-size:22px; color:var(--brass); }
-  .pill .label{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; }
+  .pill .num{ font-family:'Fraunces', serif; font-size:24px; color:var(--brass); font-weight:500; letter-spacing:-0.01em; }
+  .pill .label{ font-size:11.5px; color:var(--ink-dim); margin-top:3px; font-weight:500; }
 
-  /* ---------- booking card ---------- */
-  .booking-card{
-    background:var(--surface); border:1px solid var(--line); border-radius:16px;
-    padding:16px; margin-bottom:12px; display:flex; gap:14px; align-items:center;
-    transition:transform .15s ease; position:relative; overflow:hidden;
+  /* ================= SKELETON LOADING ================= */
+  .skel-pill{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 20px; min-width:118px; }
+  .skel-line{
+    height:14px; border-radius:6px;
+    background:linear-gradient(90deg, var(--surface-alt) 25%, #F5F0E5 50%, var(--surface-alt) 75%);
+    background-size:200% 100%; animation:shimmer 1.4s infinite;
   }
-  .booking-card:active{ transform:scale(0.98); }
+  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
+  .skel-line.w40{ width:40%; height:20px; margin-bottom:6px; }
+  .skel-line.w60{ width:60%; height:11px; }
+  .skel-card-row{
+    display:flex; gap:14px; align-items:center; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--r-lg); padding:16px; margin-bottom:12px; box-shadow:var(--sh-sm);
+  }
+  .skel-avatar{ width:52px; height:52px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(90deg, var(--surface-alt) 25%, #F5F0E5 50%, var(--surface-alt) 75%);
+    background-size:200% 100%; animation:shimmer 1.4s infinite; }
+  .skel-card-body{ flex:1; }
+  .skel-card-body .skel-line{ margin-bottom:8px; }
+  .skel-card-body .skel-line:last-child{ margin-bottom:0; }
+
+  /* ================= BOOKING CARD ================= */
+  .booking-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+    padding:16px; margin-bottom:12px; display:flex; gap:14px; align-items:center;
+    transition:transform .15s cubic-bezier(.2,.8,.2,1), box-shadow .15s ease; position:relative; overflow:hidden;
+    box-shadow:var(--sh-sm);
+  }
+  .booking-card:active{ transform:scale(0.98); box-shadow:var(--sh-sm); }
   .booking-card .avatar{
     width:52px; height:52px; border-radius:50%; background:var(--surface-alt); flex-shrink:0;
     display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif;
-    font-style:italic; color:var(--brass); font-size:18px; overflow:hidden;
+    font-style:italic; color:var(--brass); font-size:18px; overflow:hidden; border:1px solid var(--line);
   }
   .booking-card .avatar img{ width:100%; height:100%; object-fit:cover; }
   .booking-info{ flex:1; min-width:0; }
-  .booking-info .name{ font-weight:600; font-size:14.5px; }
-  .booking-info .meta{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
+  .booking-info .name{ font-weight:700; font-size:14.5px; letter-spacing:-0.005em; }
+  .booking-info .meta{ font-size:12.5px; color:var(--ink-dim); margin-top:3px; font-weight:500; }
   .booking-status{
-    font-size:10.5px; padding:4px 9px; border-radius:12px; text-transform:capitalize;
-    background:var(--surface-alt); flex-shrink:0; font-weight:600;
+    font-size:10.5px; padding:5px 11px; border-radius:20px; text-transform:capitalize;
+    background:var(--surface-alt); flex-shrink:0; font-weight:700; letter-spacing:0.01em;
   }
-  .booking-status.confirmed{ background:#EEF5EE; color:var(--ok); }
-  .booking-status.pending{ background:#FBF3E3; color:#8A6A1E; }
-  .booking-status.cancelled{ background:#F5E9E5; color:var(--err); }
+  .booking-status.confirmed{ background:var(--ok-bg); color:var(--ok); }
+  .booking-status.pending{ background:var(--warn-bg); color:var(--warn); }
+  .booking-status.cancelled{ background:var(--err-bg); color:var(--err); }
+  .booking-status.completed{ background:var(--surface-alt); color:var(--ink-dim); }
 
   .cancel-booking-btn{
-    font-size:10.5px; font-weight:600; color:var(--err); background:none; border:1px solid #E0B8AC;
-    padding:4px 10px; border-radius:12px; cursor:pointer; font-family:'Inter', sans-serif;
+    font-size:10.5px; font-weight:700; color:var(--err); background:none; border:1px solid #ECC9BE;
+    padding:5px 12px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif;
+    transition:background .15s ease;
   }
-  .cancel-booking-btn:hover{ background:#FBF0ED; }
+  .cancel-booking-btn:hover{ background:var(--err-bg); }
+  .cancel-booking-btn:active{ transform:scale(0.95); }
   .cancel-booking-btn:disabled{ opacity:0.5; cursor:not-allowed; }
 
+  /* ================= EMPTY STATE ================= */
   .empty-state{
-    text-align:center; padding:36px 20px; border:1px dashed var(--line); border-radius:16px; color:var(--ink-dim); font-size:13.5px;
+    text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-lg);
+    color:var(--ink-dim); font-size:13.5px;
   }
-  .empty-state .icon{ font-size:28px; margin-bottom:10px; }
+  .empty-state .icon{
+    font-size:26px; margin:0 auto 14px; width:52px; height:52px; border-radius:50%;
+    background:var(--surface-alt); display:flex; align-items:center; justify-content:center;
+  }
+  .empty-state strong{ font-family:'Fraunces', serif; font-size:16px; font-weight:500; color:var(--ink); display:block; margin-bottom:4px; }
   .empty-state .btn{
-    display:inline-block; margin-top:14px; background:var(--brass); color:#fff; padding:11px 20px;
-    border-radius:20px; font-size:13px; font-weight:600;
+    display:inline-block; margin-top:16px; background:var(--brass); color:#fff; padding:12px 22px;
+    border-radius:24px; font-size:13px; font-weight:700; box-shadow:0 4px 14px rgba(166,124,26,0.28);
+    transition:transform .15s ease, box-shadow .15s ease;
   }
+  .empty-state .btn:active{ transform:scale(0.96); }
 
-  /* ---------- map placeholder card ---------- */
+  /* ================= MAP TEASER ================= */
   .map-teaser{
-    position:relative; border-radius:18px; overflow:hidden; height:170px;
-    background:var(--surface-alt); border:1px solid var(--line); margin-bottom:8px;
+    position:relative; border-radius:var(--r-lg); overflow:hidden; height:176px;
+    background:var(--surface-alt); border:1px solid var(--line); margin-bottom:8px; box-shadow:var(--sh-sm);
   }
-  .map-teaser svg{ position:absolute; inset:0; width:100%; height:100%; opacity:0.5; }
+  .map-teaser svg{ position:absolute; inset:0; width:100%; height:100%; opacity:0.45; }
   .map-teaser .teaser-content{
     position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
     justify-content:center; text-align:center; padding:20px; gap:6px;
-    background:linear-gradient(to top, rgba(247,244,239,0.92), rgba(247,244,239,0.55));
+    background:linear-gradient(to top, rgba(247,244,239,0.94), rgba(247,244,239,0.5));
   }
-  .map-teaser .teaser-content strong{ font-family:'Fraunces', serif; font-size:16px; font-weight:500; }
+  .map-teaser .teaser-content strong{ font-family:'Fraunces', serif; font-size:16.5px; font-weight:500; }
   .map-teaser .teaser-content span{ font-size:12.5px; color:var(--ink-dim); }
   .map-pin-anim{
-    width:34px; height:34px; border-radius:50% 50% 50% 0; background:var(--brass);
-    transform:rotate(-45deg); position:relative; margin-bottom:6px; animation:pinBounce 2.4s ease-in-out infinite;
+    width:36px; height:36px; border-radius:50% 50% 50% 0; background:var(--brass);
+    transform:rotate(-45deg); position:relative; margin-bottom:8px; animation:pinBounce 2.6s ease-in-out infinite;
+    box-shadow:0 4px 10px rgba(166,124,26,0.3);
   }
   .map-pin-anim::after{
-    content:''; position:absolute; width:12px; height:12px; background:#fff; border-radius:50%;
+    content:''; position:absolute; width:13px; height:13px; background:#fff; border-radius:50%;
     top:50%; left:50%; transform:translate(-50%,-50%) rotate(45deg);
   }
-  @keyframes pinBounce{ 0%,100%{ transform:rotate(-45deg) translateY(0); } 50%{ transform:rotate(-45deg) translateY(-6px); } }
+  @keyframes pinBounce{ 0%,100%{ transform:rotate(-45deg) translateY(0); } 50%{ transform:rotate(-45deg) translateY(-7px); } }
 
-  /* ---------- account ---------- */
-  .info-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:6px 20px; }
-  .info-row{ display:flex; justify-content:space-between; padding:15px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  /* ================= ACCOUNT ================= */
+  .info-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:4px 20px; box-shadow:var(--sh-sm); }
+  .info-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); font-size:14px; }
   .info-row:last-child{ border-bottom:none; }
-  .info-row .k{ color:var(--ink-dim); }
-  .info-row .v{ font-weight:500; }
+  .info-row .k{ color:var(--ink-dim); font-weight:500; }
+  .info-row .v{ font-weight:600; }
 
   .logout-btn{
-    width:100%; margin-top:20px; font-size:13.5px; color:var(--err); background:var(--surface);
-    border:1px solid var(--line); padding:14px; border-radius:14px; cursor:pointer;
-    font-family:'Inter', sans-serif; font-weight:600;
+    width:100%; margin-top:24px; font-size:13.5px; color:var(--err); background:var(--surface);
+    border:1px solid var(--line); padding:15px; border-radius:var(--r-md); cursor:pointer;
+    font-family:'Inter', sans-serif; font-weight:700; transition:background .15s ease, border-color .15s ease;
   }
+  .logout-btn:hover{ background:var(--err-bg); border-color:#ECC9BE; }
+  .logout-btn:active{ transform:scale(0.98); }
 
   .lang-row{ display:flex; gap:8px; margin-top:16px; }
   .lang-btn{
-    flex:1; padding:11px; border-radius:12px; border:1px solid var(--line); background:var(--surface);
-    color:var(--ink-dim); font-size:13px; font-weight:600; cursor:pointer;
+    flex:1; padding:12px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--surface);
+    color:var(--ink-dim); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s ease;
   }
-  .lang-btn.active{ background:var(--brass); border-color:var(--brass); color:#fff; }
+  .lang-btn.active{ background:var(--brass); border-color:var(--brass); color:#fff; box-shadow:0 3px 10px rgba(166,124,26,0.25); }
 
-  /* ---------- bottom nav ---------- */
+  /* ================= BOTTOM NAV ================= */
   .bottom-nav{
     position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    width:100%; max-width:560px; background:var(--surface); border-top:1px solid var(--line);
-    display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
-    z-index:50;
+    width:100%; max-width:560px; background:rgba(255,255,255,0.88); backdrop-filter:blur(16px) saturate(1.4);
+    border-top:1px solid var(--line);
+    display:flex; padding:9px 6px calc(9px + env(safe-area-inset-bottom));
+    z-index:50; box-shadow:0 -8px 24px rgba(28,26,23,0.05);
   }
   .nav-btn{
     flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px;
     background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:10.5px;
-    font-weight:600; cursor:pointer; border-radius:10px;
+    font-weight:700; cursor:pointer; border-radius:14px; position:relative; transition:color .15s ease;
   }
   .nav-btn.active{ color:var(--brass); }
-  .nav-btn svg{ width:21px; height:21px; }
+  .nav-btn svg{ width:21px; height:21px; transition:transform .15s ease; }
+  .nav-btn.active svg{ transform:translateY(-1px); }
+  .nav-btn:active{ transform:scale(0.92); }
 
-  .top-space{ height:0; }
-  @media (min-width:561px){
-    body{ box-shadow:0 0 40px rgba(0,0,0,0.06); }
-  }
+  @media (min-width:561px){ body{ box-shadow:0 0 50px rgba(28,26,23,0.07); } }
 </style>
 </head>
 <body>
@@ -195,7 +243,10 @@
     </div>
   </div>
 
-  <div class="pill-row" id="statPills"></div>
+  <div class="pill-row" id="statPills">
+    <div class="skel-pill"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+    <div class="skel-pill"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
+  </div>
 
   <div class="wrap">
     <section>
@@ -203,7 +254,9 @@
         <span data-i18n="upcoming_title">Upcoming</span>
         <span class="see-all" data-nav="bookings" data-i18n="see_all">See all</span>
       </div>
-      <div id="homeBookings"></div>
+      <div id="homeBookings">
+        <div class="skel-card-row"><div class="skel-avatar"></div><div class="skel-card-body"><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
+      </div>
     </section>
 
     <section>
@@ -229,9 +282,9 @@
 
 <!-- ============ BOOKINGS ============ -->
 <div class="view" data-view="bookings">
-  <div class="wrap" style="padding-top:24px;">
+  <div class="wrap" style="padding-top:26px;">
     <div class="section-title"><span data-i18n="bookings_title">Your bookings</span></div>
-    <div class="filter-tabs" style="display:flex; gap:8px; margin-bottom:18px; overflow-x:auto;" id="bookingFilterTabs">
+    <div class="filter-tabs" style="display:flex; gap:8px; margin-bottom:20px; overflow-x:auto;" id="bookingFilterTabs">
       <div class="lang-btn active" data-status="all" style="white-space:nowrap;" data-i18n="filter_all">All</div>
       <div class="lang-btn" data-status="pending" style="white-space:nowrap;" data-i18n="filter_pending">Pending</div>
       <div class="lang-btn" data-status="confirmed" style="white-space:nowrap;" data-i18n="filter_confirmed">Confirmed</div>
@@ -243,23 +296,23 @@
 
 <!-- ============ MAP ============ -->
 <div class="view" data-view="map">
-  <div class="wrap" style="padding-top:24px;">
+  <div class="wrap" style="padding-top:26px;">
     <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
     <div id="mapStatusMsg"></div>
     <div id="clientMapWrap" style="display:none;">
-      <div id="clientMapEl" style="height:320px; border-radius:18px; overflow:hidden; border:1px solid var(--line);"></div>
-      <div id="mapBarberLabel" style="margin-top:12px; font-size:13.5px; color:var(--ink-dim);"></div>
+      <div id="clientMapEl" style="height:320px; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--line); box-shadow:var(--sh-sm);"></div>
+      <div id="mapBarberLabel" style="margin-top:14px; font-size:13.5px; color:var(--ink-dim);"></div>
     </div>
   </div>
 </div>
 
 <!-- ============ ACCOUNT ============ -->
 <div class="view" data-view="account">
-  <div class="wrap" style="padding-top:24px;">
+  <div class="wrap" style="padding-top:26px;">
     <div class="section-title"><span data-i18n="account_title">Account</span></div>
     <div class="info-card" id="infoCard"></div>
 
-    <div class="section-title" style="margin-top:28px;"><span data-i18n="language_title">Language</span></div>
+    <div class="section-title" style="margin-top:30px;"><span data-i18n="language_title">Language</span></div>
     <div class="lang-row" id="langSwitch">
       <button class="lang-btn active" data-lang="en">EN</button>
       <button class="lang-btn" data-lang="uz">UZ</button>
@@ -273,19 +326,19 @@
 <!-- ============ BOTTOM NAV ============ -->
 <nav class="bottom-nav" id="bottomNav">
   <button class="nav-btn active" data-view="home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
     <span data-i18n="nav_home">Home</span>
   </button>
   <button class="nav-btn" data-view="bookings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
     <span data-i18n="nav_bookings">Bookings</span>
   </button>
   <button class="nav-btn" data-view="map">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-6-3V4l6 3 6-3 6 3v13l-6-3-6 3z"/></svg>
     <span data-i18n="nav_map">Map</span>
   </button>
   <button class="nav-btn" data-view="account">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
     <span data-i18n="nav_account">Account</span>
   </button>
 </nav>
@@ -312,7 +365,7 @@ const I18N = {
     nav_home:"Home", nav_bookings:"Bookings", nav_map:"Map", nav_account:"Account",
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
     empty_btn:"Browse barbers", rv_name:"Name", rv_phone:"Phone", rv_email:"Email",
-    stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled"
+    stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed"
   },
   uz:{
     hero_eyebrow:"Ustara", hero_greeting:'Xush kelibsiz, <em id="nameInsert">u yerda</em>',
@@ -330,7 +383,7 @@ const I18N = {
     nav_home:"Bosh sahifa", nav_bookings:"Bandlar", nav_map:"Xarita", nav_account:"Hisob",
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
     empty_btn:"Sartaroshlarni ko'rish", rv_name:"Ism", rv_phone:"Telefon", rv_email:"Email",
-    stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan"
+    stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi"
   },
   ru:{
     hero_eyebrow:"Ustara", hero_greeting:'Рады видеть вас, <em id="nameInsert">снова</em>',
@@ -348,7 +401,7 @@ const I18N = {
     nav_home:"Главная", nav_bookings:"Записи", nav_map:"Карта", nav_account:"Аккаунт",
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
     empty_btn:"Смотреть барберов", rv_name:"Имя", rv_phone:"Телефон", rv_email:"Email",
-    stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено"
+    stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено"
   }
 };
 
@@ -451,7 +504,7 @@ function bookingCardHtml(b){
         <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
         <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
       </div>
-      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:7px;">
         <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
         ${canCancel ? `<button class="cancel-booking-btn" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
       </div>
@@ -502,7 +555,7 @@ function renderHomeBookings(){
     area.innerHTML = `
       <div class="empty-state">
         <div class="icon">✂️</div>
-        <strong>${t('empty_h')}</strong><br>
+        <strong>${t('empty_h')}</strong>
         <span style="font-size:12.5px;">${t('empty_p')}</span><br>
         <a href="browse.html" class="btn">${t('empty_btn')}</a>
       </div>`;
@@ -520,7 +573,7 @@ function renderAllBookings(){
     area.innerHTML = `
       <div class="empty-state">
         <div class="icon">✂️</div>
-        <strong>${t('empty_h')}</strong><br>
+        <strong>${t('empty_h')}</strong>
         <span style="font-size:12.5px;">${t('empty_p')}</span><br>
         <a href="browse.html" class="btn">${t('empty_btn')}</a>
       </div>`;
@@ -582,9 +635,10 @@ function setupClientMap(){
     `<strong>${escapeHtml(barber.shop_name || barber.full_name)}</strong> · ${escapeHtml(barber.district || '')}<br>` +
     `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" style="color:var(--brass); font-weight:600;">${t('map_directions')} →</a>`;
 
+  // Actual Leaflet init only happens once the tab is genuinely visible
   const tryInit = () => {
     const el = document.getElementById('clientMapEl');
-    if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; }
+    if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; } // wait until visible
     if(!mapInitialized){
       clientMap = L.map('clientMapEl').setView([barber.latitude, barber.longitude], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -599,6 +653,7 @@ function setupClientMap(){
     }
   };
 
+  // if Map tab is currently active, init now; otherwise init on first nav to it
   if(document.querySelector('.view[data-view="map"]').classList.contains('active')){
     tryInit();
   } else {
