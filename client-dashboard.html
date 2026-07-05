@@ -5,342 +5,304 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Ustara — Your dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --surface:#FFFFFF; --surface-alt:#EFEAE1; --line:#E9E2D3;
-    --ink:#1C1A17; --ink-dim:#8A8175; --brass:#A67C1A; --brass-soft:#C79A2E;
-    --err:#B3432B; --err-bg:#FBEDE9; --ok:#3F7A54; --ok-bg:#EBF5EE; --warn-bg:#FCF3E3; --warn:#96701A;
-    --r-sm:12px; --r-md:18px; --r-lg:20px;
-    --sh-sm:0 1px 2px rgba(28,26,23,0.05), 0 1px 1px rgba(28,26,23,0.04);
-    --sh-lg:0 16px 40px rgba(28,26,23,0.12);
+    /* light surfaces — bookings, map, account */
+    --bg:#F8F7F4; --surface:#FFFFFF; --surface-alt:#F1EFEA; --line:#ECE8E2;
+    --ink:#111111; --ink-dim:#6F6F6F;
+    /* dark surfaces — home dashboard hero */
+    --dark-bg:#141414; --dark-surface:#1E1C19; --dark-surface-2:#242220; --dark-line:rgba(255,255,255,0.08);
+    --on-dark:#F5F3EF; --on-dark-dim:#9B9691;
+    /* shared */
+    --gold:#B88A2A; --gold-soft:#D4A94A;
+    --success:#1FA971; --success-bg:#E4F5EE; --warning:#E8A63B; --warning-bg:#FBF1DF; --danger:#E05252; --danger-bg:#FCEAEA;
+    --r-card:28px; --r-btn:20px; --r-input:18px;
+    --sh-soft:0 20px 50px rgba(17,17,17,0.06), 0 4px 12px rgba(17,17,17,0.04);
+    --sh-dark:0 24px 60px rgba(0,0,0,0.45);
   }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html{ scroll-behavior:smooth; }
   body{
     background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif;
     line-height:1.5; -webkit-font-smoothing:antialiased; font-feature-settings:"cv11","ss01";
-    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+    padding-bottom:calc(96px + env(safe-area-inset-bottom));
     max-width:560px; margin:0 auto;
     min-height:100vh; position:relative;
   }
   a{ color:inherit; text-decoration:none; }
-  ::selection{ background:var(--brass); color:#fff; }
+  ::selection{ background:var(--gold); color:#fff; }
+  .serif{ font-family:'Instrument Serif', serif; font-style:italic; }
 
   .view{ display:none; }
-  .view.active{ display:block; animation:fadein .4s cubic-bezier(.2,.8,.2,1); }
-  @keyframes fadein{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+  .view.active{ display:block; animation:fadein .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
 
   .wrap{ padding:0 20px; }
+  button{ font-family:'Inter', sans-serif; }
+  button:active{ transform:scale(0.96); }
+  button, .tap{ transition:transform .12s cubic-bezier(.3,1.5,.5,1), opacity .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease; }
 
-  /* ================= HERO ================= */
-  .hero-card{
-    position:relative; margin:16px 16px 0; border-radius:26px; overflow:hidden;
-    height:190px; display:flex; align-items:flex-end; box-shadow:var(--sh-lg);
-    background:linear-gradient(135deg, #3A3226, #1C1A17);
-  }
-  .hero-card video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.78; }
-  .hero-card .hero-fallback-anim{
-    position:absolute; inset:0;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(199,154,46,0.35), transparent 55%),
-      linear-gradient(120deg, #2B2620, #4A3B1F, #1C1A17, #3A3226);
-    background-size:auto, 300% 300%; animation:heroShift 14s ease infinite; opacity:0.95;
-  }
-  @keyframes heroShift{ 0%{ background-position:0 0, 0% 50%; } 50%{ background-position:0 0, 100% 50%; } 100%{ background-position:0 0, 0% 50%; } }
-  .hero-card::after{
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(to top, rgba(15,13,11,0.9), rgba(15,13,11,0.1) 55%, transparent);
-  }
-  .hero-content{ position:relative; z-index:2; padding:20px 22px 18px; color:#FBF9F5; width:100%; }
-  .hero-eyebrow{
-    font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--brass-soft);
-    font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px;
-  }
-  .hero-eyebrow::before{ content:''; width:5px; height:5px; border-radius:50%; background:var(--brass-soft); display:inline-block; }
-  .hero-greeting{ font-family:'Fraunces', serif; font-size:22px; font-weight:500; line-height:1.2; letter-spacing:-0.01em; }
-  .hero-greeting em{ font-style:italic; color:var(--brass-soft); }
-
-  /* ================= BENTO GRID ================= */
-  .bento-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px 16px 4px; }
-  .tile{ border-radius:var(--r-lg); }
-
-  .tile-big{
-    grid-column:span 2; background:var(--ink); color:#fff; padding:22px; position:relative;
-    overflow:hidden; box-shadow:var(--sh-lg);
-  }
-  .tile-big::after{
-    content:''; position:absolute; top:-40px; right:-40px; width:150px; height:150px; border-radius:50%;
-    background:radial-gradient(circle, rgba(199,154,46,0.32), transparent 70%);
-  }
-  .tile-big .tag{ font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--brass-soft); font-weight:700; margin-bottom:10px; position:relative; z-index:1; }
-  .tile-big .name{ font-family:'Fraunces', serif; font-size:21px; margin-bottom:4px; position:relative; z-index:1; letter-spacing:-0.01em; }
-  .tile-big .meta{ font-size:12.5px; color:rgba(255,255,255,0.62); position:relative; z-index:1; font-weight:500; }
-  .tile-big .status-badge{
-    position:absolute; top:20px; right:20px; background:rgba(255,255,255,0.14); padding:5px 13px;
-    border-radius:20px; font-size:10px; font-weight:700; text-transform:capitalize; z-index:1;
-  }
-  .tile-big .cancel-dark{
-    margin-top:14px; font-size:10.5px; font-weight:700; color:#fff; background:rgba(255,255,255,0.12);
-    border:1px solid rgba(255,255,255,0.2); padding:6px 13px; border-radius:20px; cursor:pointer;
-    font-family:'Inter', sans-serif; position:relative; z-index:1;
-  }
-  .tile-big .cancel-dark:disabled{ opacity:0.5; }
-
-  .tile-stat{
-    background:var(--surface); border:1px solid var(--line); text-align:left; padding:16px 18px;
-    box-shadow:var(--sh-sm);
-  }
-  .tile-stat .num{ font-family:'Fraunces', serif; font-size:26px; color:var(--brass); font-weight:500; letter-spacing:-0.01em; }
-  .tile-stat .label{ font-size:11px; color:var(--ink-dim); margin-top:3px; font-weight:600; }
-
-  .tile-next{
-    grid-column:span 2; background:var(--surface); border:1px solid var(--line);
-    display:flex; align-items:center; gap:12px; padding:14px 16px; box-shadow:var(--sh-sm);
-    margin-bottom:0;
-  }
-  .tile-next .avatar{
-    width:42px; height:42px; border-radius:50%; background:var(--surface-alt); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif;
-    font-style:italic; color:var(--brass); font-size:14px; overflow:hidden; border:1px solid var(--line);
-  }
-  .tile-next .avatar img{ width:100%; height:100%; object-fit:cover; }
-  .tile-next .info{ flex:1; min-width:0; }
-  .tile-next .name{ font-weight:700; font-size:13.5px; }
-  .tile-next .meta{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; font-weight:500; }
-  .tile-next .right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
-
-  .booking-status{
-    font-size:10px; padding:4px 10px; border-radius:20px; text-transform:capitalize;
-    background:var(--surface-alt); flex-shrink:0; font-weight:700; letter-spacing:0.01em;
-  }
-  .booking-status.confirmed{ background:var(--ok-bg); color:var(--ok); }
-  .booking-status.pending{ background:var(--warn-bg); color:var(--warn); }
-  .booking-status.cancelled{ background:var(--err-bg); color:var(--err); }
-  .booking-status.completed{ background:var(--surface-alt); color:var(--ink-dim); }
-
-  .cancel-booking-btn{
-    font-size:10px; font-weight:700; color:var(--err); background:none; border:1px solid #ECC9BE;
-    padding:4px 11px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif;
-    transition:background .15s ease;
-  }
-  .cancel-booking-btn:hover{ background:var(--err-bg); }
-  .cancel-booking-btn:active{ transform:scale(0.95); }
-  .cancel-booking-btn:disabled{ opacity:0.5; cursor:not-allowed; }
-
-  .tile-empty{
-    grid-column:span 2; text-align:center; padding:32px 22px; border:1.5px dashed var(--line);
-    color:var(--ink-dim); font-size:13px; background:var(--surface);
-  }
-  .tile-empty .icon{
-    font-size:22px; margin:0 auto 12px; width:46px; height:46px; border-radius:50%;
-    background:var(--surface-alt); display:flex; align-items:center; justify-content:center;
-  }
-  .tile-empty strong{ font-family:'Fraunces', serif; font-size:15px; font-weight:500; color:var(--ink); display:block; margin-bottom:4px; }
-  .tile-empty .btn{
-    display:inline-block; margin-top:14px; background:var(--brass); color:#fff; padding:11px 20px;
-    border-radius:22px; font-size:12.5px; font-weight:700; box-shadow:0 4px 14px rgba(166,124,26,0.28);
-  }
-  .tile-empty .btn:active{ transform:scale(0.96); }
-
-  .tile-map{
-    grid-column:span 2; position:relative; height:130px; overflow:hidden; cursor:pointer;
-    background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size:22px 22px; background-color:var(--surface-alt); border:1px solid var(--line); box-shadow:var(--sh-sm);
-  }
-  .tile-map-label{
-    position:absolute; bottom:14px; left:16px; right:16px; background:var(--surface); padding:10px 14px;
-    border-radius:14px; box-shadow:0 4px 14px rgba(0,0,0,0.08); font-size:12.5px; font-weight:700;
-    display:flex; align-items:center; gap:8px;
-  }
-  .tile-map-label .pin-dot{
-    width:8px; height:8px; border-radius:50%; background:var(--brass); flex-shrink:0;
-    box-shadow:0 0 0 4px rgba(166,124,26,0.15); animation:pinPulse 2s ease-in-out infinite;
-  }
-  @keyframes pinPulse{ 0%,100%{ box-shadow:0 0 0 4px rgba(166,124,26,0.15); } 50%{ box-shadow:0 0 0 7px rgba(166,124,26,0.08); } }
-
-  /* skeleton */
-  .skel-line{ height:14px; border-radius:6px; background:linear-gradient(90deg, var(--surface-alt) 25%, #F5F0E5 50%, var(--surface-alt) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
-  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
-  .skel-big{ grid-column:span 2; background:#2B2620; border-radius:var(--r-lg); padding:22px; }
-  .skel-big .skel-line{ background:linear-gradient(90deg, rgba(255,255,255,0.08) 25%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.08) 75%); background-size:200% 100%; }
-  .skel-big .skel-line.w40{ width:40%; height:11px; margin-bottom:10px; }
-  .skel-big .skel-line.w70{ width:70%; height:20px; }
-  .skel-stat{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:16px 18px; }
-  .skel-stat .skel-line.w40{ width:40%; height:22px; margin-bottom:6px; }
-  .skel-stat .skel-line.w60{ width:60%; height:10px; }
-
-  /* ================= SECTIONS (bookings/account views) ================= */
-  section{ padding:28px 0 4px; }
-  .section-title{
-    font-family:'Fraunces', serif; font-size:18px; font-weight:500; letter-spacing:-0.01em;
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
-  }
-
-  .booking-list-row{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
-    padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; box-shadow:var(--sh-sm);
-  }
-  .booking-list-row .avatar{
-    width:44px; height:44px; border-radius:50%; background:var(--surface-alt); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif;
-    font-style:italic; color:var(--brass); font-size:15px; overflow:hidden; border:1px solid var(--line);
-  }
-  .booking-list-row .avatar img{ width:100%; height:100%; object-fit:cover; }
-  .booking-list-row .info{ flex:1; min-width:0; }
-  .booking-list-row .name{ font-weight:700; font-size:13.5px; }
-  .booking-list-row .meta{ font-size:11.5px; color:var(--ink-dim); margin-top:2px; font-weight:500; }
-  .booking-list-row .right{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
-
-  .empty-state{
-    text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-lg);
-    color:var(--ink-dim); font-size:13.5px;
-  }
-  .empty-state .icon{
-    font-size:26px; margin:0 auto 14px; width:52px; height:52px; border-radius:50%;
-    background:var(--surface-alt); display:flex; align-items:center; justify-content:center;
-  }
-  .empty-state strong{ font-family:'Fraunces', serif; font-size:16px; font-weight:500; color:var(--ink); display:block; margin-bottom:4px; }
-  .empty-state .btn{
-    display:inline-block; margin-top:16px; background:var(--brass); color:#fff; padding:12px 22px;
-    border-radius:24px; font-size:13px; font-weight:700; box-shadow:0 4px 14px rgba(166,124,26,0.28);
-  }
-  .empty-state .btn:active{ transform:scale(0.96); }
-
-  .lang-btn{
-    flex:1; padding:12px; border-radius:var(--r-sm); border:1px solid var(--line); background:var(--surface);
-    color:var(--ink-dim); font-size:13px; font-weight:700; cursor:pointer; transition:all .15s ease;
-  }
-  .lang-btn.active{ background:var(--brass); border-color:var(--brass); color:#fff; box-shadow:0 3px 10px rgba(166,124,26,0.25); }
-  .lang-row{ display:flex; gap:8px; margin-top:16px; }
-  .filter-tabs{ display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; }
-  .filter-tabs .lang-btn{ flex:none; white-space:nowrap; }
-
-  .info-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:4px 20px; box-shadow:var(--sh-sm); }
-  .info-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--line); font-size:14px; }
-  .info-row:last-child{ border-bottom:none; }
-  .info-row .k{ color:var(--ink-dim); font-weight:500; }
-  .info-row .v{ font-weight:600; }
-
-  .logout-btn{
-    width:100%; margin-top:24px; font-size:13.5px; color:var(--err); background:var(--surface);
-    border:1px solid var(--line); padding:15px; border-radius:var(--r-md); cursor:pointer;
-    font-family:'Inter', sans-serif; font-weight:700; transition:background .15s ease, border-color .15s ease;
-  }
-  .logout-btn:hover{ background:var(--err-bg); border-color:#ECC9BE; }
-  .logout-btn:active{ transform:scale(0.98); }
-
-  /* ================= BOTTOM NAV ================= */
-  .bottom-nav{
-    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-    width:100%; max-width:560px; background:rgba(255,255,255,0.88); backdrop-filter:blur(16px) saturate(1.4);
-    border-top:1px solid var(--line);
-    display:flex; padding:9px 6px calc(9px + env(safe-area-inset-bottom));
-    z-index:50; box-shadow:0 -8px 24px rgba(28,26,23,0.05);
-  }
-  .nav-btn{
-    flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px;
-    background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:10.5px;
-    font-weight:700; cursor:pointer; border-radius:14px; transition:color .15s ease;
-  }
-  .nav-btn.active{ color:var(--brass); }
-  .nav-btn svg{ width:21px; height:21px; transition:transform .15s ease; }
-  .nav-btn.active svg{ transform:translateY(-1px); }
-  .nav-btn:active{ transform:scale(0.92); }
-
-  @media (min-width:561px){ body{ box-shadow:0 0 50px rgba(28,26,23,0.07); } }
-
-  /* ================= NOTIFICATION BELL ================= */
+  /* ================= HOME (dark hero dashboard) ================= */
+  .home-dark{ background:var(--dark-bg); color:var(--on-dark); padding:22px 20px 36px; border-radius:0 0 36px 36px; margin-bottom:-20px; }
+  .home-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px; }
+  .home-greeting{ font-family:'Instrument Serif', serif; font-style:italic; font-size:28px; line-height:1.15; }
+  .home-greeting .wave{ font-style:normal; }
   .notif-bell{
-    position:absolute; top:16px; right:16px; z-index:3; width:38px; height:38px; border-radius:50%;
-    background:rgba(255,255,255,0.15); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.2);
-    color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    width:40px; height:40px; border-radius:50%; background:var(--dark-surface); border:1px solid var(--dark-line);
+    color:var(--on-dark); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    position:relative; flex-shrink:0;
   }
   .notif-badge{
-    position:absolute; top:-4px; right:-4px; background:#C23B3B; color:#fff; font-size:9.5px; font-weight:800;
+    position:absolute; top:-3px; right:-3px; background:var(--danger); color:#fff; font-size:9.5px; font-weight:800;
     min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center;
-    padding:0 3px; border:2px solid var(--ink);
+    padding:0 3px; border:2px solid var(--dark-bg);
   }
+
+  .eyebrow-gold{ font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-soft); font-weight:700; margin-bottom:10px; }
+
+  .appt-card{
+    background:var(--dark-surface); border:1px solid var(--dark-line); border-radius:var(--r-card);
+    padding:20px; box-shadow:var(--sh-dark); position:relative; overflow:hidden; margin-bottom:16px;
+  }
+  .appt-card::after{
+    content:''; position:absolute; top:-60px; right:-60px; width:180px; height:180px; border-radius:50%;
+    background:radial-gradient(circle, rgba(184,138,42,0.18), transparent 70%);
+  }
+  .appt-top{ display:flex; gap:12px; align-items:center; position:relative; z-index:1; }
+  .appt-avatar{
+    width:52px; height:52px; border-radius:50%; background:var(--dark-surface-2); flex-shrink:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic;
+    color:var(--gold-soft); font-size:19px; border:1px solid var(--dark-line);
+  }
+  .appt-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .appt-info{ flex:1; min-width:0; }
+  .appt-name{ font-weight:700; font-size:15.5px; }
+  .appt-meta{ font-size:12.5px; color:var(--on-dark-dim); margin-top:2px; }
+  .appt-svc{ font-size:12.5px; color:var(--gold-soft); font-weight:700; margin-top:4px; }
+  .appt-qr{ width:52px; height:52px; border-radius:12px; overflow:hidden; flex-shrink:0; background:#fff; padding:4px; }
+  .appt-qr img{ width:100%; height:100%; object-fit:contain; }
+  .appt-actions{ display:flex; gap:8px; margin-top:16px; position:relative; z-index:1; }
+  .appt-btn{
+    flex:1; padding:11px; border-radius:var(--r-btn); font-size:12.5px; font-weight:700; text-align:center;
+    cursor:pointer; border:1px solid var(--dark-line); color:var(--on-dark); background:transparent;
+  }
+  .appt-btn.solid{ background:var(--gold); border-color:var(--gold); color:#141414; }
+  .appt-btn.solid:hover{ background:var(--gold-soft); }
+  .appt-cancel-link{ font-size:11.5px; color:var(--danger); text-align:center; margin-top:10px; cursor:pointer; font-weight:600; position:relative; z-index:1; }
+
+  .dark-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .dark-tile{
+    background:var(--dark-surface); border:1px solid var(--dark-line); border-radius:20px; padding:16px;
+  }
+  .loyalty-tile{ grid-column:span 2; display:flex; flex-direction:column; gap:10px; }
+  .loyalty-head{ display:flex; justify-content:space-between; align-items:center; }
+  .loyalty-tier{ font-size:12.5px; font-weight:700; color:var(--gold-soft); display:flex; align-items:center; gap:6px; }
+  .loyalty-pts{ font-size:11.5px; color:var(--on-dark-dim); font-weight:600; }
+  .loyalty-bar-track{ height:7px; border-radius:6px; background:var(--dark-surface-2); overflow:hidden; }
+  .loyalty-bar-fill{ height:100%; background:linear-gradient(90deg, var(--gold), var(--gold-soft)); border-radius:6px; transition:width .6s cubic-bezier(.2,.8,.2,1); }
+
+  .stat-dark-num{ font-family:'Instrument Serif', serif; font-style:italic; font-size:24px; color:var(--gold-soft); }
+  .stat-dark-label{ font-size:11px; color:var(--on-dark-dim); font-weight:600; margin-top:2px; }
+
+  .fav-dark-card{ display:flex; align-items:center; gap:12px; }
+  .fav-dark-avatar{
+    width:48px; height:48px; border-radius:50%; overflow:hidden; flex-shrink:0; border:2px solid var(--gold);
+    display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic;
+    color:var(--gold-soft); font-size:17px; background:var(--dark-surface-2);
+  }
+  .fav-dark-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .fav-dark-info{ flex:1; min-width:0; }
+  .fav-dark-name{ font-weight:700; font-size:14px; }
+  .fav-dark-label{ font-size:11px; color:var(--on-dark-dim); }
+  .fav-dark-arrow{ color:var(--on-dark-dim); font-size:16px; }
+  .fav-row-dark{ display:flex; gap:12px; overflow-x:auto; padding:2px; margin-top:2px; }
+  .fav-chip-dark{ flex-shrink:0; text-align:center; width:58px; }
+  .fav-chip-avatar{
+    width:48px; height:48px; border-radius:50%; background:var(--dark-surface-2); border:1px solid var(--dark-line);
+    display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic;
+    color:var(--gold-soft); font-size:15px; overflow:hidden; margin:0 auto 5px;
+  }
+  .fav-chip-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .fav-chip-name{ font-size:10px; color:var(--on-dark-dim); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .rebook-dark{
+    background:linear-gradient(135deg, rgba(184,138,42,0.14), transparent); border:1px solid rgba(184,138,42,0.3);
+    border-radius:20px; padding:14px 16px; display:flex; align-items:center; gap:12px; margin-bottom:16px;
+  }
+  .rebook-dark .icon{ font-size:20px; flex-shrink:0; }
+  .rebook-dark .text{ flex:1; font-size:12px; color:var(--on-dark); }
+  .rebook-dark .cta{ flex-shrink:0; background:var(--gold); color:#141414; padding:8px 14px; border-radius:16px; font-size:11px; font-weight:700; }
+
+  .empty-dark{
+    text-align:center; padding:36px 20px; border:1.5px dashed var(--dark-line); border-radius:var(--r-card);
+    color:var(--on-dark-dim); font-size:13px; margin-bottom:16px;
+  }
+  .empty-dark .icon{ font-size:24px; margin:0 auto 12px; width:48px; height:48px; border-radius:50%; background:var(--dark-surface-2); display:flex; align-items:center; justify-content:center; }
+  .empty-dark strong{ font-family:'Instrument Serif', serif; font-style:italic; font-size:17px; color:var(--on-dark); display:block; margin-bottom:4px; }
+  .empty-dark .btn{ display:inline-block; margin-top:14px; background:var(--gold); color:#141414; padding:11px 20px; border-radius:var(--r-btn); font-size:12.5px; font-weight:700; }
+
+  /* ================= LIGHT SECTIONS (bookings/map/account) ================= */
+  section{ padding:26px 0 4px; }
+  .section-title{
+    font-family:'Instrument Serif', serif; font-style:italic; font-size:20px; font-weight:400;
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;
+  }
+  .see-all{ font-size:12px; color:var(--gold); font-weight:700; cursor:pointer; }
+
+  .filter-pills{ display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; }
+  .filter-pill{
+    flex:none; padding:11px 16px; border-radius:var(--r-btn); border:1px solid var(--line); background:var(--surface);
+    color:var(--ink-dim); font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .filter-pill.active{ background:#141414; border-color:#141414; color:var(--gold-soft); }
+
+  .wallet-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:16px;
+    margin-bottom:12px; box-shadow:var(--sh-soft); display:flex; gap:13px; align-items:center;
+  }
+  .wallet-avatar{
+    width:50px; height:50px; border-radius:50%; background:var(--surface-alt); flex-shrink:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic;
+    color:var(--gold); font-size:17px; border:1px solid var(--line);
+  }
+  .wallet-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .wallet-info{ flex:1; min-width:0; }
+  .wallet-name{ font-weight:700; font-size:14.5px; }
+  .wallet-meta{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .wallet-svc{ font-size:12px; color:var(--gold); font-weight:700; margin-top:3px; }
+  .wallet-right{ display:flex; flex-direction:column; align-items:flex-end; gap:7px; flex-shrink:0; }
+  .status-badge{
+    font-size:10px; padding:5px 11px; border-radius:20px; text-transform:capitalize; font-weight:700;
+  }
+  .status-badge.confirmed{ background:var(--success-bg); color:var(--success); }
+  .status-badge.pending{ background:var(--warning-bg); color:var(--warning); }
+  .status-badge.cancelled{ background:var(--danger-bg); color:var(--danger); }
+  .status-badge.completed{ background:var(--surface-alt); color:var(--ink-dim); }
+  .wallet-cancel{
+    font-size:10.5px; font-weight:700; color:var(--danger); background:none; border:1px solid #F3CFCF;
+    padding:5px 11px; border-radius:16px; cursor:pointer;
+  }
+
+  .empty-state{
+    text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-card);
+    color:var(--ink-dim); font-size:13.5px;
+  }
+  .empty-state .icon{ font-size:26px; margin:0 auto 14px; width:52px; height:52px; border-radius:50%; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; }
+  .empty-state strong{ font-family:'Instrument Serif', serif; font-style:italic; font-size:18px; color:var(--ink); display:block; margin-bottom:4px; font-weight:400; }
+  .empty-state .btn{ display:inline-block; margin-top:16px; background:#141414; color:var(--gold-soft); padding:13px 22px; border-radius:var(--r-btn); font-size:13px; font-weight:700; }
+
   .notification-row{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:14px 16px;
-    margin-bottom:10px; font-size:13px; box-shadow:var(--sh-sm); position:relative;
+    background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:14px 16px;
+    margin-bottom:10px; font-size:13px; box-shadow:var(--sh-soft); position:relative;
   }
-  .notification-row.unread{ border-left:3px solid var(--brass); }
+  .notification-row.unread{ border-left:3px solid var(--gold); }
   .notification-row .n-time{ font-size:11px; color:var(--ink-dim); margin-top:4px; }
 
-  /* ================= FAVORITES ================= */
-  .fav-row{ display:flex; gap:14px; overflow-x:auto; padding:2px 2px 8px; }
-  .fav-item{ flex-shrink:0; text-align:center; width:64px; cursor:pointer; }
-  .fav-avatar{
-    width:56px; height:56px; border-radius:50%; background:var(--surface-alt); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces', serif; font-style:italic;
-    color:var(--brass); font-size:18px; overflow:hidden; margin:0 auto 6px; box-shadow:var(--sh-sm);
+  .lang-row{ display:flex; gap:8px; margin-top:16px; }
+  .lang-btn{
+    flex:1; padding:13px; border-radius:var(--r-input); border:1px solid var(--line); background:var(--surface);
+    color:var(--ink-dim); font-size:13px; font-weight:700; cursor:pointer;
   }
-  .fav-avatar img{ width:100%; height:100%; object-fit:cover; }
-  .fav-item .fav-name{ font-size:10.5px; font-weight:600; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lang-btn.active{ background:#141414; border-color:#141414; color:var(--gold-soft); }
 
-  /* ================= REBOOK NUDGE ================= */
-  .rebook-nudge{
-    margin:16px 16px 0; background:linear-gradient(135deg, #FBF3E3, #F7F4EF); border:1px solid #E8D5A8;
-    border-radius:20px; padding:16px 18px; display:flex; align-items:center; gap:14px;
+  .info-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:4px 20px; box-shadow:var(--sh-soft); }
+  .info-row{ display:flex; justify-content:space-between; align-items:center; padding:17px 0; border-bottom:1px solid var(--line); font-size:14px; }
+  .info-row:last-child{ border-bottom:none; }
+  .info-row .k{ color:var(--ink-dim); font-weight:500; }
+  .info-row .v{ font-weight:700; }
+
+  .logout-btn{
+    width:100%; margin-top:24px; font-size:13.5px; color:var(--danger); background:var(--surface);
+    border:1px solid var(--line); padding:16px; border-radius:var(--r-input); cursor:pointer; font-weight:700;
   }
-  .rebook-nudge .icon{ font-size:24px; flex-shrink:0; }
-  .rebook-nudge .text{ flex:1; font-size:12.5px; color:var(--ink); font-weight:500; }
-  .rebook-nudge .text strong{ font-family:'Fraunces', serif; font-weight:500; font-style:italic; }
-  .rebook-nudge .cta{
-    flex-shrink:0; background:var(--brass); color:#fff; padding:9px 16px; border-radius:18px;
-    font-size:11.5px; font-weight:700;
+  .logout-btn:hover{ background:var(--danger-bg); }
+
+  /* ================= FLOATING BOTTOM NAV ================= */
+  .bottom-nav{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    width:calc(100% - 32px); max-width:400px; background:rgba(20,20,20,0.85); backdrop-filter:blur(20px) saturate(1.6);
+    border:1px solid rgba(255,255,255,0.08); border-radius:28px;
+    display:flex; padding:10px 8px;
+    z-index:50; box-shadow:0 20px 50px rgba(0,0,0,0.35);
   }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px;
+    background:none; border:none; color:rgba(245,243,239,0.45); font-size:10px;
+    font-weight:700; cursor:pointer; border-radius:16px;
+  }
+  .nav-btn.active{ color:var(--gold-soft); }
+  .nav-btn svg{ width:20px; height:20px; }
+
+  @media (min-width:561px){ body{ box-shadow:0 0 60px rgba(17,17,17,0.08); } }
+
+  /* skeleton */
+  .skel-line{ height:14px; border-radius:6px; background:linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
+  @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
+  .skel-appt{ background:var(--dark-surface); border-radius:var(--r-card); padding:20px; margin-bottom:16px; }
+  .skel-appt .skel-line.w40{ width:40%; height:11px; margin-bottom:10px; }
+  .skel-appt .skel-line.w70{ width:70%; height:18px; }
 </style>
 </head>
 <body>
 
 <!-- ============ HOME ============ -->
 <div class="view active" data-view="home">
-  <div class="hero-card">
-    <div class="hero-fallback-anim" id="heroFallback"></div>
-    <video id="heroVideo" autoplay muted loop playsinline
-           onerror="document.getElementById('heroFallback').style.display='block'; this.style.display='none';">
-      <source src="https://gbvfesorkmsxugpvcuqy.supabase.co/storage/v1/object/public/site-assets/mixkit-barber-doing-a-fashion-cut-to-a-man-43229-hd-ready.mp4" type="video/mp4">
-    </video>
-    <button class="notif-bell" id="notifBellBtn">
-      🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
-    </button>
-    <div class="hero-content">
-      <div class="hero-eyebrow" data-i18n="hero_eyebrow">Ustara</div>
-      <div class="hero-greeting" data-i18n-html="hero_greeting">Good to see you, <em id="nameInsert">there</em></div>
+  <div class="home-dark">
+    <div class="home-head">
+      <div>
+        <div class="eyebrow-gold" data-i18n="hero_eyebrow">Ustara</div>
+        <div class="home-greeting"><span class="wave">👋</span> <span data-i18n="hero_greeting_text">Good to see you,</span><br><span id="nameInsert">there</span></div>
+      </div>
+      <button class="notif-bell" id="notifBellBtn">
+        🔔<span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <div id="rebookNudge"></div>
+
+    <div id="homeBookings">
+      <div class="skel-appt"><div class="skel-line w40"></div><div class="skel-line w70"></div></div>
+    </div>
+
+    <div class="dark-grid" id="dashboardTiles">
+      <div class="dark-tile" style="grid-column:span 2;"><div class="skel-line w40"></div><div class="skel-line w70"></div></div>
     </div>
   </div>
+</div>
 
-  <div id="rebookNudge"></div>
-
-  <div class="bento-grid">
-    <div id="homeBookings" style="display:contents">
-      <div class="skel-big"><div class="skel-line w40"></div><div class="skel-line w70"></div></div>
+<!-- ============ BOOKINGS ============ -->
+<div class="view" data-view="bookings">
+  <div class="wrap" style="padding-top:24px;">
+    <div class="section-title"><span data-i18n="bookings_title">Your bookings</span></div>
+    <div class="filter-pills" id="bookingFilterTabs">
+      <div class="filter-pill active" data-status="all" data-i18n="filter_all">All</div>
+      <div class="filter-pill" data-status="pending" data-i18n="filter_pending">Pending</div>
+      <div class="filter-pill" data-status="confirmed" data-i18n="filter_confirmed">Confirmed</div>
+      <div class="filter-pill" data-status="cancelled" data-i18n="filter_cancelled">Cancelled</div>
     </div>
-    <div id="statPills" style="display:contents">
-      <div class="skel-stat"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
-      <div class="skel-stat"><div class="skel-line w40"></div><div class="skel-line w60"></div></div>
-    </div>
-    <div class="tile tile-map" id="mapTeaser" data-nav="map">
-      <div class="tile-map-label"><span class="pin-dot"></span><span id="mapTeaserText">Your barber's spot</span></div>
-    </div>
+    <div id="allBookingsArea"></div>
   </div>
+</div>
 
-  <div class="wrap">
-    <section id="favoritesSection" style="display:none;">
-      <div class="section-title"><span data-i18n="favorites_title">Your favorites</span></div>
-      <div class="fav-row" id="favRow"></div>
-    </section>
+<!-- ============ MAP ============ -->
+<div class="view" data-view="map">
+  <div class="wrap" style="padding-top:24px;">
+    <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
+    <div id="mapStatusMsg"></div>
+    <div id="clientMapWrap" style="display:none;">
+      <div id="clientMapEl" style="height:320px; border-radius:var(--r-card); overflow:hidden; border:1px solid var(--line); box-shadow:var(--sh-soft);"></div>
+      <div id="mapBarberLabel" style="margin-top:14px; font-size:13.5px; color:var(--ink-dim);"></div>
+    </div>
   </div>
 </div>
 
 <!-- ============ NOTIFICATIONS ============ -->
 <div class="view" data-view="notifications">
-  <div class="wrap" style="padding-top:26px;">
+  <div class="wrap" style="padding-top:24px;">
     <div class="section-title">
       <span data-i18n="notifications_title">Notifications</span>
       <span class="see-all" data-nav="home" data-i18n="close_label">Close</span>
@@ -349,35 +311,9 @@
   </div>
 </div>
 
-<!-- ============ BOOKINGS ============ -->
-<div class="view" data-view="bookings">
-  <div class="wrap" style="padding-top:26px;">
-    <div class="section-title"><span data-i18n="bookings_title">Your bookings</span></div>
-    <div class="filter-tabs" id="bookingFilterTabs">
-      <div class="lang-btn active" data-status="all" data-i18n="filter_all">All</div>
-      <div class="lang-btn" data-status="pending" data-i18n="filter_pending">Pending</div>
-      <div class="lang-btn" data-status="confirmed" data-i18n="filter_confirmed">Confirmed</div>
-      <div class="lang-btn" data-status="cancelled" data-i18n="filter_cancelled">Cancelled</div>
-    </div>
-    <div id="allBookingsArea"></div>
-  </div>
-</div>
-
-<!-- ============ MAP ============ -->
-<div class="view" data-view="map">
-  <div class="wrap" style="padding-top:26px;">
-    <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
-    <div id="mapStatusMsg"></div>
-    <div id="clientMapWrap" style="display:none;">
-      <div id="clientMapEl" style="height:320px; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--line); box-shadow:var(--sh-sm);"></div>
-      <div id="mapBarberLabel" style="margin-top:14px; font-size:13.5px; color:var(--ink-dim);"></div>
-    </div>
-  </div>
-</div>
-
 <!-- ============ ACCOUNT ============ -->
 <div class="view" data-view="account">
-  <div class="wrap" style="padding-top:26px;">
+  <div class="wrap" style="padding-top:24px;">
     <div class="section-title"><span data-i18n="account_title">Account</span></div>
     <div class="info-card" id="infoCard"></div>
 
@@ -426,14 +362,13 @@ function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,
 
 const I18N = {
   en:{
-    hero_eyebrow:"Ustara", hero_greeting:'Good to see you, <em id="nameInsert">there</em>',
+    hero_eyebrow:"Ustara", hero_greeting_text:"Good to see you,",
     upcoming_title:"Upcoming", see_all:"See all",
-    map_title:"Your barber's spot", map_soon_h:"Map coming soon",
-    map_soon_s:"You'll be able to see exactly where to go, right here.",
+    map_title:"Your barber's spot",
     map_no_booking:"Book an appointment to see your barber's location here.",
     map_no_location:"Your barber hasn't set their exact location yet.",
-    map_teaser_no_booking:"Book a cut to see it here", map_teaser_no_location:"Location coming soon",
     map_directions:"Get directions",
+    map_teaser_no_booking:"Book a cut to see it here", map_teaser_no_location:"Location coming soon",
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.",
@@ -443,17 +378,18 @@ const I18N = {
     empty_btn:"Browse barbers", rv_name:"Name", rv_phone:"Phone", rv_email:"Email",
     stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed",
     favorites_title:"Your favorites", notifications_title:"Notifications", close_label:"Close", no_notifications:"No notifications yet.",
-    rebook_nudge:"It's been a while since your last visit with {barber} — ready for another?", rebook_cta:"Book again"
+    rebook_nudge:"It's been a while since your last visit with {barber} — ready for another?", rebook_cta:"Book again",
+    view_details:"View details", add_calendar:"Add to calendar",
+    loyalty_member:"Member", visit_streak:"Visit streak", weeks:"weeks", favorite_barber:"Favorite barber", your_barber:"Your barber"
   },
   uz:{
-    hero_eyebrow:"Ustara", hero_greeting:'Xush kelibsiz, <em id="nameInsert">u yerda</em>',
+    hero_eyebrow:"Ustara", hero_greeting_text:"Xush kelibsiz,",
     upcoming_title:"Kelgusi", see_all:"Barchasi",
-    map_title:"Sartaroshingiz joylashuvi", map_soon_h:"Xarita tez orada",
-    map_soon_s:"Qayerga borishni aniq shu yerda ko'rasiz.",
+    map_title:"Sartaroshingiz joylashuvi",
     map_no_booking:"Sartaroshingiz joylashuvini ko'rish uchun uchrashuvni band qiling.",
     map_no_location:"Sartaroshingiz hali aniq joylashuvni belgilamagan.",
-    map_teaser_no_booking:"Ko'rish uchun band qiling", map_teaser_no_location:"Joylashuv tez orada",
     map_directions:"Yo'nalishni ko'rish",
+    map_teaser_no_booking:"Ko'rish uchun band qiling", map_teaser_no_location:"Joylashuv tez orada",
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.",
@@ -463,17 +399,18 @@ const I18N = {
     empty_btn:"Sartaroshlarni ko'rish", rv_name:"Ism", rv_phone:"Telefon", rv_email:"Email",
     stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi",
     favorites_title:"Sevimlilaringiz", notifications_title:"Bildirishnomalar", close_label:"Yopish", no_notifications:"Hozircha bildirishnoma yo'q.",
-    rebook_nudge:"{barber} bilan oxirgi tashrifingizdan beri vaqt o'tdi — yana borasizmi?", rebook_cta:"Qayta band qilish"
+    rebook_nudge:"{barber} bilan oxirgi tashrifingizdan beri vaqt o'tdi — yana borasizmi?", rebook_cta:"Qayta band qilish",
+    view_details:"Batafsil", add_calendar:"Kalendarga qo'shish",
+    loyalty_member:"A'zo", visit_streak:"Tashrif seriyasi", weeks:"hafta", favorite_barber:"Sevimli sartarosh", your_barber:"Sizning sartaroshingiz"
   },
   ru:{
-    hero_eyebrow:"Ustara", hero_greeting:'Рады видеть вас, <em id="nameInsert">снова</em>',
+    hero_eyebrow:"Ustara", hero_greeting_text:"Рады видеть вас,",
     upcoming_title:"Предстоящие", see_all:"Все",
-    map_title:"Место вашего барбера", map_soon_h:"Карта скоро",
-    map_soon_s:"Здесь вы увидите, куда именно идти.",
+    map_title:"Место вашего барбера",
     map_no_booking:"Запишитесь на приём, чтобы увидеть местоположение барбера здесь.",
     map_no_location:"Ваш барбер ещё не указал точное местоположение.",
-    map_teaser_no_booking:"Запишитесь, чтобы увидеть", map_teaser_no_location:"Локация скоро",
     map_directions:"Проложить маршрут",
+    map_teaser_no_booking:"Запишитесь, чтобы увидеть", map_teaser_no_location:"Локация скоро",
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.",
@@ -483,7 +420,9 @@ const I18N = {
     empty_btn:"Смотреть барберов", rv_name:"Имя", rv_phone:"Телефон", rv_email:"Email",
     stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено",
     favorites_title:"Ваши избранные", notifications_title:"Уведомления", close_label:"Закрыть", no_notifications:"Уведомлений пока нет.",
-    rebook_nudge:"Прошло время с последнего визита к {barber} — не пора ли снова?", rebook_cta:"Записаться снова"
+    rebook_nudge:"Прошло время с последнего визита к {barber} — не пора ли снова?", rebook_cta:"Записаться снова",
+    view_details:"Подробнее", add_calendar:"В календарь",
+    loyalty_member:"Участник", visit_streak:"Серия визитов", weeks:"недель", favorite_barber:"Любимый барбер", your_barber:"Ваш барбер"
   }
 };
 
@@ -497,6 +436,10 @@ let notificationsData = [];
 
 function t(key){ return I18N[currentLang][key]; }
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+function avatarFor(barber){
+  const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  return barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
+}
 
 function applyLang(lang){
   currentLang = lang;
@@ -504,18 +447,14 @@ function applyLang(lang){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     if(dict[el.dataset.i18n] !== undefined) el.textContent = dict[el.dataset.i18n];
   });
-  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
-    if(dict[el.dataset.i18nHtml] !== undefined) el.innerHTML = dict[el.dataset.i18nHtml];
-  });
   document.querySelectorAll('#langSwitch .lang-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.lang === lang);
   });
   document.getElementById('htmlRoot').lang = lang;
   if(clientData) document.getElementById('nameInsert').textContent = clientData.full_name.split(' ')[0];
-  renderStatPills();
   renderHomeBookings();
+  renderDashboardTiles();
   renderAllBookings();
-  renderMapTeaser();
   if(clientData) renderInfoCard();
 }
 
@@ -572,58 +511,51 @@ async function init(){
 
   applyLang(currentLang);
   setupClientMap();
-  renderFavorites();
   renderNotifBadge();
   renderRebookNudge();
 }
 
-/* ---------- home: bento grid ---------- */
-function renderStatPills(){
-  const now = new Date();
-  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled').length;
-  const total = bookingsData.filter(b => b.status === 'confirmed').length;
-  document.getElementById('statPills').innerHTML = `
-    <div class="tile tile-stat"><div class="num">${upcoming}</div><div class="label">${t('stat_upcoming')}</div></div>
-    <div class="tile tile-stat"><div class="num">${total}</div><div class="label">${t('stat_total')}</div></div>
-  `;
-}
-
-function avatarFor(barber){
-  const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  return barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
-}
-
+/* ---------- home: appointment card ---------- */
 function bigTileHtml(b){
   const barber = b.barbers || {};
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
+  const qrData = encodeURIComponent(`USTARA-BOOKING-${b.id}`);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
   return `
-    <div class="tile tile-big" data-booking-id="${b.id}">
-      <span class="status-badge">${t(b.status) || b.status}</span>
-      <div class="tag">${t('upcoming_title')}</div>
-      <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
-      <div class="meta">${new Date(b.start_time).toLocaleString()}${barber.district ? ' · ' + escapeHtml(barber.district) : ''}</div>
-      ${svcName ? `<div class="meta" style="color:var(--brass-soft); font-weight:700; margin-top:4px;">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
-      ${canCancel ? `<button class="cancel-dark" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+    <div class="appt-card" data-booking-id="${b.id}">
+      <div class="appt-top">
+        <div class="appt-avatar">${avatarFor(barber)}</div>
+        <div class="appt-info">
+          <div class="appt-name">${escapeHtml(barber.full_name || 'Barber')}</div>
+          <div class="appt-meta">${new Date(b.start_time).toLocaleString()}${barber.district ? ' · ' + escapeHtml(barber.district) : ''}</div>
+          ${svcName ? `<div class="appt-svc">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
+        </div>
+        <div class="appt-qr"><img src="${qrUrl}" alt="QR" loading="lazy"></div>
+      </div>
+      <div class="appt-actions">
+        <button class="appt-btn" data-view-booking="${b.id}">${t('view_details')}</button>
+        <button class="appt-btn solid" data-calendar="${b.id}">${t('add_calendar')}</button>
+      </div>
+      ${canCancel ? `<div class="appt-cancel-link" data-cancel-id="${b.id}">${t('cancel_booking')}</div>` : ''}
     </div>
   `;
 }
 
 function bookingCardHtml(b){
   const barber = b.barbers || {};
-  const avatar = avatarFor(barber);
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   return `
-    <div class="tile tile-next" data-booking-id="${b.id}">
-      <div class="avatar">${avatar}</div>
-      <div class="info">
-        <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
-        <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
+    <div class="wallet-card" data-booking-id="${b.id}">
+      <div class="wallet-avatar">${avatarFor(barber)}</div>
+      <div class="wallet-info">
+        <div class="wallet-name">${escapeHtml(barber.full_name || 'Barber')}</div>
+        <div class="wallet-meta">${new Date(b.start_time).toLocaleString()}</div>
       </div>
-      <div class="right">
-        <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
-        ${canCancel ? `<button class="cancel-booking-btn" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+      <div class="wallet-right">
+        <span class="status-badge ${b.status}">${t(b.status) || b.status}</span>
+        ${canCancel ? `<button class="wallet-cancel" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
       </div>
     </div>
   `;
@@ -631,21 +563,20 @@ function bookingCardHtml(b){
 
 function bookingListRowHtml(b){
   const barber = b.barbers || {};
-  const avatar = avatarFor(barber);
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   return `
-    <div class="booking-list-row" data-booking-id="${b.id}">
-      <div class="avatar">${avatar}</div>
-      <div class="info">
-        <div class="name">${escapeHtml(barber.full_name || 'Barber')}</div>
-        <div class="meta">${new Date(b.start_time).toLocaleString()}</div>
-        ${svcName ? `<div class="meta" style="color:var(--brass); font-weight:700; margin-top:3px;">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
+    <div class="wallet-card" data-booking-id="${b.id}">
+      <div class="wallet-avatar">${avatarFor(barber)}</div>
+      <div class="wallet-info">
+        <div class="wallet-name">${escapeHtml(barber.full_name || 'Barber')}</div>
+        <div class="wallet-meta">${new Date(b.start_time).toLocaleString()}</div>
+        ${svcName ? `<div class="wallet-svc">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
       </div>
-      <div class="right">
-        <span class="booking-status ${b.status}">${t(b.status) || b.status}</span>
-        ${canCancel ? `<button class="cancel-booking-btn" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+      <div class="wallet-right">
+        <span class="status-badge ${b.status}">${t(b.status) || b.status}</span>
+        ${canCancel ? `<button class="wallet-cancel" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
       </div>
     </div>
   `;
@@ -656,7 +587,8 @@ function attachCancelHandlers(container){
     btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
       if(!confirm(t('cancel_confirm'))) return;
-      btn.disabled = true;
+      const original = btn.textContent;
+      btn.style.pointerEvents = 'none';
       btn.textContent = '...';
       const { error } = await supabaseClient.from('bookings').update({
         status: 'cancelled',
@@ -666,11 +598,36 @@ function attachCancelHandlers(container){
       if(error){
         console.error('Cancel failed:', error);
         alert('Could not cancel: ' + error.message);
-        btn.disabled = false;
-        btn.textContent = t('cancel_booking');
+        btn.style.pointerEvents = '';
+        btn.textContent = original;
         return;
       }
       await refreshBookings();
+    });
+  });
+}
+
+function attachCalendarHandlers(container){
+  container.querySelectorAll('[data-calendar]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const b = bookingsData.find(x => x.id === btn.dataset.calendar);
+      if(!b) return;
+      const start = new Date(b.start_time);
+      const end = new Date(start.getTime() + (b.service_duration_minutes || 30) * 60000);
+      const fmt = d => d.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+      const barberName = (b.barbers && b.barbers.full_name) || 'Barber';
+      const ics = [
+        'BEGIN:VCALENDAR','VERSION:2.0','BEGIN:VEVENT',
+        `DTSTART:${fmt(start)}`, `DTEND:${fmt(end)}`,
+        `SUMMARY:Haircut with ${barberName} — Ustara`,
+        `DESCRIPTION:Booked via Ustara`,
+        'END:VEVENT','END:VCALENDAR'
+      ].join('\n');
+      const blob = new Blob([ics], { type:'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'ustara-appointment.ics'; a.click();
+      URL.revokeObjectURL(url);
     });
   });
 }
@@ -682,19 +639,19 @@ async function refreshBookings(){
     .eq('client_id', clientData.id)
     .order('start_time', { ascending:true });
   bookingsData = bookings || [];
-  renderStatPills();
   renderHomeBookings();
+  renderDashboardTiles();
   renderAllBookings();
-  renderMapTeaser();
+  renderRebookNudge();
 }
 
 function renderHomeBookings(){
   const now = new Date();
-  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled').slice(0,3);
+  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled').slice(0,1);
   const area = document.getElementById('homeBookings');
   if(upcoming.length === 0){
     area.innerHTML = `
-      <div class="tile tile-empty">
+      <div class="empty-dark">
         <div class="icon">✂️</div>
         <strong>${t('empty_h')}</strong>
         <span style="font-size:12px;">${t('empty_p')}</span><br>
@@ -702,9 +659,95 @@ function renderHomeBookings(){
       </div>`;
     return;
   }
-  const [first, ...rest] = upcoming;
-  area.innerHTML = bigTileHtml(first) + rest.map(bookingCardHtml).join('');
+  area.innerHTML = upcoming.map(bigTileHtml).join('');
   attachCancelHandlers(area);
+  attachCalendarHandlers(area);
+}
+
+/* ---------- home: loyalty / streak / favorite tiles (derived from real data, no new schema) ---------- */
+function renderDashboardTiles(){
+  const container = document.getElementById('dashboardTiles');
+  const completed = bookingsData.filter(b => b.status === 'completed');
+  const completedCount = completed.length;
+
+  // loyalty: every 10 completed visits = a tier; points shown out of 1000 (100 pts/visit)
+  const tierNames = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+  const tierIndex = Math.min(Math.floor(completedCount / 10), tierNames.length - 1);
+  const pointsThisTier = (completedCount % 10) * 100;
+
+  // visit streak: consecutive weeks (from today backward) with at least one completed visit
+  let streak = 0;
+  if(completed.length > 0){
+    const weekMs = 7 * 86400000;
+    const now = new Date();
+    let cursor = new Date(now);
+    for(let i=0; i<52; i++){
+      const weekStart = new Date(cursor.getTime() - weekMs);
+      const hasVisit = completed.some(b => {
+        const d = new Date(b.completed_at || b.start_time);
+        return d >= weekStart && d <= cursor;
+      });
+      if(!hasVisit) break;
+      streak++;
+      cursor = weekStart;
+    }
+  }
+
+  // favorite barber: explicit favorites first, else most-visited barber
+  let favBarbers = favoritesData.map(f => f.barbers).filter(Boolean);
+  if(favBarbers.length === 0 && completed.length > 0){
+    const counts = {};
+    completed.forEach(b => { counts[b.barber_id] = (counts[b.barber_id]||0) + 1; });
+    const topId = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0];
+    const topBooking = completed.find(b => b.barber_id === topId);
+    if(topBooking && topBooking.barbers) favBarbers = [{ id: topId, full_name: topBooking.barbers.full_name, avatar_url: topBooking.barbers.avatar_url }];
+  }
+
+  let html = `
+    <div class="dark-tile loyalty-tile">
+      <div class="loyalty-head">
+        <span class="loyalty-tier">👑 ${tierNames[tierIndex]} ${t('loyalty_member')}</span>
+        <span class="loyalty-pts">${pointsThisTier} / 1000 pts</span>
+      </div>
+      <div class="loyalty-bar-track"><div class="loyalty-bar-fill" style="width:${pointsThisTier/10}%;"></div></div>
+    </div>
+    <div class="dark-tile">
+      <div class="stat-dark-num">🔥 ${streak}</div>
+      <div class="stat-dark-label">${t('visit_streak')}${streak ? ' · ' + streak + ' ' + t('weeks') : ''}</div>
+    </div>
+    <div class="dark-tile">
+      <div class="stat-dark-num">${completedCount}</div>
+      <div class="stat-dark-label">${t('stat_total')}</div>
+    </div>
+  `;
+
+  if(favBarbers.length === 1){
+    const fb = favBarbers[0];
+    html += `
+      <a href="profile.html?id=${fb.id}" class="dark-tile fav-dark-card" style="grid-column:span 2;">
+        <div class="fav-dark-avatar">${avatarFor(fb)}</div>
+        <div class="fav-dark-info">
+          <div class="fav-dark-name">${escapeHtml(fb.full_name)}</div>
+          <div class="fav-dark-label">${t('your_barber')}</div>
+        </div>
+        <span class="fav-dark-arrow">→</span>
+      </a>`;
+  } else if(favBarbers.length > 1){
+    html += `
+      <div class="dark-tile" style="grid-column:span 2;">
+        <div class="fav-dark-label" style="margin-bottom:8px; font-weight:700;">${t('favorites_title')}</div>
+        <div class="fav-row-dark">
+          ${favBarbers.map(fb => `
+            <a href="profile.html?id=${fb.id}" class="fav-chip-dark">
+              <div class="fav-chip-avatar">${avatarFor(fb)}</div>
+              <div class="fav-chip-name">${escapeHtml(fb.full_name.split(' ')[0])}</div>
+            </a>
+          `).join('')}
+        </div>
+      </div>`;
+  }
+
+  container.innerHTML = html;
 }
 
 /* ---------- bookings tab ---------- */
@@ -727,7 +770,7 @@ function renderAllBookings(){
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('[data-status]');
   if(!tab) return;
-  document.querySelectorAll('#bookingFilterTabs .lang-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#bookingFilterTabs .filter-pill').forEach(b=>b.classList.remove('active'));
   tab.classList.add('active');
   currentFilter = tab.dataset.status;
   renderAllBookings();
@@ -742,20 +785,8 @@ function renderInfoCard(){
   `;
 }
 
-function renderMapTeaser(){
-  const label = document.getElementById('mapTeaserText');
-  const booking = nextBookingWithBarber();
-  if(!booking){
-    label.textContent = t('map_teaser_no_booking');
-    return;
-  }
-  const barber = booking.barbers;
-  if(!barber.latitude || !barber.longitude || !barber.is_location_verified){
-    label.textContent = t('map_teaser_no_location');
-    return;
-  }
-  label.textContent = escapeHtml(barber.shop_name || barber.full_name) + (barber.district ? ' · ' + escapeHtml(barber.district) : '');
-}
+/* ---------- map teaser text logic kept for potential future use (map tab itself unaffected) ---------- */
+function renderMapTeaser(){ /* no-op: home no longer shows a map teaser tile, per new design reference */ }
 
 /* ---------- real map, lazy-initialized on first visit to Map tab ---------- */
 let clientMap = null;
@@ -790,7 +821,7 @@ function setupClientMap(){
   mapWrap.style.display = 'block';
   document.getElementById('mapBarberLabel').innerHTML =
     `<strong>${escapeHtml(barber.shop_name || barber.full_name)}</strong> · ${escapeHtml(barber.district || '')}<br>` +
-    `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" style="color:var(--brass); font-weight:600;">${t('map_directions')} →</a>`;
+    `<a href="https://www.openstreetmap.org/directions?to=${barber.latitude},${barber.longitude}" target="_blank" style="color:var(--gold); font-weight:600;">${t('map_directions')} →</a>`;
 
   const tryInit = () => {
     const el = document.getElementById('clientMapEl');
@@ -816,28 +847,8 @@ function setupClientMap(){
   }
 }
 
-/* ---------- favorites ---------- */
-function renderFavorites(){
-  const section = document.getElementById('favoritesSection');
-  const row = document.getElementById('favRow');
-  if(favoritesData.length === 0){
-    section.style.display = 'none';
-    return;
-  }
-  section.style.display = 'block';
-  row.innerHTML = favoritesData.map(f => {
-    const barber = f.barbers;
-    if(!barber) return '';
-    const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    const avatar = barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
-    return `
-      <a href="profile.html?id=${barber.id}" class="fav-item">
-        <div class="fav-avatar">${avatar}</div>
-        <div class="fav-name">${escapeHtml(barber.full_name.split(' ')[0])}</div>
-      </a>
-    `;
-  }).join('');
-}
+/* ---------- favorites (legacy hook kept for compatibility; favorites now render inside dashboard tiles) ---------- */
+function renderFavorites(){ /* superseded by renderDashboardTiles, kept as no-op so no external caller breaks */ }
 
 /* ---------- notifications ---------- */
 function renderNotifBadge(){
@@ -897,9 +908,9 @@ function renderRebookNudge(){
   const barberName = target.barbers.full_name;
 
   el.innerHTML = `
-    <div class="rebook-nudge">
+    <div class="rebook-dark">
       <div class="icon">✂️</div>
-      <div class="text">${t('rebook_nudge').replace('{barber}', `<strong>${escapeHtml(barberName)}</strong>`)}</div>
+      <div class="text">${t('rebook_nudge').replace('{barber}', `<strong class="serif">${escapeHtml(barberName)}</strong>`)}</div>
       <a href="profile.html?id=${target.barber_id}" class="cta">${t('rebook_cta')}</a>
     </div>
   `;
