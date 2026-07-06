@@ -189,6 +189,11 @@
     font-size:10.5px; font-weight:700; color:var(--danger); background:none; border:1px solid #F3CFCF;
     padding:5px 11px; border-radius:16px; cursor:pointer;
   }
+  .wallet-remove{
+    font-size:10.5px; font-weight:600; color:var(--ink-dim); background:none; border:1px solid var(--line);
+    padding:5px 11px; border-radius:16px; cursor:pointer;
+  }
+  .wallet-remove:hover{ background:var(--surface-alt); }
 
   .empty-state{
     text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-card);
@@ -437,7 +442,7 @@ const I18N = {
     map_teaser_no_booking:"Book a cut to see it here", map_teaser_no_location:"Location coming soon",
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
-    cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.",
+    cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.", remove_booking:"Remove",
     account_title:"Account", language_title:"Language", logout:"Log out",
     nav_home:"Home", nav_bookings:"Bookings", nav_map:"Map", nav_account:"Account",
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
@@ -463,7 +468,7 @@ const I18N = {
     map_teaser_no_booking:"Ko'rish uchun band qiling", map_teaser_no_location:"Joylashuv tez orada",
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
-    cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.",
+    cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.", remove_booking:"O'chirish",
     account_title:"Hisob", language_title:"Til", logout:"Chiqish",
     nav_home:"Bosh sahifa", nav_bookings:"Bandlar", nav_map:"Xarita", nav_account:"Hisob",
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
@@ -489,7 +494,7 @@ const I18N = {
     map_teaser_no_booking:"Запишитесь, чтобы увидеть", map_teaser_no_location:"Локация скоро",
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
-    cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.",
+    cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.", remove_booking:"Удалить",
     account_title:"Аккаунт", language_title:"Язык", logout:"Выйти",
     nav_home:"Главная", nav_bookings:"Записи", nav_map:"Карта", nav_account:"Аккаунт",
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
@@ -650,6 +655,7 @@ function bookingCardHtml(b){
 function bookingListRowHtml(b){
   const barber = b.barbers || {};
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
+  const canRemove = b.status !== 'confirmed'; // never let a confirmed (real upcoming) booking be hidden
   const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   return `
@@ -663,9 +669,28 @@ function bookingListRowHtml(b){
       <div class="wallet-right">
         <span class="status-badge ${b.status}">${t(b.status) || b.status}</span>
         ${canCancel ? `<button class="wallet-cancel" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
+        ${canRemove ? `<button class="wallet-remove" data-remove-id="${b.id}">${t('remove_booking')}</button>` : ''}
       </div>
     </div>
   `;
+}
+
+function attachRemoveHandlers(container){
+  container.querySelectorAll('[data-remove-id]').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      btn.disabled = true;
+      const { error } = await supabaseClient.rpc('hide_booking_for_client', { p_booking_id: btn.dataset.removeId });
+      if(error){
+        console.error('Failed to remove booking from view:', error);
+        alert('Could not remove: ' + error.message);
+        btn.disabled = false;
+        return;
+      }
+      bookingsData = bookingsData.filter(b => b.id !== btn.dataset.removeId);
+      renderAllBookings();
+    });
+  });
 }
 
 function attachCancelHandlers(container){
@@ -733,7 +758,7 @@ async function refreshBookings(){
 
 function renderHomeBookings(){
   const now = new Date();
-  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled').slice(0,1);
+  const upcoming = bookingsData.filter(b => new Date(b.start_time) > now && b.status !== 'cancelled' && b.status !== 'completed').slice(0,1);
   const area = document.getElementById('homeBookings');
   if(upcoming.length === 0){
     area.innerHTML = `
@@ -840,7 +865,8 @@ function renderDashboardTiles(){
 /* ---------- bookings tab ---------- */
 function renderAllBookings(){
   const area = document.getElementById('allBookingsArea');
-  const filtered = currentFilter === 'all' ? bookingsData : bookingsData.filter(b => b.status === currentFilter);
+  const visible = bookingsData.filter(b => !b.hidden_by_client);
+  const filtered = currentFilter === 'all' ? visible : visible.filter(b => b.status === currentFilter);
   if(filtered.length === 0){
     area.innerHTML = `
       <div class="empty-state">
@@ -853,6 +879,7 @@ function renderAllBookings(){
   }
   area.innerHTML = filtered.map(bookingListRowHtml).join('');
   attachCancelHandlers(area);
+  attachRemoveHandlers(area);
 }
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('[data-status]');
@@ -910,7 +937,7 @@ let mapInitialized = false;
 function nextBookingWithBarber(){
   const now = new Date();
   const upcoming = bookingsData
-    .filter(b => new Date(b.start_time) > now && b.status !== 'cancelled' && b.barbers)
+    .filter(b => new Date(b.start_time) > now && b.status !== 'cancelled' && b.status !== 'completed' && b.barbers)
     .sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
   return upcoming[0] || null;
 }
@@ -1086,7 +1113,7 @@ function showBookingDetailsModal(b){
 
 /* ---------- review prompt (shown automatically after a haircut completes) ---------- */
 function checkForReviewPrompt(){
-  const unreviewed = bookingsData.filter(b => b.status === 'completed' && !reviewedBookingIds.has(b.id) && b.barbers);
+  const unreviewed = bookingsData.filter(b => b.status === 'completed' && !reviewedBookingIds.has(b.id) && !b.hidden_by_client && b.barbers);
   if(unreviewed.length === 0) return;
   // most recently completed first
   unreviewed.sort((a,b) => new Date(b.completed_at || b.start_time) - new Date(a.completed_at || a.start_time));
