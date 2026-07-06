@@ -150,6 +150,8 @@ const params = new URLSearchParams(window.location.search);
 const browserLang = (navigator.language || 'en').slice(0,2);
 const currentLang = I18N[browserLang] ? browserLang : 'en';
 let signupRole = params.get('role') === 'barber' ? 'barber' : 'client';
+const refCode = params.get('ref');
+if(refCode) localStorage.setItem('ustara_pending_ref', refCode);
 
 function t(key){ return I18N[currentLang][key]; }
 function applyI18n(){
@@ -246,6 +248,11 @@ document.getElementById('signupForm').addEventListener('submit', async function(
 
   if(authData.session){
     if(signupRole === 'client'){
+      const pendingRef = localStorage.getItem('ustara_pending_ref');
+      if(pendingRef){
+        await supabaseClient.rpc('record_referral', { p_code: pendingRef }).catch(()=>{});
+        localStorage.removeItem('ustara_pending_ref');
+      }
       window.location.href = 'client-dashboard.html';
     } else {
       await supabaseClient.auth.signOut();
