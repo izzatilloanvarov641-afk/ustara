@@ -107,6 +107,16 @@
   .loyalty-pts{ font-size:11.5px; color:var(--on-dark-dim); font-weight:600; }
   .loyalty-bar-track{ height:7px; border-radius:6px; background:var(--dark-surface-2); overflow:hidden; }
   .loyalty-bar-fill{ height:100%; background:linear-gradient(90deg, var(--gold), var(--gold-soft)); border-radius:6px; transition:width .6s cubic-bezier(.2,.8,.2,1); }
+  .checkin-streak-line{ font-size:11px; color:var(--on-dark-dim); margin-top:8px; }
+
+  .checkin-toast{
+    position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:300;
+    background:#141414; color:#F5F3EF; padding:12px 20px; border-radius:20px; font-size:13px; font-weight:600;
+    display:flex; align-items:center; gap:8px; opacity:0; transition:opacity .3s ease, transform .3s ease;
+    box-shadow:0 12px 30px rgba(0,0,0,0.3); max-width:calc(100% - 40px);
+  }
+  .checkin-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .checkin-toast span{ color:var(--gold-soft); }
 
   .stat-dark-num{ font-family:'Instrument Serif', serif; font-style:italic; font-size:24px; color:var(--gold-soft); }
   .stat-dark-label{ font-size:11px; color:var(--on-dark-dim); font-weight:600; margin-top:2px; }
@@ -486,7 +496,8 @@ const I18N = {
     style_title:"My style", style_sub:"Set your usual cut once — it'll auto-attach to future bookings so you don't have to explain it every time.",
     style_upload:"Upload photo", style_save:"Save my style", style_saved:"Saved!",
     view_details:"View details", add_calendar:"Add to calendar",
-    loyalty_member:"Member", visit_streak:"Visit streak", weeks:"weeks", favorite_barber:"Favorite barber", your_barber:"Your barber"
+    loyalty_member:"Member", visit_streak:"Visit streak", weeks:"weeks", favorite_barber:"Favorite barber", your_barber:"Your barber",
+    checkin_streak_label:"{n}-day check-in streak", checkin_toast:"Day {streak} streak! +{points} pts"
   },
   uz:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Xush kelibsiz,",
@@ -516,7 +527,8 @@ const I18N = {
     style_title:"Mening uslubim", style_sub:"Odatiy soch turingizni bir marta belgilang — u kelgusi bandlarga avtomatik biriktiriladi.",
     style_upload:"Surat yuklash", style_save:"Uslubimni saqlash", style_saved:"Saqlandi!",
     view_details:"Batafsil", add_calendar:"Kalendarga qo'shish",
-    loyalty_member:"A'zo", visit_streak:"Tashrif seriyasi", weeks:"hafta", favorite_barber:"Sevimli sartarosh", your_barber:"Sizning sartaroshingiz"
+    loyalty_member:"A'zo", visit_streak:"Tashrif seriyasi", weeks:"hafta", favorite_barber:"Sevimli sartarosh", your_barber:"Sizning sartaroshingiz",
+    checkin_streak_label:"{n} kunlik kirish seriyasi", checkin_toast:"{streak}-kun seriya! +{points} ball"
   },
   ru:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Рады видеть вас,",
@@ -546,7 +558,8 @@ const I18N = {
     style_title:"Мой стиль", style_sub:"Задайте свою обычную стрижку один раз — она автоматически прикрепится к будущим записям.",
     style_upload:"Загрузить фото", style_save:"Сохранить стиль", style_saved:"Сохранено!",
     view_details:"Подробнее", add_calendar:"В календарь",
-    loyalty_member:"Участник", visit_streak:"Серия визитов", weeks:"недель", favorite_barber:"Любимый барбер", your_barber:"Ваш барбер"
+    loyalty_member:"Участник", visit_streak:"Серия визитов", weeks:"недель", favorite_barber:"Любимый барбер", your_barber:"Ваш барбер",
+    checkin_streak_label:"{n}-дневная серия входов", checkin_toast:"День {streak} серии! +{points} очков"
   }
 };
 
@@ -643,6 +656,7 @@ async function init(){
   renderRebookNudge();
   checkForReviewPrompt();
   setupStyleProfile();
+  await checkInIfNeeded();
 }
 
 /* ---------- home: appointment card ---------- */
@@ -858,10 +872,12 @@ function renderDashboardTiles(){
   const completed = bookingsData.filter(b => b.status === 'completed');
   const completedCount = completed.length;
 
-  // loyalty: every 10 completed visits = a tier; points shown out of 1000 (100 pts/visit)
+  // loyalty: 100 pts per completed visit + accumulated daily check-in bonus 
+  // points, combined into one running total; every 1000 points = a tier
   const tierNames = ['Bronze', 'Silver', 'Gold', 'Platinum'];
-  const tierIndex = Math.min(Math.floor(completedCount / 10), tierNames.length - 1);
-  const pointsThisTier = (completedCount % 10) * 100;
+  const totalPoints = (completedCount * 100) + (clientData.checkin_bonus_points || 0);
+  const tierIndex = Math.min(Math.floor(totalPoints / 1000), tierNames.length - 1);
+  const pointsThisTier = totalPoints % 1000;
 
   // visit streak: consecutive weeks (from today backward) with at least one completed visit
   let streak = 0;
@@ -898,6 +914,7 @@ function renderDashboardTiles(){
         <span class="loyalty-pts">${pointsThisTier} / 1000 pts</span>
       </div>
       <div class="loyalty-bar-track"><div class="loyalty-bar-fill" style="width:${pointsThisTier/10}%;"></div></div>
+      ${clientData.checkin_streak > 0 ? `<div class="checkin-streak-line">🔥 ${t('checkin_streak_label').replace('{n}', clientData.checkin_streak)}</div>` : ''}
     </div>
     <div class="dark-tile">
       <div class="stat-dark-num">🔥 ${streak}</div>
@@ -1122,6 +1139,45 @@ document.getElementById('notifBellBtn').addEventListener('click', async ()=>{
 });
 
 /* ---------- rebooking nudge ---------- */
+/* ---------- daily check-in bonus ---------- */
+async function checkInIfNeeded(){
+  const todayStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, local calendar day
+  const lastStr = clientData.last_checkin_date;
+
+  if(lastStr === todayStr) return; // already checked in today, nothing to do
+
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+  const newStreak = (lastStr === yesterdayStr) ? (clientData.checkin_streak || 0) + 1 : 1;
+  const pointsEarned = 10; // flat daily bonus — simple and predictable
+  const newBonusPoints = (clientData.checkin_bonus_points || 0) + pointsEarned;
+
+  const updates = {
+    checkin_streak: newStreak,
+    last_checkin_date: todayStr,
+    checkin_bonus_points: newBonusPoints
+  };
+  const { error } = await supabaseClient.from('clients').update(updates).eq('id', clientData.id);
+  if(error){ console.error('Check-in update failed:', error); return; }
+
+  Object.assign(clientData, updates);
+  renderDashboardTiles();
+  showCheckinToast(newStreak, pointsEarned);
+}
+
+function showCheckinToast(streak, points){
+  const toast = document.createElement('div');
+  toast.className = 'checkin-toast';
+  toast.innerHTML = `🔥 <span>${t('checkin_toast').replace('{streak}', streak).replace('{points}', points)}</span>`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=> toast.classList.add('show'));
+  setTimeout(()=>{
+    toast.classList.remove('show');
+    setTimeout(()=> toast.remove(), 300);
+  }, 3200);
+}
+
 function renderRebookNudge(){
   const el = document.getElementById('rebookNudge');
   const completed = bookingsData.filter(b => b.status === 'completed' && b.completed_at && b.barbers);
