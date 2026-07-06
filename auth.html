@@ -95,6 +95,12 @@
     </form>
     <div class="info-text" id="signupInfo"></div>
   </div>
+
+  <div class="foot-link">
+    <span data-i18n="legal_prefix">By continuing, you agree to our</span>
+    <a href="terms.html" data-i18n="foot_terms">Terms</a> &amp;
+    <a href="privacy.html" data-i18n="foot_privacy">Privacy</a>
+  </div>
 </div>
 <script>
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
@@ -112,7 +118,8 @@ const I18N = {
     check_email_client:'Account created — check your email to activate it, then log in.',
     check_email_barber:'Account created — check your email to activate it. Your profile will also need a quick review before you can log in; we\'ll email you once it\'s approved.',
     pending_after_signup:"Account created — your barber profile is now pending review. We'll email you once it's approved.",
-    submit_login:"Log in", submit_signup:"Create account" },
+    submit_login:"Log in", submit_signup:"Create account",
+    legal_prefix:"By continuing, you agree to our", foot_terms:"Terms", foot_privacy:"Privacy" },
   uz:{ tab_login:"Kirish", tab_signup:"Ro'yxatdan o'tish",
     login_title:"Xush kelibsiz", signup_title:"Hisob yarating",
     l_email:"Email", l_password:"Parol", l_name:"To'liq ism", l_phone:"Telefon raqami",
@@ -123,7 +130,8 @@ const I18N = {
     check_email_client:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng kiring.',
     check_email_barber:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring. Profilingiz kirishdan oldin qisqacha ko\'rib chiqiladi — tasdiqlangach xabar beramiz.',
     pending_after_signup:"Hisob yaratildi — sartarosh profilingiz endi ko'rib chiqilmoqda. Tasdiqlangach sizga email orqali xabar beramiz.",
-    submit_login:"Kirish", submit_signup:"Hisob yaratish" },
+    submit_login:"Kirish", submit_signup:"Hisob yaratish",
+    legal_prefix:"Davom etish orqali siz quyidagilarga rozilik bildirasiz:", foot_terms:"Shartlar", foot_privacy:"Maxfiylik" },
   ru:{ tab_login:"Войти", tab_signup:"Регистрация",
     login_title:"С возвращением", signup_title:"Создайте аккаунт",
     l_email:"Email", l_password:"Пароль", l_name:"Полное имя", l_phone:"Номер телефона",
@@ -134,7 +142,8 @@ const I18N = {
     check_email_client:'Аккаунт создан — проверьте почту, чтобы активировать его, затем войдите.',
     check_email_barber:'Аккаунт создан — проверьте почту, чтобы активировать его. Профиль также пройдёт короткую проверку перед входом — сообщим по email, когда он будет одобрен.',
     pending_after_signup:"Аккаунт создан — ваш профиль барбера сейчас на проверке. Сообщим по email, когда он будет одобрен.",
-    submit_login:"Войти", submit_signup:"Создать аккаунт" }
+    submit_login:"Войти", submit_signup:"Создать аккаунт",
+    legal_prefix:"Продолжая, вы соглашаетесь с нашими", foot_terms:"Условия", foot_privacy:"Конфиденциальность" }
 };
 
 const params = new URLSearchParams(window.location.search);

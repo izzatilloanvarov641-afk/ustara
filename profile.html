@@ -151,6 +151,12 @@
   <div class="loading" id="loadingMsg">Loading...</div>
 </div>
 
+<div style="text-align:center; font-size:11.5px; color:var(--ink-dim); padding:24px 20px 40px;">
+  <a href="terms.html" id="footTermsLink" style="color:inherit; text-decoration:underline;">Terms</a>
+  &nbsp;·&nbsp;
+  <a href="privacy.html" id="footPrivacyLink" style="color:inherit; text-decoration:underline;">Privacy</a>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
@@ -179,7 +185,8 @@ const T = {
        use_saved_style:"Use my saved style", using_saved_style:"Using your saved style ✓",
        back:"Back", location:"Location", min:"min",
        trust_clients:"Clients", trust_years:"Years exp.", trust_verified:"Verified", sticky_book:"Book with {name}",
-       reviews_word:"reviews", reviews_title:"Reviews", new_barber:"New to Ustara" },
+       reviews_word:"reviews", reviews_title:"Reviews", new_barber:"New to Ustara",
+       foot_terms:"Terms", foot_privacy:"Privacy" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
        addon_title:"Qo'shimcha xizmatlar? (ixtiyoriy)", continue_btn:"Davom etish",
@@ -189,7 +196,8 @@ const T = {
        use_saved_style:"Saqlangan uslubimni ishlatish", using_saved_style:"Saqlangan uslub ishlatilmoqda ✓",
        back:"Orqaga", location:"Joylashuv", min:"daq",
        trust_clients:"Mijozlar", trust_years:"Tajriba", trust_verified:"Tasdiqlangan", sticky_book:"{name} bilan band qilish",
-       reviews_word:"sharh", reviews_title:"Sharhlar", new_barber:"Ustara'da yangi" },
+       reviews_word:"sharh", reviews_title:"Sharhlar", new_barber:"Ustara'da yangi",
+       foot_terms:"Shartlar", foot_privacy:"Maxfiylik" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
        addon_title:"Добавить услуги? (необязательно)", continue_btn:"Продолжить",
@@ -199,11 +207,14 @@ const T = {
        use_saved_style:"Использовать мой сохранённый стиль", using_saved_style:"Используется ваш стиль ✓",
        back:"Назад", location:"Локация", min:"мин",
        trust_clients:"Клиентов", trust_years:"Опыт", trust_verified:"Проверен", sticky_book:"Записаться к {name}",
-       reviews_word:"отзывов", reviews_title:"Отзывы", new_barber:"Новичок на Ustara" }
+       reviews_word:"отзывов", reviews_title:"Отзывы", new_barber:"Новичок на Ustara",
+       foot_terms:"Условия", foot_privacy:"Конфиденциальность" }
 };
 const browserLang = (navigator.language || 'en').slice(0,2);
 const lang = T[browserLang] ? browserLang : 'en';
 function t(k){ return T[lang][k]; }
+document.getElementById('footTermsLink').textContent = t('foot_terms');
+document.getElementById('footPrivacyLink').textContent = t('foot_privacy');
 function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : ''; }
 function localizeSpecialty(s){ const i = SPECIALTIES_EN.indexOf(s); return i === -1 ? s : SPECIALTIES_LOCAL[lang][i]; }
