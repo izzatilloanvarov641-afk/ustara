@@ -368,6 +368,7 @@ const I18N = {
     login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
     booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
     confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
+    use_saved_style:"Use my saved style", using_saved_style:"Using your saved style ✓",
     back:"Back", min:"min",
     day_short:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] },
   uz:{ search_ph:"Sartarosh yoki xizmat qidiring", loc_ph:"Joylashuvingizni kiriting", search_btn:"Qidirish",
@@ -380,6 +381,7 @@ const I18N = {
     login_prompt:"Band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
     booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.",
     confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
+    use_saved_style:"Saqlangan uslubimni ishlatish", using_saved_style:"Saqlangan uslub ishlatilmoqda ✓",
     back:"Orqaga", min:"daq",
     day_short:['Ya','Du','Se','Ch','Pa','Ju','Sh'] },
   ru:{ search_ph:"Поиск барберов или услуг", loc_ph:"Введите ваше местоположение", search_btn:"Поиск",
@@ -392,6 +394,7 @@ const I18N = {
     login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
     booking_confirmed:"Записано!", booking_failed:"Это время заняли — выберите другое.",
     confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
+    use_saved_style:"Использовать мой сохранённый стиль", using_saved_style:"Используется ваш стиль ✓",
     back:"Назад", min:"мин",
     day_short:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'] }
 };
@@ -838,10 +841,16 @@ async function showPopDayPicker(b, serviceKey, duration, price){
   function selectDay(idx){
     selectedSlotIso = null;
     selectedRefPhoto = null;
+    let useSavedStyle = false;
+    const hasSavedStyle = currentClientProfile && (currentClientProfile.style_notes || currentClientProfile.style_photo_url);
     tabs.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
     const slots = generateSlots(b, days[idx], duration, bookedIsoSet);
     if(!slots.length){ grid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
     grid.innerHTML = slots.map(s=>`<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
+      + (hasSavedStyle ? `
+        <div class="ref-photo-row" id="savedStyleRow" style="display:none;">
+          <label class="ref-photo-label" id="useSavedStyleBtn" style="cursor:pointer;">✨ <span>${t('use_saved_style')}</span></label>
+        </div>` : '')
       + `<div class="ref-photo-row" id="refPhotoRow" style="display:none;">
            <label class="ref-photo-label" for="refPhotoInput">📎 <span id="refPhotoLabelText">${t('attach_reference')}</span></label>
            <input type="file" id="refPhotoInput" accept="image/*" style="display:none;">
@@ -850,10 +859,22 @@ async function showPopDayPicker(b, serviceKey, duration, price){
     const confirmBtn = document.getElementById('confirmBookingBtn');
     const refRow = document.getElementById('refPhotoRow');
     const refInput = document.getElementById('refPhotoInput');
+    const savedStyleRow = document.getElementById('savedStyleRow');
     refInput.addEventListener('change', ()=>{
       selectedRefPhoto = refInput.files[0] || null;
+      useSavedStyle = false;
       document.getElementById('refPhotoLabelText').textContent = selectedRefPhoto ? selectedRefPhoto.name : t('attach_reference');
+      const btn = document.getElementById('useSavedStyleBtn');
+      if(btn) btn.querySelector('span').textContent = t('use_saved_style');
     });
+    if(savedStyleRow){
+      document.getElementById('useSavedStyleBtn').addEventListener('click', ()=>{
+        useSavedStyle = !useSavedStyle;
+        selectedRefPhoto = null;
+        document.getElementById('useSavedStyleBtn').querySelector('span').textContent = useSavedStyle ? t('using_saved_style') : t('use_saved_style');
+        document.getElementById('refPhotoLabelText').textContent = t('attach_reference');
+      });
+    }
 
     grid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
       el.addEventListener('click', ()=>{
@@ -861,6 +882,7 @@ async function showPopDayPicker(b, serviceKey, duration, price){
         el.classList.add('selected');
         selectedSlotIso = el.dataset.iso;
         refRow.style.display = 'flex';
+        if(savedStyleRow) savedStyleRow.style.display = 'flex';
         confirmBtn.style.display = 'block';
         confirmBtn.textContent = t('confirm_booking_btn') + ' — ' + el.textContent;
       });
@@ -879,7 +901,11 @@ async function showPopDayPicker(b, serviceKey, duration, price){
       confirmBtn.textContent = t('booking_in_progress');
 
       let referencePhotoUrl = null;
-      if(selectedRefPhoto){
+      let styleNotesToSave = null;
+      if(useSavedStyle && currentClientProfile){
+        referencePhotoUrl = currentClientProfile.style_photo_url || null;
+        styleNotesToSave = currentClientProfile.style_notes || null;
+      } else if(selectedRefPhoto){
         const ext = selectedRefPhoto.name.split('.').pop();
         const path = `${currentUser.id}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabaseClient.storage.from('booking-references').upload(path, selectedRefPhoto);
@@ -895,7 +921,7 @@ async function showPopDayPicker(b, serviceKey, duration, price){
         barber_id: b.id, client_id: currentUser.id,
         client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
         start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-        service_price: price, reference_photo_url: referencePhotoUrl
+        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave
       }]);
       if(error){
         console.error('Booking insert failed:', error);

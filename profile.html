@@ -57,6 +57,14 @@
   }
   h1{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:27px; }
   .meta{ font-size:13px; color:var(--ink-dim); margin-top:5px; }
+  .rating-line{ font-size:14px; color:var(--gold-soft); font-weight:700; margin-top:8px; }
+  .rating-line span{ color:var(--ink-dim); font-weight:500; font-size:12.5px; }
+  .rating-line.new-badge{ color:var(--ink-dim); font-size:12px; font-style:italic; font-family:'Instrument Serif', serif; }
+  .reviews-list{ margin-bottom:8px; }
+  .review-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px 16px; margin-bottom:10px; }
+  .review-stars{ color:var(--gold); font-size:14px; margin-bottom:6px; letter-spacing:1px; }
+  .review-comment{ font-size:13px; color:var(--ink); line-height:1.5; margin-bottom:6px; }
+  .review-date{ font-size:11px; color:var(--ink-dim); }
   .trust-row{ display:flex; justify-content:center; gap:22px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
   .trust-item{ text-align:center; }
   .trust-num{ font-family:'Instrument Serif', serif; font-style:italic; font-size:19px; color:var(--gold-soft); }
@@ -162,22 +170,28 @@ const T = {
        no_slots:"No availability set yet", login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
        booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
        confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
+       use_saved_style:"Use my saved style", using_saved_style:"Using your saved style ✓",
        back:"Back", location:"Location", min:"min",
-       trust_clients:"Clients", trust_years:"Years exp.", trust_verified:"Verified", sticky_book:"Book with {name}" },
+       trust_clients:"Clients", trust_years:"Years exp.", trust_verified:"Verified", sticky_book:"Book with {name}",
+       reviews_word:"reviews", reviews_title:"Reviews", new_barber:"New to Ustara" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
        no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
        booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
        confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
+       use_saved_style:"Saqlangan uslubimni ishlatish", using_saved_style:"Saqlangan uslub ishlatilmoqda ✓",
        back:"Orqaga", location:"Joylashuv", min:"daq",
-       trust_clients:"Mijozlar", trust_years:"Tajriba", trust_verified:"Tasdiqlangan", sticky_book:"{name} bilan band qilish" },
+       trust_clients:"Mijozlar", trust_years:"Tajriba", trust_verified:"Tasdiqlangan", sticky_book:"{name} bilan band qilish",
+       reviews_word:"sharh", reviews_title:"Sharhlar", new_barber:"Ustara'da yangi" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
        no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
        booking_confirmed:"Записано!", booking_failed:"Это время только что заняли — выберите другое.",
        confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
+       use_saved_style:"Использовать мой сохранённый стиль", using_saved_style:"Используется ваш стиль ✓",
        back:"Назад", location:"Локация", min:"мин",
-       trust_clients:"Клиентов", trust_years:"Опыт", trust_verified:"Проверен", sticky_book:"Записаться к {name}" }
+       trust_clients:"Клиентов", trust_years:"Опыт", trust_verified:"Проверен", sticky_book:"Записаться к {name}",
+       reviews_word:"отзывов", reviews_title:"Отзывы", new_barber:"Новичок на Ustara" }
 };
 const browserLang = (navigator.language || 'en').slice(0,2);
 const lang = T[browserLang] ? browserLang : 'en';
@@ -210,10 +224,14 @@ async function init(){
     portfolioPhotos = data || [];
   } catch(e){ console.warn('portfolio_photos fetch failed:', e); }
 
-  // real, honest trust indicator — no fake ratings since there's no reviews system yet
+  // real, honest trust indicator
   const { count: completedCount } = await supabaseClient
     .from('bookings').select('*', { count: 'exact', head: true })
     .eq('barber_id', barberId).eq('status', 'completed');
+
+  const { data: reviews } = await supabaseClient
+    .from('reviews').select('*').eq('barber_id', barberId).order('created_at', { ascending:false });
+  const reviewsData = reviews || [];
 
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(sessionData.session){
@@ -226,16 +244,21 @@ async function init(){
     }
   }
 
-  render(portfolioPhotos, completedCount || 0);
+  render(portfolioPhotos, completedCount || 0, reviewsData);
 }
 
-function render(portfolioPhotos, completedCount){
+function render(portfolioPhotos, completedCount, reviewsData){
   const b = barberData;
   const specs = (b.specialties || []).map(s => `<span class="tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
   const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials(b.full_name);
   const heroPhoto = portfolioPhotos[0]
     ? `<img src="${escapeHtml(portfolioPhotos[0].photo_url)}" alt="">`
     : `<div class="no-photo-bg"></div>`;
+
+  const avgRating = reviewsData.length > 0
+    ? (reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length).toFixed(1)
+    : null;
+  const recentReviews = reviewsData.slice(0, 3);
 
   document.title = `${b.full_name} — Ustara`;
 
@@ -253,6 +276,7 @@ function render(portfolioPhotos, completedCount){
       </div>
       <h1>${escapeHtml(b.full_name)}</h1>
       <div class="meta">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
+      ${avgRating ? `<div class="rating-line">★ ${avgRating} <span>(${reviewsData.length} ${t('reviews_word')})</span></div>` : `<div class="rating-line new-badge">${t('new_barber')}</div>`}
 
       <div class="trust-row">
         <div class="trust-item"><div class="trust-num">${completedCount}+</div><div class="trust-label">${t('trust_clients')}</div></div>
@@ -268,6 +292,19 @@ function render(portfolioPhotos, completedCount){
       ${portfolioPhotos.length > 0 ? `
         <div class="section-title">${t('portfolio')}</div>
         <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(p.photo_url)}" alt="">`).join('')}</div>
+      ` : ''}
+
+      ${recentReviews.length > 0 ? `
+        <div class="section-title">${t('reviews_title')}</div>
+        <div class="reviews-list">
+          ${recentReviews.map(r => `
+            <div class="review-card">
+              <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+              ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
+              <div class="review-date">${new Date(r.created_at).toLocaleDateString()}</div>
+            </div>
+          `).join('')}
+        </div>
       ` : ''}
 
       ${b.latitude && b.longitude && b.is_location_verified ? `
@@ -370,10 +407,16 @@ async function showDayPicker(serviceKey, duration, price){
   function selectDay(idx){
     selectedSlotIso = null;
     selectedRefPhoto = null;
+    let useSavedStyle = false;
+    const hasSavedStyle = currentClientProfile && (currentClientProfile.style_notes || currentClientProfile.style_photo_url);
     document.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
     const slots = generateSlotsForDate(days[idx], duration, bookedIsoSet);
     if(slots.length === 0){ slotGrid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
     slotGrid.innerHTML = slots.map(s => `<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
+      + (hasSavedStyle ? `
+        <div class="ref-photo-row" id="savedStyleRow" style="display:none;">
+          <label class="ref-photo-label" id="useSavedStyleBtn" style="cursor:pointer;">✨ <span>${t('use_saved_style')}</span></label>
+        </div>` : '')
       + `<div class="ref-photo-row" id="refPhotoRow" style="display:none;">
            <label class="ref-photo-label" for="refPhotoInput">📎 <span id="refPhotoLabelText">${t('attach_reference')}</span></label>
            <input type="file" id="refPhotoInput" accept="image/*" style="display:none;">
@@ -382,10 +425,22 @@ async function showDayPicker(serviceKey, duration, price){
     const confirmBtn = document.getElementById('confirmBookingBtn');
     const refRow = document.getElementById('refPhotoRow');
     const refInput = document.getElementById('refPhotoInput');
+    const savedStyleRow = document.getElementById('savedStyleRow');
     refInput.addEventListener('change', ()=>{
       selectedRefPhoto = refInput.files[0] || null;
+      useSavedStyle = false;
       document.getElementById('refPhotoLabelText').textContent = selectedRefPhoto ? selectedRefPhoto.name : t('attach_reference');
+      const btn = document.getElementById('useSavedStyleBtn');
+      if(btn) btn.querySelector('span').textContent = t('use_saved_style');
     });
+    if(savedStyleRow){
+      document.getElementById('useSavedStyleBtn').addEventListener('click', ()=>{
+        useSavedStyle = !useSavedStyle;
+        selectedRefPhoto = null;
+        document.getElementById('useSavedStyleBtn').querySelector('span').textContent = useSavedStyle ? t('using_saved_style') : t('use_saved_style');
+        document.getElementById('refPhotoLabelText').textContent = t('attach_reference');
+      });
+    }
 
     slotGrid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
       el.addEventListener('click', ()=>{
@@ -393,6 +448,7 @@ async function showDayPicker(serviceKey, duration, price){
         el.classList.add('selected');
         selectedSlotIso = el.dataset.iso;
         refRow.style.display = 'flex';
+        if(savedStyleRow) savedStyleRow.style.display = 'flex';
         confirmBtn.style.display = 'block';
         confirmBtn.textContent = t('confirm_booking_btn') + ' — ' + el.textContent;
       });
@@ -416,7 +472,11 @@ async function showDayPicker(serviceKey, duration, price){
       confirmBtn.textContent = t('booking_in_progress');
 
       let referencePhotoUrl = null;
-      if(selectedRefPhoto){
+      let styleNotesToSave = null;
+      if(useSavedStyle && currentClientProfile){
+        referencePhotoUrl = currentClientProfile.style_photo_url || null;
+        styleNotesToSave = currentClientProfile.style_notes || null;
+      } else if(selectedRefPhoto){
         const ext = selectedRefPhoto.name.split('.').pop();
         const path = `${currentUser.id}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabaseClient.storage.from('booking-references').upload(path, selectedRefPhoto);
@@ -432,7 +492,7 @@ async function showDayPicker(serviceKey, duration, price){
         barber_id: barberData.id, client_id: currentUser.id,
         client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
         start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-        service_price: price, reference_photo_url: referencePhotoUrl
+        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave
       }]);
       if(error){
         console.error('Booking insert failed:', error);

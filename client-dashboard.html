@@ -276,6 +276,21 @@
   .details-modal-row a{ color:var(--gold); font-weight:700; }
   .details-modal-directions{ display:inline-block; margin-top:16px; color:var(--gold); font-weight:700; font-size:13px; }
 
+  .star-picker{ display:flex; justify-content:center; gap:8px; margin-bottom:16px; }
+  .star-picker .star{ font-size:32px; color:var(--surface-alt); cursor:pointer; transition:transform .1s ease, color .15s ease; }
+  .star-picker .star:active{ transform:scale(0.9); }
+  .star-picker .star.filled{ color:var(--gold); }
+  .review-textarea{
+    width:100%; min-height:70px; border:1px solid var(--line); border-radius:var(--r-input); padding:12px;
+    font-family:'Inter', sans-serif; font-size:13.5px; resize:vertical; margin-bottom:14px; color:var(--ink);
+  }
+  .review-submit-btn{
+    width:100%; background:#141414; color:var(--gold-soft); border:none; padding:14px; border-radius:var(--r-btn);
+    font-size:13.5px; font-weight:700; cursor:pointer;
+  }
+  .review-submit-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .review-skip-link{ font-size:12px; color:var(--ink-dim); margin-top:12px; cursor:pointer; }
+
   /* skeleton */
   .skel-line{ height:14px; border-radius:6px; background:linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; }
   @keyframes shimmer{ from{ background-position:200% 0; } to{ background-position:-200% 0; } }
@@ -354,6 +369,19 @@
     <div class="section-title"><span data-i18n="account_title">Account</span></div>
     <div class="info-card" id="infoCard"></div>
 
+    <div class="section-title" style="margin-top:30px;"><span data-i18n="style_title">My style</span></div>
+    <div class="info-card" style="padding:18px 20px;">
+      <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="style_sub">Set your usual cut once — it'll auto-attach to future bookings so you don't have to explain it every time.</p>
+      <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
+        <div id="stylePhotoPreview" style="width:64px; height:64px; border-radius:14px; overflow:hidden; background:var(--surface-alt); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--ink-dim); font-size:11px; border:1px solid var(--line);"></div>
+        <label for="stylePhotoInput" style="font-size:12.5px; color:var(--gold); font-weight:700; cursor:pointer; border:1px dashed var(--line); padding:9px 14px; border-radius:14px;" data-i18n="style_upload">Upload photo</label>
+        <input type="file" id="stylePhotoInput" accept="image/*" style="display:none;">
+      </div>
+      <textarea id="styleNotesInput" placeholder="e.g. Skin fade, #2 on sides, keep length on top" style="width:100%; min-height:70px; border:1px solid var(--line); border-radius:var(--r-input); padding:12px; font-family:'Inter', sans-serif; font-size:13.5px; resize:vertical; margin-bottom:12px; color:var(--ink);"></textarea>
+      <button id="saveStyleBtn" style="width:100%; background:#141414; color:var(--gold-soft); border:none; padding:13px; border-radius:var(--r-btn); font-size:13px; font-weight:700; cursor:pointer;" data-i18n="style_save">Save my style</button>
+      <div id="styleSaveMsg" style="font-size:12px; color:var(--success); margin-top:8px; display:none;"></div>
+    </div>
+
     <div class="section-title" style="margin-top:30px;"><span data-i18n="language_title">Language</span></div>
     <div class="lang-row" id="langSwitch">
       <button class="lang-btn active" data-lang="en">EN</button>
@@ -417,6 +445,10 @@ const I18N = {
     stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed",
     favorites_title:"Your favorites", notifications_title:"Notifications", close_label:"Close", no_notifications:"No notifications yet.",
     rebook_nudge:"It's been a while since your last visit with {barber} — ready for another?", rebook_cta:"Book again",
+    review_prompt_title:"How was your cut with {barber}?", review_comment_ph:"Leave a comment (optional)",
+    review_submit:"Submit review", review_skip:"Maybe later",
+    style_title:"My style", style_sub:"Set your usual cut once — it'll auto-attach to future bookings so you don't have to explain it every time.",
+    style_upload:"Upload photo", style_save:"Save my style", style_saved:"Saved!",
     view_details:"View details", add_calendar:"Add to calendar",
     loyalty_member:"Member", visit_streak:"Visit streak", weeks:"weeks", favorite_barber:"Favorite barber", your_barber:"Your barber"
   },
@@ -439,6 +471,10 @@ const I18N = {
     stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi",
     favorites_title:"Sevimlilaringiz", notifications_title:"Bildirishnomalar", close_label:"Yopish", no_notifications:"Hozircha bildirishnoma yo'q.",
     rebook_nudge:"{barber} bilan oxirgi tashrifingizdan beri vaqt o'tdi — yana borasizmi?", rebook_cta:"Qayta band qilish",
+    review_prompt_title:"{barber} bilan soch olish qanday o'tdi?", review_comment_ph:"Izoh qoldiring (ixtiyoriy)",
+    review_submit:"Sharh yuborish", review_skip:"Keyinroq",
+    style_title:"Mening uslubim", style_sub:"Odatiy soch turingizni bir marta belgilang — u kelgusi bandlarga avtomatik biriktiriladi.",
+    style_upload:"Surat yuklash", style_save:"Uslubimni saqlash", style_saved:"Saqlandi!",
     view_details:"Batafsil", add_calendar:"Kalendarga qo'shish",
     loyalty_member:"A'zo", visit_streak:"Tashrif seriyasi", weeks:"hafta", favorite_barber:"Sevimli sartarosh", your_barber:"Sizning sartaroshingiz"
   },
@@ -461,6 +497,10 @@ const I18N = {
     stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено",
     favorites_title:"Ваши избранные", notifications_title:"Уведомления", close_label:"Закрыть", no_notifications:"Уведомлений пока нет.",
     rebook_nudge:"Прошло время с последнего визита к {barber} — не пора ли снова?", rebook_cta:"Записаться снова",
+    review_prompt_title:"Как прошла стрижка у {barber}?", review_comment_ph:"Оставьте комментарий (необязательно)",
+    review_submit:"Отправить отзыв", review_skip:"Позже",
+    style_title:"Мой стиль", style_sub:"Задайте свою обычную стрижку один раз — она автоматически прикрепится к будущим записям.",
+    style_upload:"Загрузить фото", style_save:"Сохранить стиль", style_saved:"Сохранено!",
     view_details:"Подробнее", add_calendar:"В календарь",
     loyalty_member:"Участник", visit_streak:"Серия визитов", weeks:"недель", favorite_barber:"Любимый барбер", your_barber:"Ваш барбер"
   }
@@ -470,6 +510,7 @@ let currentLang = 'en';
 let clientData = null;
 let userEmail = '';
 let bookingsData = [];
+let reviewedBookingIds = new Set();
 let currentFilter = 'all';
 let favoritesData = [];
 let notificationsData = [];
@@ -549,10 +590,15 @@ async function init(){
     .from('notifications').select('*').eq('client_id', user.id).order('created_at', { ascending:false });
   notificationsData = notifs || [];
 
+  const { data: myReviews } = await supabaseClient.from('reviews').select('booking_id').eq('client_id', user.id);
+  reviewedBookingIds = new Set((myReviews || []).map(r => r.booking_id));
+
   applyLang(currentLang);
   setupClientMap();
   renderNotifBadge();
   renderRebookNudge();
+  checkForReviewPrompt();
+  setupStyleProfile();
 }
 
 /* ---------- home: appointment card ---------- */
@@ -1036,6 +1082,128 @@ function showBookingDetailsModal(b){
   const close = () => overlay.remove();
   overlay.querySelector('.details-modal-close').addEventListener('click', close);
   overlay.addEventListener('click', (e)=>{ if(e.target === overlay) close(); });
+}
+
+/* ---------- review prompt (shown automatically after a haircut completes) ---------- */
+function checkForReviewPrompt(){
+  const unreviewed = bookingsData.filter(b => b.status === 'completed' && !reviewedBookingIds.has(b.id) && b.barbers);
+  if(unreviewed.length === 0) return;
+  // most recently completed first
+  unreviewed.sort((a,b) => new Date(b.completed_at || b.start_time) - new Date(a.completed_at || a.start_time));
+  showReviewModal(unreviewed[0]);
+}
+
+function showReviewModal(booking){
+  const barber = booking.barbers;
+  const overlay = document.createElement('div');
+  overlay.className = 'details-modal-overlay';
+  overlay.innerHTML = `
+    <div class="details-modal">
+      <button class="details-modal-close">&times;</button>
+      <div class="details-modal-avatar">${avatarFor(barber)}</div>
+      <div class="details-modal-name">${t('review_prompt_title').replace('{barber}', escapeHtml(barber.full_name))}</div>
+      <div class="star-picker" id="starPicker">
+        ${[1,2,3,4,5].map(n => `<span class="star" data-star="${n}">★</span>`).join('')}
+      </div>
+      <textarea id="reviewComment" class="review-textarea" placeholder="${t('review_comment_ph')}"></textarea>
+      <button class="review-submit-btn" id="reviewSubmitBtn" disabled>${t('review_submit')}</button>
+      <div class="review-skip-link" id="reviewSkipLink">${t('review_skip')}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  let selectedRating = 0;
+  const stars = overlay.querySelectorAll('.star');
+  const submitBtn = overlay.querySelector('#reviewSubmitBtn');
+  stars.forEach(star => {
+    star.addEventListener('click', ()=>{
+      selectedRating = parseInt(star.dataset.star);
+      stars.forEach(s => s.classList.toggle('filled', parseInt(s.dataset.star) <= selectedRating));
+      submitBtn.disabled = false;
+    });
+  });
+
+  const close = () => overlay.remove();
+  overlay.querySelector('.details-modal-close').addEventListener('click', close);
+  overlay.querySelector('#reviewSkipLink').addEventListener('click', close);
+
+  submitBtn.addEventListener('click', async ()=>{
+    if(selectedRating === 0) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '...';
+    const comment = overlay.querySelector('#reviewComment').value.trim();
+    const { error } = await supabaseClient.from('reviews').insert([{
+      booking_id: booking.id, barber_id: booking.barber_id, client_id: clientData.id,
+      rating: selectedRating, comment: comment || null
+    }]);
+    if(error){
+      console.error('Review submit failed:', error);
+      alert('Could not submit review: ' + error.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = t('review_submit');
+      return;
+    }
+    reviewedBookingIds.add(booking.id);
+    close();
+  });
+}
+
+/* ---------- saved style profile ---------- */
+let pendingStylePhoto = null;
+
+function renderStylePreview(){
+  const preview = document.getElementById('stylePhotoPreview');
+  if(pendingStylePhoto){
+    preview.innerHTML = `<img src="${URL.createObjectURL(pendingStylePhoto)}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else if(clientData.style_photo_url){
+    preview.innerHTML = `<img src="${escapeHtml(clientData.style_photo_url)}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    preview.textContent = '—';
+  }
+}
+
+function setupStyleProfile(){
+  document.getElementById('styleNotesInput').value = clientData.style_notes || '';
+  renderStylePreview();
+
+  document.getElementById('stylePhotoInput').addEventListener('change', (e)=>{
+    pendingStylePhoto = e.target.files[0] || null;
+    renderStylePreview();
+  });
+
+  document.getElementById('saveStyleBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('saveStyleBtn');
+    const msg = document.getElementById('styleSaveMsg');
+    btn.disabled = true;
+    const notes = document.getElementById('styleNotesInput').value.trim();
+    const updates = { style_notes: notes || null };
+
+    if(pendingStylePhoto){
+      const ext = pendingStylePhoto.name.split('.').pop();
+      const path = `${clientData.id}/style.${ext}`;
+      const { error: uploadError } = await supabaseClient.storage.from('booking-references').upload(path, pendingStylePhoto, { upsert: true });
+      if(!uploadError){
+        const { data: urlData } = supabaseClient.storage.from('booking-references').getPublicUrl(path);
+        updates.style_photo_url = urlData.publicUrl;
+      } else {
+        console.warn('Style photo upload failed:', uploadError);
+      }
+    }
+
+    const { error } = await supabaseClient.from('clients').update(updates).eq('id', clientData.id);
+    btn.disabled = false;
+    if(!error){
+      Object.assign(clientData, updates);
+      pendingStylePhoto = null;
+      renderStylePreview();
+      msg.textContent = t('style_saved');
+      msg.style.display = 'block';
+      setTimeout(()=> msg.style.display = 'none', 1800);
+    } else {
+      console.error('Style profile save failed:', error);
+      alert('Could not save: ' + error.message);
+    }
+  });
 }
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
