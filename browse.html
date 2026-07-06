@@ -230,6 +230,12 @@
     border:1px solid var(--line); border-radius:14px; margin-bottom:8px; cursor:pointer; font-size:13px;
   }
   .service-option:hover{ border-color:var(--gold); background:#FBF7EE; }
+  .service-option.selected{ border-color:var(--gold); background:#FBF7EE; box-shadow:inset 0 0 0 1px var(--gold); }
+  .booking-summary-line{
+    font-size:12.5px; color:var(--ink-dim); background:var(--surface-alt); padding:10px 14px;
+    border-radius:12px; margin-bottom:14px;
+  }
+  .booking-summary-line strong{ color:var(--gold); }
   .svc-price{ font-weight:800; color:var(--gold); }
   .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin:12px 0; scrollbar-width:none; }
   .day-tabs::-webkit-scrollbar{ display:none; }
@@ -365,6 +371,7 @@ const I18N = {
     empty_none_h:"No barbers here yet", empty_none_p:"Ustara is opening in Tashkent. Be the first barber on the platform.",
     empty_btn:"Join as a barber", years:"yrs", from:"from", km:"km", book:"Book appointment",
     choose_service:"Choose a service", book_title:"Pick a time", no_slots:"No availability set yet",
+    addon_title:"Add extras? (optional)", continue_btn:"Continue",
     login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
     booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
     confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
@@ -378,6 +385,7 @@ const I18N = {
     empty_none_h:"Hozircha sartaroshlar yo'q", empty_none_p:"Ustara Toshkentda ochilmoqda. Birinchi sartarosh bo'ling.",
     empty_btn:"Sartarosh sifatida qo'shiling", years:"yil", from:"dan", km:"km", book:"Band qilish",
     choose_service:"Xizmatni tanlang", book_title:"Vaqtni tanlang", no_slots:"Hali ish vaqti sozlanmagan",
+    addon_title:"Qo'shimcha xizmatlar? (ixtiyoriy)", continue_btn:"Davom etish",
     login_prompt:"Band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
     booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.",
     confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
@@ -391,6 +399,7 @@ const I18N = {
     empty_none_h:"Барберов пока нет", empty_none_p:"Ustara открывается в Ташкенте. Станьте первым барбером.",
     empty_btn:"Присоединиться как барбер", years:"лет", from:"от", km:"км", book:"Записаться",
     choose_service:"Выберите услугу", book_title:"Выберите время", no_slots:"Рабочие часы не настроены",
+    addon_title:"Добавить услуги? (необязательно)", continue_btn:"Продолжить",
     login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
     booking_confirmed:"Записано!", booking_failed:"Это время заняли — выберите другое.",
     confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
@@ -778,7 +787,49 @@ function renderPopServices(b){
       <span class="svc-price">${formatPrice(s.price)}</span>
     </div>`).join('');
   listEl.querySelectorAll('.service-option').forEach(opt=>{
-    opt.addEventListener('click', ()=> showPopDayPicker(b, opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0));
+    opt.addEventListener('click', ()=> showAddonPicker(b, opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0, active));
+  });
+}
+
+function showAddonPicker(b, mainKey, mainDuration, mainPrice, allActiveServices){
+  const listEl = document.getElementById('popServiceList');
+  const addonOptions = allActiveServices.filter(s => s.service_key !== mainKey);
+
+  if(addonOptions.length === 0){
+    // nothing to add on to — go straight to the time picker
+    showPopDayPicker(b, mainKey, mainDuration, mainPrice, []);
+    return;
+  }
+
+  const selectedAddons = new Set();
+  listEl.innerHTML = `
+    <span class="back-link" id="addonBackBtn">← ${t('back')}</span>
+    <div class="pop-section-t">${t('addon_title')}</div>
+    ${addonOptions.map(s => `
+      <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
+        <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span class="svc-price">+${formatPrice(s.price)}</span>
+      </div>`).join('')}
+    <button class="confirm-booking-btn" id="continueWithAddonsBtn">${t('continue_btn')}</button>
+  `;
+  document.getElementById('addonBackBtn').addEventListener('click', ()=> renderPopServices(b));
+
+  listEl.querySelectorAll('.addon-option').forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      const key = opt.dataset.addonKey;
+      if(selectedAddons.has(key)){ selectedAddons.delete(key); opt.classList.remove('selected'); }
+      else { selectedAddons.add(key); opt.classList.add('selected'); }
+    });
+  });
+
+  document.getElementById('continueWithAddonsBtn').addEventListener('click', ()=>{
+    let totalDuration = mainDuration, totalPrice = mainPrice;
+    const addonKeys = [];
+    selectedAddons.forEach(key => {
+      const svc = addonOptions.find(s => s.service_key === key);
+      if(svc){ totalDuration += svc.duration_minutes; totalPrice += (svc.price || 0); addonKeys.push(key); }
+    });
+    showPopDayPicker(b, mainKey, totalDuration, totalPrice, addonKeys);
   });
 }
 
@@ -814,7 +865,7 @@ function generateSlots(b, dateObj, duration, bookedIsoSet){
   return out;
 }
 
-async function showPopDayPicker(b, serviceKey, duration, price){
+async function showPopDayPicker(b, serviceKey, duration, price, addonKeys = []){
   const listEl = document.getElementById('popServiceList');
   const rs = new Date(); const re = new Date(); re.setDate(re.getDate()+7);
   const { data: existing } = await supabaseClient.from('bookings').select('start_time')
@@ -825,9 +876,14 @@ async function showPopDayPicker(b, serviceKey, duration, price){
   const days = [];
   for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(b, JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
 
+  const summaryLine = addonKeys.length > 0
+    ? `<div class="booking-summary-line">${SERVICES_LOCAL[currentLang][serviceKey] || serviceKey} + ${addonKeys.map(k => SERVICES_LOCAL[currentLang][k] || k).join(', ')} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
+    : '';
+
   listEl.innerHTML = `
     <span class="back-link" id="popBack">← ${t('back')}</span>
     <div class="pop-section-t" style="margin-top:4px;">${t('book_title')}</div>
+    ${summaryLine}
     ${days.length ? `<div class="day-tabs" id="popDayTabs"></div><div class="slot-grid" id="popSlotGrid"></div>` : `<div class="no-slots-msg">${t('no_slots')}</div>`}
   `;
   document.getElementById('popBack').addEventListener('click', ()=> renderPopServices(b));
@@ -921,7 +977,8 @@ async function showPopDayPicker(b, serviceKey, duration, price){
         barber_id: b.id, client_id: currentUser.id,
         client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
         start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave
+        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave,
+        addon_keys: addonKeys
       }]);
       if(error){
         console.error('Booking insert failed:', error);

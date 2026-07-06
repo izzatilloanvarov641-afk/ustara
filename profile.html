@@ -85,6 +85,11 @@
     background:var(--surface); transition:border-color .15s ease;
   }
   .service-option:hover, .service-option.selected{ border-color:var(--gold); }
+  .booking-summary-line{
+    font-size:12.5px; color:var(--ink-dim); background:var(--surface-2); padding:10px 14px;
+    border-radius:12px; margin-bottom:14px;
+  }
+  .booking-summary-line strong{ color:var(--gold-soft); }
   .svc-price{ font-weight:800; color:var(--gold-soft); }
 
   .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin:14px 0; }
@@ -167,6 +172,7 @@ const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const T = {
   en:{ not_found:"This barber profile doesn't exist or isn't available right now.", years:"yrs",
        portfolio:"Their work", book_title:"Book an appointment", choose_service:"Choose a service",
+       addon_title:"Add extras? (optional)", continue_btn:"Continue",
        no_slots:"No availability set yet", login_prompt:"Log in to book this slot", login_btn:"Log in or sign up",
        booking_confirmed:"Booked! You'll see it in your dashboard.", booking_failed:"That slot was just taken — pick another.",
        confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
@@ -176,6 +182,7 @@ const T = {
        reviews_word:"reviews", reviews_title:"Reviews", new_barber:"New to Ustara" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
+       addon_title:"Qo'shimcha xizmatlar? (ixtiyoriy)", continue_btn:"Davom etish",
        no_slots:"Hali ish vaqti sozlanmagan", login_prompt:"Bu vaqtni band qilish uchun kiring", login_btn:"Kirish yoki ro'yxatdan o'tish",
        booking_confirmed:"Band qilindi!", booking_failed:"Bu vaqt hozirgina band qilindi — boshqasini tanlang.",
        confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
@@ -185,6 +192,7 @@ const T = {
        reviews_word:"sharh", reviews_title:"Sharhlar", new_barber:"Ustara'da yangi" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
+       addon_title:"Добавить услуги? (необязательно)", continue_btn:"Продолжить",
        no_slots:"Рабочие часы ещё не настроены", login_prompt:"Войдите, чтобы записаться", login_btn:"Войти или зарегистрироваться",
        booking_confirmed:"Записано!", booking_failed:"Это время только что заняли — выберите другое.",
        confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
@@ -346,7 +354,48 @@ function renderServiceChoices(){
     </div>
   `).join('');
   area.querySelectorAll('.service-option').forEach(opt=>{
-    opt.addEventListener('click', ()=> showDayPicker(opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0));
+    opt.addEventListener('click', ()=> showAddonPicker(opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0));
+  });
+}
+
+function showAddonPicker(mainKey, mainDuration, mainPrice){
+  const area = document.getElementById('bookingArea');
+  const addonOptions = servicesData.filter(s => s.service_key !== mainKey);
+
+  if(addonOptions.length === 0){
+    showDayPicker(mainKey, mainDuration, mainPrice, []);
+    return;
+  }
+
+  const selectedAddons = new Set();
+  area.innerHTML = `
+    <span class="back-link" id="addonBackBtn">← ${t('back')}</span>
+    <div class="pop-section-t">${t('addon_title')}</div>
+    ${addonOptions.map(s => `
+      <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
+        <span>${SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span class="svc-price">+${formatPrice(s.price)}</span>
+      </div>`).join('')}
+    <button class="confirm-booking-btn" id="continueWithAddonsBtn">${t('continue_btn')}</button>
+  `;
+  document.getElementById('addonBackBtn').addEventListener('click', renderServiceChoices);
+
+  area.querySelectorAll('.addon-option').forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      const key = opt.dataset.addonKey;
+      if(selectedAddons.has(key)){ selectedAddons.delete(key); opt.classList.remove('selected'); }
+      else { selectedAddons.add(key); opt.classList.add('selected'); }
+    });
+  });
+
+  document.getElementById('continueWithAddonsBtn').addEventListener('click', ()=>{
+    let totalDuration = mainDuration, totalPrice = mainPrice;
+    const addonKeys = [];
+    selectedAddons.forEach(key => {
+      const svc = addonOptions.find(s => s.service_key === key);
+      if(svc){ totalDuration += svc.duration_minutes; totalPrice += (svc.price || 0); addonKeys.push(key); }
+    });
+    showDayPicker(mainKey, totalDuration, totalPrice, addonKeys);
   });
 }
 
@@ -381,7 +430,7 @@ function generateSlotsForDate(dateObj, duration, bookedIsoSet){
   return slots;
 }
 
-async function showDayPicker(serviceKey, duration, price){
+async function showDayPicker(serviceKey, duration, price, addonKeys = []){
   const area = document.getElementById('bookingArea');
   const rangeStart = new Date(); const rangeEnd = new Date(); rangeEnd.setDate(rangeEnd.getDate()+7);
   const { data: existing } = await supabaseClient.from('bookings').select('start_time').eq('barber_id', barberData.id)
@@ -391,8 +440,13 @@ async function showDayPicker(serviceKey, duration, price){
   const days = [];
   for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
 
+  const summaryLine = addonKeys.length > 0
+    ? `<div class="booking-summary-line">${SERVICES_LOCAL[lang][serviceKey] || serviceKey} + ${addonKeys.map(k => SERVICES_LOCAL[lang][k] || k).join(', ')} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
+    : '';
+
   area.innerHTML = `
     <span class="back-link" id="backBtn">← ${t('back')}</span>
+    ${summaryLine}
     ${days.length === 0 ? `<div class="no-slots-msg">${t('no_slots')}</div>` : `<div class="day-tabs" id="dayTabs"></div><div class="slot-grid" id="slotGrid"></div>`}
   `;
   document.getElementById('backBtn').addEventListener('click', renderServiceChoices);
@@ -492,7 +546,8 @@ async function showDayPicker(serviceKey, duration, price){
         barber_id: barberData.id, client_id: currentUser.id,
         client_name: currentClientProfile.full_name, client_phone: currentClientProfile.phone,
         start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
-        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave
+        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave,
+        addon_keys: addonKeys
       }]);
       if(error){
         console.error('Booking insert failed:', error);

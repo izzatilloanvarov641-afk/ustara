@@ -1071,11 +1071,14 @@ function bookingRowHtml(b, withActions = true){
   const styleNote = b.style_notes
     ? `<div style="font-size:12px; color:var(--brass); margin-top:4px; font-style:italic;">"${escapeHtml(b.style_notes)}"</div>`
     : '';
+  const addonNames = (b.addon_keys && b.addon_keys.length > 0)
+    ? b.addon_keys.map(k => SERVICES_LOCAL[currentLang][k] || k).join(', ')
+    : '';
   return `
     <div class="booking-row">
       ${refPhoto}
       <div>
-        <strong>${escapeHtml(b.client_name)}</strong> ${clientVisitBadge(b.client_id)}${svcName ? ' · ' + escapeHtml(svcName) : ''}<br>
+        <strong>${escapeHtml(b.client_name)}</strong> ${clientVisitBadge(b.client_id)}${svcName ? ' · ' + escapeHtml(svcName) : ''}${addonNames ? ' + ' + escapeHtml(addonNames) : ''}<br>
         <span style="color:var(--ink-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
         ${styleNote}
       </div>
