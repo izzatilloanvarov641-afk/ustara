@@ -194,6 +194,21 @@
     padding:5px 11px; border-radius:16px; cursor:pointer;
   }
   .wallet-remove:hover{ background:var(--surface-alt); }
+  .wallet-share{
+    font-size:10.5px; font-weight:700; color:#141414; background:var(--gold-soft); border:none;
+    padding:5px 11px; border-radius:16px; cursor:pointer;
+  }
+  .wallet-share:hover{ background:var(--gold); }
+
+  .share-step-icon{ font-size:32px; text-align:center; margin-bottom:8px; }
+  .share-photo-preview{
+    width:100%; aspect-ratio:4/5; background:var(--surface-alt); border-radius:16px; margin:12px 0;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed var(--line);
+  }
+  .share-upload-label{
+    display:flex; flex-direction:column; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim);
+    cursor:pointer; font-weight:600; text-align:center; padding:20px;
+  }
 
   .empty-state{
     text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-card);
@@ -443,6 +458,9 @@ const I18N = {
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.", remove_booking:"Remove",
+    share_prompt_title:"Show off your fresh cut?", add_after_photo:"Add a photo",
+    create_share_card:"Create share card", share_action:"Share",
+    share_card_line:"Fresh cut by {barber}",
     account_title:"Account", language_title:"Language", logout:"Log out",
     nav_home:"Home", nav_bookings:"Bookings", nav_map:"Map", nav_account:"Account",
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
@@ -469,6 +487,9 @@ const I18N = {
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.", remove_booking:"O'chirish",
+    share_prompt_title:"Yangi sochingizni ko'rsatasizmi?", add_after_photo:"Surat qo'shish",
+    create_share_card:"Ulashish kartasini yaratish", share_action:"Ulashish",
+    share_card_line:"{barber} tomonidan yangi soch turmagi",
     account_title:"Hisob", language_title:"Til", logout:"Chiqish",
     nav_home:"Bosh sahifa", nav_bookings:"Bandlar", nav_map:"Xarita", nav_account:"Hisob",
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
@@ -495,6 +516,9 @@ const I18N = {
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.", remove_booking:"Удалить",
+    share_prompt_title:"Покажете свою новую стрижку?", add_after_photo:"Добавить фото",
+    create_share_card:"Создать карточку", share_action:"Поделиться",
+    share_card_line:"Свежая стрижка от {barber}",
     account_title:"Аккаунт", language_title:"Язык", logout:"Выйти",
     nav_home:"Главная", nav_bookings:"Записи", nav_map:"Карта", nav_account:"Аккаунт",
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
@@ -658,6 +682,11 @@ function bookingListRowHtml(b){
   const canRemove = b.status !== 'confirmed'; // never let a confirmed (real upcoming) booking be hidden
   const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
+  const shareAction = b.status === 'completed'
+    ? (b.after_photo_url
+        ? `<button class="wallet-share" data-share-id="${b.id}">${t('share_action')}</button>`
+        : `<button class="wallet-share" data-add-photo-id="${b.id}">${t('add_after_photo')}</button>`)
+    : '';
   return `
     <div class="wallet-card" data-booking-id="${b.id}">
       <div class="wallet-avatar">${avatarFor(barber)}</div>
@@ -670,9 +699,41 @@ function bookingListRowHtml(b){
         <span class="status-badge ${b.status}">${t(b.status) || b.status}</span>
         ${canCancel ? `<button class="wallet-cancel" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
         ${canRemove ? `<button class="wallet-remove" data-remove-id="${b.id}">${t('remove_booking')}</button>` : ''}
+        ${shareAction}
       </div>
     </div>
   `;
+}
+
+function attachShareHandlers(container){
+  container.querySelectorAll('[data-share-id]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const b = bookingsData.find(x => x.id === btn.dataset.shareId);
+      if(!b || !b.after_photo_url) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(b.after_photo_url);
+        const blob = await res.blob();
+        const file = new File([blob], 'photo.jpg', { type: blob.type });
+        const myReview = await supabaseClient.from('reviews').select('rating').eq('booking_id', b.id).single();
+        await generateAndShareCard(file, b.barbers, (myReview.data && myReview.data.rating) || 5);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+  container.querySelectorAll('[data-add-photo-id]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const b = bookingsData.find(x => x.id === btn.dataset.addPhotoId);
+      if(!b) return;
+      const { data: myReview } = await supabaseClient.from('reviews').select('rating').eq('booking_id', b.id).single();
+      const overlay = document.createElement('div');
+      overlay.className = 'details-modal-overlay';
+      overlay.innerHTML = '<div class="details-modal"></div>';
+      document.body.appendChild(overlay);
+      showShareStep(overlay, b, (myReview && myReview.rating) || 5);
+    });
+  });
 }
 
 function attachRemoveHandlers(container){
@@ -880,6 +941,7 @@ function renderAllBookings(){
   area.innerHTML = filtered.map(bookingListRowHtml).join('');
   attachCancelHandlers(area);
   attachRemoveHandlers(area);
+  attachShareHandlers(area);
 }
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('[data-status]');
@@ -1171,8 +1233,113 @@ function showReviewModal(booking){
       return;
     }
     reviewedBookingIds.add(booking.id);
+    showShareStep(overlay, booking, selectedRating);
+  });
+}
+
+/* ---------- after-photo + shareable card ---------- */
+function showShareStep(overlay, booking, rating){
+  const barber = booking.barbers;
+  overlay.querySelector('.details-modal').innerHTML = `
+    <button class="details-modal-close">&times;</button>
+    <div class="share-step-icon">✨</div>
+    <div class="details-modal-name">${t('share_prompt_title')}</div>
+    <div class="share-photo-preview" id="sharePhotoPreview">
+      <label for="afterPhotoInput" class="share-upload-label">📷 <span>${t('add_after_photo')}</span></label>
+    </div>
+    <input type="file" id="afterPhotoInput" accept="image/*" style="display:none;">
+    <button class="review-submit-btn" id="generateShareBtn" disabled>${t('create_share_card')}</button>
+    <div class="review-skip-link" id="shareSkipLink">${t('review_skip')}</div>
+  `;
+  const close = () => overlay.remove();
+  overlay.querySelector('.details-modal-close').addEventListener('click', close);
+  overlay.querySelector('#shareSkipLink').addEventListener('click', close);
+
+  let afterPhotoFile = null;
+  const preview = document.getElementById('sharePhotoPreview');
+  const generateBtn = document.getElementById('generateShareBtn');
+  document.getElementById('afterPhotoInput').addEventListener('change', (e)=>{
+    afterPhotoFile = e.target.files[0] || null;
+    if(afterPhotoFile){
+      preview.innerHTML = `<img src="${URL.createObjectURL(afterPhotoFile)}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+      generateBtn.disabled = false;
+    }
+  });
+
+  generateBtn.addEventListener('click', async ()=>{
+    generateBtn.disabled = true;
+    generateBtn.textContent = '...';
+    let afterPhotoUrl = null;
+    if(afterPhotoFile){
+      const ext = afterPhotoFile.name.split('.').pop();
+      const path = `${clientData.id}/after-${booking.id}.${ext}`;
+      const { error: uploadError } = await supabaseClient.storage.from('booking-references').upload(path, afterPhotoFile, { upsert: true });
+      if(!uploadError){
+        const { data: urlData } = supabaseClient.storage.from('booking-references').getPublicUrl(path);
+        afterPhotoUrl = urlData.publicUrl;
+        await supabaseClient.from('bookings').update({ after_photo_url: afterPhotoUrl }).eq('id', booking.id);
+        const b = bookingsData.find(x => x.id === booking.id);
+        if(b) b.after_photo_url = afterPhotoUrl;
+      }
+    }
+    await generateAndShareCard(afterPhotoFile, barber, rating);
     close();
   });
+}
+
+async function generateAndShareCard(photoFile, barber, rating){
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080; canvas.height = 1920;
+  const ctx = canvas.getContext('2d');
+
+  // background: the photo if provided, else a dark gradient fallback
+  if(photoFile){
+    const img = await new Promise((resolve)=>{
+      const image = new Image();
+      image.onload = ()=> resolve(image);
+      image.src = URL.createObjectURL(photoFile);
+    });
+    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+    const w = img.width * scale, h = img.height * scale;
+    ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+  } else {
+    const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    grad.addColorStop(0, '#2B2620'); grad.addColorStop(1, '#141414');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // dark gradient overlay at the bottom for text legibility
+  const overlay = ctx.createLinearGradient(0, canvas.height * 0.55, 0, canvas.height);
+  overlay.addColorStop(0, 'rgba(15,13,11,0)'); overlay.addColorStop(1, 'rgba(15,13,11,0.92)');
+  ctx.fillStyle = overlay; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // text
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#D4A94A';
+  ctx.font = 'italic 44px "Instrument Serif", serif';
+  ctx.fillText('ustara', 60, canvas.height - 240);
+
+  ctx.fillStyle = '#F5F3EF';
+  ctx.font = '600 52px Inter, sans-serif';
+  ctx.fillText(t('share_card_line').replace('{barber}', barber.full_name), 60, canvas.height - 160);
+
+  ctx.font = '400 34px Inter, sans-serif';
+  ctx.fillStyle = '#D4A94A';
+  ctx.fillText('★'.repeat(rating) + '☆'.repeat(5 - rating), 60, canvas.height - 100);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  const file = new File([blob], 'ustara-fresh-cut.png', { type: 'image/png' });
+
+  if(navigator.share && navigator.canShare && navigator.canShare({ files: [file] })){
+    try {
+      await navigator.share({ files: [file], title: 'Ustara' });
+      return;
+    } catch(e) { /* user cancelled share sheet, fall through to download */ }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ustara-fresh-cut.png'; a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ---------- saved style profile ---------- */
