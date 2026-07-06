@@ -209,6 +209,9 @@
     display:flex; flex-direction:column; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim);
     cursor:pointer; font-weight:600; text-align:center; padding:20px;
   }
+  .share-upload-choices{ display:flex; width:100%; height:100%; }
+  .share-upload-choices .share-upload-label{ flex:1; }
+  .share-upload-choices .share-upload-label:first-child{ border-right:1px dashed var(--line); }
 
   .empty-state{
     text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-card);
@@ -459,6 +462,7 @@ const I18N = {
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.", remove_booking:"Remove",
     share_prompt_title:"Show off your fresh cut?", add_after_photo:"Add a photo",
+    take_photo:"Take a photo", choose_from_gallery:"Choose from gallery",
     create_share_card:"Create share card", share_action:"Share",
     share_card_line:"Fresh cut by {barber}",
     account_title:"Account", language_title:"Language", logout:"Log out",
@@ -488,6 +492,7 @@ const I18N = {
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.", remove_booking:"O'chirish",
     share_prompt_title:"Yangi sochingizni ko'rsatasizmi?", add_after_photo:"Surat qo'shish",
+    take_photo:"Surat olish", choose_from_gallery:"Galereyadan tanlash",
     create_share_card:"Ulashish kartasini yaratish", share_action:"Ulashish",
     share_card_line:"{barber} tomonidan yangi soch turmagi",
     account_title:"Hisob", language_title:"Til", logout:"Chiqish",
@@ -517,6 +522,7 @@ const I18N = {
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.", remove_booking:"Удалить",
     share_prompt_title:"Покажете свою новую стрижку?", add_after_photo:"Добавить фото",
+    take_photo:"Сделать фото", choose_from_gallery:"Выбрать из галереи",
     create_share_card:"Создать карточку", share_action:"Поделиться",
     share_card_line:"Свежая стрижка от {barber}",
     account_title:"Аккаунт", language_title:"Язык", logout:"Выйти",
@@ -1245,9 +1251,13 @@ function showShareStep(overlay, booking, rating){
     <div class="share-step-icon">✨</div>
     <div class="details-modal-name">${t('share_prompt_title')}</div>
     <div class="share-photo-preview" id="sharePhotoPreview">
-      <label for="afterPhotoInput" class="share-upload-label">📷 <span>${t('add_after_photo')}</span></label>
+      <div class="share-upload-choices" id="shareUploadChoices">
+        <label for="takePhotoInput" class="share-upload-label">📸 <span>${t('take_photo')}</span></label>
+        <label for="choosePhotoInput" class="share-upload-label">🖼️ <span>${t('choose_from_gallery')}</span></label>
+      </div>
     </div>
-    <input type="file" id="afterPhotoInput" accept="image/*" style="display:none;">
+    <input type="file" id="takePhotoInput" accept="image/*" capture="user" style="display:none;">
+    <input type="file" id="choosePhotoInput" accept="image/*" style="display:none;">
     <button class="review-submit-btn" id="generateShareBtn" disabled>${t('create_share_card')}</button>
     <div class="review-skip-link" id="shareSkipLink">${t('review_skip')}</div>
   `;
@@ -1258,13 +1268,16 @@ function showShareStep(overlay, booking, rating){
   let afterPhotoFile = null;
   const preview = document.getElementById('sharePhotoPreview');
   const generateBtn = document.getElementById('generateShareBtn');
-  document.getElementById('afterPhotoInput').addEventListener('change', (e)=>{
-    afterPhotoFile = e.target.files[0] || null;
+
+  function handlePhotoSelected(file){
+    afterPhotoFile = file;
     if(afterPhotoFile){
-      preview.innerHTML = `<img src="${URL.createObjectURL(afterPhotoFile)}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
+      preview.innerHTML = `<img src="${URL.createObjectURL(afterPhotoFile)}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;filter:brightness(1.08) contrast(1.1) saturate(1.15);">`;
       generateBtn.disabled = false;
     }
-  });
+  }
+  document.getElementById('takePhotoInput').addEventListener('change', (e)=> handlePhotoSelected(e.target.files[0] || null));
+  document.getElementById('choosePhotoInput').addEventListener('change', (e)=> handlePhotoSelected(e.target.files[0] || null));
 
   generateBtn.addEventListener('click', async ()=>{
     generateBtn.disabled = true;
@@ -1301,7 +1314,27 @@ async function generateAndShareCard(photoFile, barber, rating){
     });
     const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
     const w = img.width * scale, h = img.height * scale;
+    // automatic photo enhancement — applied to every upload, no toggle needed.
+    // Genuine limitation to be upfront about: this is a color/light polish 
+    // (brightness/contrast/warmth/vignette), not AI skin-retouching — real 
+    // face-smoothing would need a paid third-party beauty-filter API.
+    ctx.filter = 'brightness(1.08) contrast(1.1) saturate(1.15)';
     ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+    ctx.filter = 'none';
+
+    // subtle warm tone overlay
+    ctx.fillStyle = 'rgba(212, 169, 74, 0.06)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // soft vignette (darkens edges, keeps the face area untouched/bright)
+    const vignette = ctx.createRadialGradient(
+      canvas.width/2, canvas.height*0.42, canvas.height*0.25,
+      canvas.width/2, canvas.height*0.42, canvas.height*0.75
+    );
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   } else {
     const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
     grad.addColorStop(0, '#2B2620'); grad.addColorStop(1, '#141414');
