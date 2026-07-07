@@ -108,6 +108,27 @@
   }
   .chip.selected{ background:#141414; border-color:#141414; color:var(--gold-soft); font-weight:700; }
 
+  .meta-filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .meta-chip{
+    display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); color:var(--ink);
+    padding:9px 14px; border-radius:20px; font-size:12px; cursor:pointer; background:var(--surface);
+    white-space:nowrap; font-weight:700; transition:background .15s, border-color .15s, color .15s;
+  }
+  .meta-chip svg{ flex-shrink:0; opacity:0.7; }
+  .meta-chip.active{ background:var(--gold); border-color:var(--gold); color:#141414; }
+  .meta-chip.active svg{ opacity:1; }
+
+  .info-banner{
+    display:flex; align-items:flex-start; gap:12px; background:var(--surface-alt); border:1px solid var(--line);
+    border-radius:16px; padding:14px 16px; margin-bottom:14px;
+  }
+  .info-banner .ib-icon{
+    width:34px; height:34px; border-radius:10px; background:var(--surface); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;
+  }
+  .info-banner .ib-title{ font-weight:700; font-size:13px; color:var(--ink); }
+  .info-banner .ib-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+
   /* ================= BARBER CARD ================= */
   .card{
     background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:14px;
@@ -140,6 +161,7 @@
   }
   .card-who{ flex:1; min-width:0; }
   .card-name{ font-weight:700; font-size:15px; }
+  .card-rating{ font-weight:700; font-size:12px; color:var(--gold); }
   .card-sub{ font-size:11.5px; color:var(--ink-dim); }
   .card-right{ text-align:right; flex-shrink:0; }
   .card-price{ font-size:13px; font-weight:800; color:var(--gold); }
@@ -329,6 +351,21 @@
       <span class="results-count" id="resultsCount"></span>
     </div>
     <div class="chips-scroll" id="specialtyChips"></div>
+    <div class="meta-filters" id="metaFilters">
+      <button type="button" class="meta-chip" data-filter="nearby">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span data-i18n="filter_nearby">Nearby</span>
+      </button>
+      <button type="button" class="meta-chip" data-filter="open">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span data-i18n="filter_open">Open now</span>
+      </button>
+      <button type="button" class="meta-chip" data-filter="rating">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span data-i18n="filter_rating">Rating 4.5+</span>
+      </button>
+    </div>
+    <div id="areaBanner"></div>
     <div id="resultsArea">
       <div class="skel-card"><div class="skel-photos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div><div class="skel skel-btn"></div></div>
       <div class="skel-card"><div class="skel-photos"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div><div class="skel skel-line w60"></div><div class="skel skel-line w40"></div><div class="skel skel-btn"></div></div>
@@ -382,6 +419,9 @@ const I18N = {
     confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
     use_saved_style:"Use my saved style", using_saved_style:"Using your saved style ✓",
     back:"Back", min:"min", foot_terms:"Terms", foot_privacy:"Privacy",
+    filter_nearby:"Nearby", filter_open:"Open now", filter_rating:"Rating 4.5+",
+    area_empty_h:"No barbers in this area yet", area_empty_p:"We're adding more barbers here soon — try a wider search.",
+    loc_denied:"Couldn't get your location — check your browser permissions.",
     day_short:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] },
   uz:{ search_ph:"Sartarosh yoki xizmat qidiring", loc_ph:"Joylashuvingizni kiriting", search_btn:"Qidirish",
     loading:"Sartaroshlar yuklanmoqda...", view_list:"Ro'yxat", view_map:"Xarita",
@@ -396,6 +436,9 @@ const I18N = {
     confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
     use_saved_style:"Saqlangan uslubimni ishlatish", using_saved_style:"Saqlangan uslub ishlatilmoqda ✓",
     back:"Orqaga", min:"daq", foot_terms:"Shartlar", foot_privacy:"Maxfiylik",
+    filter_nearby:"Yaqin atrofda", filter_open:"Hozir ochiq", filter_rating:"Reyting 4.5+",
+    area_empty_h:"Bu hududda hozircha sartaroshlar yo'q", area_empty_p:"Tez orada bu yerga ham sartaroshlar qo'shamiz — kengroq hududni sinab ko'ring.",
+    loc_denied:"Joylashuvingizni aniqlab bo'lmadi — brauzer ruxsatlarini tekshiring.",
     day_short:['Ya','Du','Se','Ch','Pa','Ju','Sh'] },
   ru:{ search_ph:"Поиск барберов или услуг", loc_ph:"Введите ваше местоположение", search_btn:"Поиск",
     loading:"Загрузка барберов...", view_list:"Список", view_map:"Карта",
@@ -410,6 +453,9 @@ const I18N = {
     confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
     use_saved_style:"Использовать мой сохранённый стиль", using_saved_style:"Используется ваш стиль ✓",
     back:"Назад", min:"мин", foot_terms:"Условия", foot_privacy:"Конфиденциальность",
+    filter_nearby:"Рядом", filter_open:"Открыто сейчас", filter_rating:"Рейтинг 4.5+",
+    area_empty_h:"Барберов в этом районе пока нет", area_empty_p:"Скоро добавим сюда барберов — попробуйте расширить область поиска.",
+    loc_denied:"Не удалось определить ваше местоположение — проверьте разрешения браузера.",
     day_short:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'] }
 };
 
@@ -422,6 +468,11 @@ let currentUser = null, currentClientProfile = null;
 let favoriteIds = new Set();
 let map, markersById = {};
 let userLoc = null; // {lat, lng} chosen via location search
+let nearbyLoc = null; // {lat, lng} from device geolocation, used only by the "Nearby" filter
+let nearbyCircle = null;
+let avgRatingByBarber = {};
+const metaFilters = { nearby:false, open:false, rating:false };
+const NEARBY_RADIUS_KM = 5;
 
 function t(k){ return I18N[currentLang][k]; }
 function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
@@ -564,6 +615,54 @@ function renderSpecialtyChips(){
   });
 }
 
+/* ================= meta filters: nearby / open now / rating ================= */
+document.getElementById('metaFilters').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.meta-chip');
+  if(!btn) return;
+  const key = btn.dataset.filter;
+  if(key === 'nearby' && !metaFilters.nearby && !nearbyLoc){
+    requestNearbyLocation(btn);
+    return;
+  }
+  metaFilters[key] = !metaFilters[key];
+  btn.classList.toggle('active', metaFilters[key]);
+  if(key === 'nearby' && !metaFilters.nearby) clearNearbyCircle();
+  renderResults();
+});
+
+function requestNearbyLocation(btn){
+  if(!navigator.geolocation){ metaFilters.nearby = true; btn.classList.add('active'); renderResults(); return; }
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      nearbyLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      metaFilters.nearby = true;
+      btn.disabled = false;
+      btn.classList.add('active');
+      if(map) map.setView([nearbyLoc.lat, nearbyLoc.lng], 13);
+      renderResults();
+    },
+    ()=>{
+      btn.disabled = false;
+      alert(t('loc_denied'));
+    },
+    { timeout:8000 }
+  );
+}
+
+function clearNearbyCircle(){
+  if(nearbyCircle && map){ map.removeLayer(nearbyCircle); nearbyCircle = null; }
+}
+
+function drawNearbyCircle(center){
+  clearNearbyCircle();
+  if(!map) return;
+  nearbyCircle = L.circle([center.lat, center.lng], {
+    radius: NEARBY_RADIUS_KM * 1000,
+    color: '#B88A2A', weight:1.5, fillColor:'#B88A2A', fillOpacity:0.08
+  }).addTo(map);
+}
+
 /* ================= map ================= */
 function initMap(){
   map = L.map('mapEl', { zoomControl:true }).setView([41.2995, 69.2401], 12);
@@ -636,24 +735,41 @@ function renderResults(){
       const specs = b.specialties || [];
       if(!activeSpecEn.every(s => specs.includes(s))) return false;
     }
+    if(metaFilters.open && !isOpenNow(b)) return false;
+    if(metaFilters.rating && (avgRatingByBarber[b.id] || 0) < 4.5) return false;
+    if(metaFilters.nearby && nearbyLoc){
+      if(!b.latitude || !b.longitude) return false;
+      if(distKm(nearbyLoc, {lat:b.latitude, lng:b.longitude}) > NEARBY_RADIUS_KM) return false;
+    }
     return true;
   });
 
-  // sort by distance if user picked a location
-  if(userLoc){
+  // sort by distance if user picked a location (nearby-device-location takes priority over searched location)
+  const sortOrigin = (metaFilters.nearby && nearbyLoc) ? nearbyLoc : userLoc;
+  if(sortOrigin){
     filtered.sort((a,b)=>{
-      const da = (a.latitude && a.longitude) ? distKm(userLoc, {lat:a.latitude, lng:a.longitude}) : Infinity;
-      const db = (b.latitude && b.longitude) ? distKm(userLoc, {lat:b.latitude, lng:b.longitude}) : Infinity;
+      const da = (a.latitude && a.longitude) ? distKm(sortOrigin, {lat:a.latitude, lng:a.longitude}) : Infinity;
+      const db = (b.latitude && b.longitude) ? distKm(sortOrigin, {lat:b.latitude, lng:b.longitude}) : Infinity;
       return da - db;
     });
   }
+
+  if(metaFilters.nearby && nearbyLoc) drawNearbyCircle(nearbyLoc); else clearNearbyCircle();
 
   const count = filtered.length;
   document.getElementById('resultsCount').textContent =
     count + ' ' + (count === 1 ? t('results_one') : t('results_many'));
 
+  const banner = document.getElementById('areaBanner');
+  banner.innerHTML = '';
+
   if(allBarbers.length === 0){
     area.innerHTML = `<div class="empty"><div class="icon">✂️</div><h3>${t('empty_none_h')}</h3><p>${t('empty_none_p')}</p><a href="auth.html?role=barber" class="btn">${t('empty_btn')}</a></div>`;
+    renderMapPins([]); return;
+  }
+  if(count === 0 && metaFilters.nearby && nearbyLoc){
+    banner.innerHTML = `<div class="info-banner"><div class="ib-icon">📍</div><div><div class="ib-title">${t('area_empty_h')}</div><div class="ib-sub">${t('area_empty_p')}</div></div></div>`;
+    area.innerHTML = '';
     renderMapPins([]); return;
   }
   if(count === 0){
@@ -679,7 +795,7 @@ function renderResults(){
         <div class="card-id-row">
           <div class="card-avatar">${avatar}</div>
           <div class="card-who">
-            <div class="card-name">${escapeHtml(b.full_name)}</div>
+            <div class="card-name">${escapeHtml(b.full_name)}${avgRatingByBarber[b.id] ? ` <span class="card-rating">★ ${avgRatingByBarber[b.id].toFixed(1)}</span>` : ''}</div>
             <div class="card-sub">${escapeHtml(b.shop_name || b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
           </div>
           <div class="card-right">
@@ -847,6 +963,19 @@ function blocksForDay(b, dayKey){
     return [{ start: (b.work_start || '09:00').slice(0,5), end: (b.work_end || '20:00').slice(0,5) }];
   }
   return [];
+}
+
+function isOpenNow(b){
+  const now = new Date();
+  const dayKey = JS_DAY_TO_KEY[now.getDay()];
+  const blocks = blocksForDay(b, dayKey);
+  if(!blocks.length) return false;
+  const mins = now.getHours()*60 + now.getMinutes();
+  return blocks.some(block=>{
+    const [sh, sm] = block.start.split(':').map(Number);
+    const [eh, em] = block.end.split(':').map(Number);
+    return mins >= (sh*60+sm) && mins < (eh*60+em);
+  });
 }
 
 function generateSlots(b, dateObj, duration, bookedIsoSet){
@@ -1046,14 +1175,22 @@ async function loadAll(){
 
     if(allBarbers.length){
       const ids = allBarbers.map(b => b.id);
-      const [{ data: services }, photosRes] = await Promise.all([
+      const [{ data: services }, photosRes, reviewsRes] = await Promise.all([
         supabaseClient.from('services').select('*').in('barber_id', ids),
-        supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r => r).catch(()=>({ data: [] }))
+        supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r => r).catch(()=>({ data: [] })),
+        supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', ids).then(r => r).catch(()=>({ data: [] }))
       ]);
       servicesByBarber = {};
       (services||[]).forEach(s=>{ (servicesByBarber[s.barber_id] = servicesByBarber[s.barber_id] || []).push(s); });
       photosByBarber = {};
       ((photosRes && photosRes.data) || []).forEach(p=>{ (photosByBarber[p.barber_id] = photosByBarber[p.barber_id] || []).push(p); });
+      const ratingSums = {};
+      ((reviewsRes && reviewsRes.data) || []).forEach(r=>{
+        const e = ratingSums[r.barber_id] || (ratingSums[r.barber_id] = { sum:0, count:0 });
+        e.sum += r.rating; e.count += 1;
+      });
+      avgRatingByBarber = {};
+      Object.entries(ratingSums).forEach(([id, e])=>{ avgRatingByBarber[id] = e.sum / e.count; });
     }
     applyLang(currentLang);
   } catch(e){

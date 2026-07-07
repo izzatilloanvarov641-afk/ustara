@@ -147,6 +147,35 @@
     background:var(--dark-surface);
   }
 
+  /* ================= HOME: nearby / top barber sections (light) ================= */
+  .home-section{ margin:28px 0 8px; }
+  .home-section-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .home-section-head h3{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:19px; }
+  .home-section-head a{ font-size:12.5px; color:var(--gold); font-weight:700; }
+
+  .home-barber-scroll{ display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+  .home-barber-scroll::-webkit-scrollbar{ display:none; }
+  .home-barber-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .hb-card{
+    flex-shrink:0; width:156px; background:var(--surface); border:1px solid var(--line); border-radius:18px;
+    overflow:hidden; box-shadow:var(--sh-soft); cursor:pointer; transition:transform .15s ease;
+  }
+  .hb-card:hover{ transform:translateY(-2px); }
+  .home-barber-grid .hb-card{ width:auto; }
+  .hb-photo{
+    width:100%; aspect-ratio:4/3; background:var(--surface-alt); overflow:hidden; display:flex;
+    align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic;
+    color:var(--gold); font-size:22px;
+  }
+  .hb-photo img{ width:100%; height:100%; object-fit:cover; }
+  .hb-body{ padding:10px 12px 12px; }
+  .hb-name{ font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hb-sub{ font-size:11px; color:var(--ink-dim); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hb-meta{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:11px; }
+  .hb-rating{ color:var(--gold); font-weight:700; }
+  .hb-dist, .hb-price{ color:var(--ink-dim); }
+  .home-section-empty{ font-size:12.5px; color:var(--ink-dim); padding:8px 2px; }
+
   .rebook-dark{
     background:linear-gradient(135deg, rgba(184,138,42,0.14), transparent); border:1px solid rgba(184,138,42,0.3);
     border-radius:20px; padding:14px 16px; display:flex; align-items:center; gap:12px; margin-bottom:16px;
@@ -362,9 +391,25 @@
       <div class="dark-tile" style="grid-column:span 2;"><div class="skel-line w40"></div><div class="skel-line w70"></div></div>
     </div>
 
-    <!-- Reserved ad/commercial banner slot — currently empty, ready for 
+    <!-- Reserved ad/commercial banner slot — currently empty, ready for
          Claude Code to drop real promo images/carousel into later. -->
     <div class="ad-banner-slot" id="adBannerSlot"></div>
+  </div>
+
+  <div class="wrap home-section">
+    <div class="home-section-head">
+      <h3 data-i18n="nearby_h">Nearby barbers</h3>
+      <a href="browse.html" data-i18n="see_all">See all</a>
+    </div>
+    <div class="home-barber-scroll" id="homeNearbyRow"></div>
+  </div>
+
+  <div class="wrap home-section">
+    <div class="home-section-head">
+      <h3 data-i18n="top_h">Top rated</h3>
+      <a href="browse.html" data-i18n="see_all">See all</a>
+    </div>
+    <div class="home-barber-grid" id="homeTopGrid"></div>
   </div>
 </div>
 
@@ -522,7 +567,9 @@ const I18N = {
     style_upload:"Upload photo", style_save:"Save my style", style_saved:"Saved!",
     view_details:"View details", add_calendar:"Add to calendar",
     loyalty_member:"Member", visit_streak:"Visit streak", weeks:"weeks", favorite_barber:"Favorite barber", your_barber:"Your barber",
-    checkin_streak_label:"{n}-day check-in streak", checkin_toast:"Day {streak} streak! +{points} pts"
+    checkin_streak_label:"{n}-day check-in streak", checkin_toast:"Day {streak} streak! +{points} pts",
+    nearby_h:"Nearby barbers", top_h:"Top rated", price_from:"from", dist_km:"km", yrs:"yrs",
+    no_barbers_yet:"No barbers here yet — check back soon."
   },
   uz:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Xush kelibsiz,",
@@ -560,7 +607,9 @@ const I18N = {
     style_upload:"Surat yuklash", style_save:"Uslubimni saqlash", style_saved:"Saqlandi!",
     view_details:"Batafsil", add_calendar:"Kalendarga qo'shish",
     loyalty_member:"A'zo", visit_streak:"Tashrif seriyasi", weeks:"hafta", favorite_barber:"Sevimli sartarosh", your_barber:"Sizning sartaroshingiz",
-    checkin_streak_label:"{n} kunlik kirish seriyasi", checkin_toast:"{streak}-kun seriya! +{points} ball"
+    checkin_streak_label:"{n} kunlik kirish seriyasi", checkin_toast:"{streak}-kun seriya! +{points} ball",
+    nearby_h:"Yaqin atrofdagi sartaroshlar", top_h:"Top sartaroshlar", price_from:"dan", dist_km:"km", yrs:"yil",
+    no_barbers_yet:"Hozircha sartaroshlar yo'q — tez orada qaytib ko'ring."
   },
   ru:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Рады видеть вас,",
@@ -598,7 +647,9 @@ const I18N = {
     style_upload:"Загрузить фото", style_save:"Сохранить стиль", style_saved:"Сохранено!",
     view_details:"Подробнее", add_calendar:"В календарь",
     loyalty_member:"Участник", visit_streak:"Серия визитов", weeks:"недель", favorite_barber:"Любимый барбер", your_barber:"Ваш барбер",
-    checkin_streak_label:"{n}-дневная серия входов", checkin_toast:"День {streak} серии! +{points} очков"
+    checkin_streak_label:"{n}-дневная серия входов", checkin_toast:"День {streak} серии! +{points} очков",
+    nearby_h:"Барберы рядом", top_h:"Лучшие барберы", price_from:"от", dist_km:"км", yrs:"лет",
+    no_barbers_yet:"Барберов пока нет — загляните позже."
   }
 };
 
@@ -616,6 +667,11 @@ function escapeHtml(str){ const d = document.createElement('div'); d.textContent
 function avatarFor(barber){
   const initials = (barber.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   return barber.avatar_url ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">` : initials;
+}
+function distKm(a, b){
+  const R = 6371, dLat = (b.lat-a.lat)*Math.PI/180, dLng = (b.lng-a.lng)*Math.PI/180;
+  const s = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
 }
 
 function applyLang(lang){
@@ -703,7 +759,100 @@ async function init(){
   setupStyleProfile();
   setupTelegramConnect();
   renderReferralCard();
+  loadHomeBarbers();
   await checkInIfNeeded();
+}
+
+/* ---------- home: nearby / top barbers ---------- */
+function hbCardHtml(b, opts){
+  const photo = (b._photos || [])[0];
+  const cover = photo
+    ? `<img src="${escapeHtml(photo.photo_url)}" alt="" loading="lazy">`
+    : (b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : (b.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase());
+  const sub = escapeHtml(b.shop_name || b.district || '');
+  const rating = b._avgRating ? `★ ${b._avgRating.toFixed(1)}` : '';
+  const dist = (opts && opts.showDist && b._distKm != null) ? b._distKm.toFixed(1) + ' ' + t('dist_km') : '';
+  return `
+    <div class="hb-card" data-barber-id="${b.id}">
+      <div class="hb-photo">${cover}</div>
+      <div class="hb-body">
+        <div class="hb-name">${escapeHtml(b.full_name)}</div>
+        <div class="hb-sub">${sub}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
+        <div class="hb-meta">
+          <span class="hb-rating">${rating}</span>
+          <span class="hb-dist">${dist}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function wireHbCards(container){
+  container.querySelectorAll('[data-barber-id]').forEach(card=>{
+    card.addEventListener('click', ()=>{ window.location.href = 'profile.html?id=' + card.dataset.barberId; });
+  });
+}
+
+async function loadHomeBarbers(){
+  const nearbyEl = document.getElementById('homeNearbyRow');
+  const topEl = document.getElementById('homeTopGrid');
+  try {
+    const { data: barbers, error } = await supabaseClient.from('barbers').select('*')
+      .eq('is_published', true).eq('is_approved', true)
+      .order('created_at', { ascending:false });
+    if(error || !barbers || !barbers.length){
+      nearbyEl.innerHTML = `<div class="home-section-empty">${t('no_barbers_yet')}</div>`;
+      topEl.innerHTML = `<div class="home-section-empty">${t('no_barbers_yet')}</div>`;
+      return;
+    }
+    const ids = barbers.map(b => b.id);
+    const [{ data: photos }, { data: reviews }] = await Promise.all([
+      supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
+      supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] }))
+    ]);
+    const photosByBarber = {};
+    (photos || []).forEach(p => { (photosByBarber[p.barber_id] = photosByBarber[p.barber_id] || []).push(p); });
+    const ratingSums = {};
+    (reviews || []).forEach(r => {
+      const e = ratingSums[r.barber_id] || (ratingSums[r.barber_id] = { sum:0, count:0 });
+      e.sum += r.rating; e.count += 1;
+    });
+    barbers.forEach(b => {
+      b._photos = photosByBarber[b.id] || [];
+      b._avgRating = ratingSums[b.id] ? ratingSums[b.id].sum / ratingSums[b.id].count : null;
+    });
+
+    // Top rated: highest average rating first, unrated barbers pushed to the end
+    const topSorted = [...barbers].sort((a,b) => (b._avgRating || 0) - (a._avgRating || 0));
+    topEl.innerHTML = topSorted.slice(0, 4).map(b => hbCardHtml(b, { showDist:false })).join('');
+    wireHbCards(topEl);
+
+    // Nearby: sort by distance if we can get the client's location, else just show recent barbers
+    const renderNearby = (originLoc)=>{
+      let list = barbers;
+      if(originLoc){
+        list = [...barbers].sort((a,b)=>{
+          const da = (a.latitude && a.longitude) ? distKm(originLoc, {lat:a.latitude, lng:a.longitude}) : Infinity;
+          const db = (b.latitude && b.longitude) ? distKm(originLoc, {lat:b.latitude, lng:b.longitude}) : Infinity;
+          return da - db;
+        });
+        list.forEach(b => { if(b.latitude && b.longitude) b._distKm = distKm(originLoc, {lat:b.latitude, lng:b.longitude}); });
+      }
+      nearbyEl.innerHTML = list.slice(0, 8).map(b => hbCardHtml(b, { showDist: !!originLoc })).join('');
+      wireHbCards(nearbyEl);
+    };
+    renderNearby(null);
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        (pos) => renderNearby({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}, // permission denied or unavailable — keep the non-sorted list already shown
+        { timeout:8000 }
+      );
+    }
+  } catch(e){
+    console.warn('loadHomeBarbers failed:', e);
+    nearbyEl.innerHTML = `<div class="home-section-empty">${t('no_barbers_yet')}</div>`;
+    topEl.innerHTML = `<div class="home-section-empty">${t('no_barbers_yet')}</div>`;
+  }
 }
 
 /* ---------- home: appointment card ---------- */
