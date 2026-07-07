@@ -364,6 +364,146 @@
   .skel-appt{ background:var(--dark-surface); border-radius:var(--r-card); padding:20px; margin-bottom:16px; }
   .skel-appt .skel-line.w40{ width:40%; height:11px; margin-bottom:10px; }
   .skel-appt .skel-line.w70{ width:70%; height:18px; }
+
+  /* ================= MAP TAB: search + filters + list + booking ================= */
+  .map-toolbar{ display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+  .search-box{
+    display:flex; align-items:center; gap:9px; background:var(--surface-alt); border:1px solid var(--line);
+    border-radius:var(--r-btn); padding:12px 16px; position:relative;
+  }
+  .search-box svg{ opacity:0.45; flex-shrink:0; }
+  .search-box input{ background:none; border:none; outline:none; color:var(--ink); font-size:13.5px; width:100%; font-family:'Inter', sans-serif; }
+  .search-box input::placeholder{ color:#A39A8B; }
+  .loc-clear{ background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:15px; display:none; padding:0 2px; flex-shrink:0; }
+  .loc-box.has-value .loc-clear{ display:block; }
+  .suggestions{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; background:var(--surface);
+    border:1px solid var(--line); border-radius:16px; box-shadow:var(--sh-soft);
+    overflow:hidden; display:none; z-index:100; max-height:280px; overflow-y:auto;
+  }
+  .suggestions.open{ display:block; }
+  .suggestion{ padding:12px 16px; cursor:pointer; font-size:13.5px; border-bottom:1px solid var(--line); }
+  .suggestion:last-child{ border-bottom:none; }
+  .suggestion:hover, .suggestion.kb-active{ background:var(--surface-alt); }
+  .suggestion .s-main{ font-weight:600; }
+  .suggestion .s-sub{ font-size:11.5px; color:var(--ink-dim); margin-top:1px; }
+
+  .chips-scroll{ display:flex; gap:8px; overflow-x:auto; padding:2px 2px 4px; scrollbar-width:none; }
+  .chips-scroll::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex-shrink:0; border:1px solid var(--line); color:var(--ink-dim); padding:9px 15px; border-radius:20px;
+    font-size:12px; cursor:pointer; background:var(--surface); white-space:nowrap; font-weight:600;
+  }
+  .chip.selected{ background:#141414; border-color:#141414; color:var(--gold-soft); font-weight:700; }
+
+  .meta-filters{ display:flex; gap:8px; flex-wrap:wrap; margin-top:2px; }
+  .meta-chip{
+    display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); color:var(--ink);
+    padding:9px 14px; border-radius:20px; font-size:12px; cursor:pointer; background:var(--surface);
+    white-space:nowrap; font-weight:700;
+  }
+  .meta-chip svg{ flex-shrink:0; opacity:0.7; }
+  .meta-chip.active{ background:var(--gold); border-color:var(--gold); color:#141414; }
+  .meta-chip.active svg{ opacity:1; }
+
+  .info-banner{
+    display:flex; align-items:flex-start; gap:12px; background:var(--surface-alt); border:1px solid var(--line);
+    border-radius:16px; padding:14px 16px; margin:14px 0;
+  }
+  .info-banner .ib-icon{ width:34px; height:34px; border-radius:10px; background:var(--surface); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px; }
+  .info-banner .ib-title{ font-weight:700; font-size:13px; color:var(--ink); }
+  .info-banner .ib-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+
+  .map-view-toggle{ display:flex; border:1px solid var(--line); border-radius:20px; padding:3px; width:max-content; margin:14px 0; }
+  .map-view-toggle button{ background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:12.5px; font-weight:700; padding:8px 18px; border-radius:16px; cursor:pointer; }
+  .map-view-toggle button.active{ background:#141414; color:var(--gold-soft); }
+
+  .bcard{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:14px;
+    margin-bottom:14px; cursor:pointer; box-shadow:var(--sh-soft); position:relative; transition:border-color .15s ease;
+  }
+  .bcard.highlighted{ border-color:var(--gold); }
+  .bcard .fav-btn{
+    position:absolute; top:14px; right:14px; z-index:5; width:32px; height:32px; border-radius:50%;
+    background:rgba(255,255,255,0.9); border:1px solid var(--line); cursor:pointer; font-size:16px;
+    color:var(--ink-dim); display:flex; align-items:center; justify-content:center;
+  }
+  .bcard .fav-btn.favorited{ color:var(--danger); border-color:#F3CFCF; }
+  .bcard .card-photos{ display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin-bottom:12px; }
+  .bcard .card-photos .ph{ aspect-ratio:1; border-radius:14px; overflow:hidden; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:22px; }
+  .bcard .card-photos .ph img{ width:100%; height:100%; object-fit:cover; }
+  .bcard .card-id-row{ display:flex; align-items:center; gap:11px; margin-bottom:10px; }
+  .bcard .card-avatar{ width:44px; height:44px; border-radius:50%; overflow:hidden; flex-shrink:0; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:15px; border:1px solid var(--line); }
+  .bcard .card-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .bcard .card-who{ flex:1; min-width:0; }
+  .bcard .card-name{ font-weight:700; font-size:15px; }
+  .bcard .card-rating{ font-weight:700; font-size:12px; color:var(--gold); }
+  .bcard .card-sub{ font-size:11.5px; color:var(--ink-dim); }
+  .bcard .card-right{ text-align:right; flex-shrink:0; }
+  .bcard .card-price{ font-size:13px; font-weight:800; color:var(--gold); }
+  .bcard .card-dist{ font-size:11px; color:var(--ink-dim); }
+  .bcard .avail-row{ display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; scrollbar-width:none; }
+  .bcard .avail-row::-webkit-scrollbar{ display:none; }
+  .bcard .avail-day{ flex-shrink:0; text-align:center; width:40px; }
+  .bcard .avail-day .d-label{ font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; font-weight:600; margin-bottom:3px; }
+  .bcard .avail-day .d-num{ width:32px; height:32px; margin:0 auto; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:600; border:1.5px solid var(--line); color:var(--ink-dim); }
+  .bcard .avail-day.open .d-num{ border-color:var(--gold); color:var(--gold); }
+  .bcard .book-btn{ width:100%; background:#141414; color:var(--gold-soft); border:none; border-radius:var(--r-btn); padding:13px; font-size:12.5px; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; cursor:pointer; font-family:'Inter', sans-serif; }
+
+  .photo-pin{ width:46px; height:46px; border-radius:50%; overflow:hidden; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.3); background:#141414; display:flex; align-items:center; justify-content:center; }
+  .photo-pin img{ width:100%; height:100%; object-fit:cover; }
+  .photo-pin span{ color:var(--gold-soft); font-family:'Instrument Serif', serif; font-style:italic; font-size:15px; }
+  .photo-pin.active{ border-color:var(--gold); transform:scale(1.2); }
+
+  .profile-pop-overlay{
+    display:none; position:fixed; inset:0; background:rgba(20,18,15,0.55); z-index:200;
+    align-items:flex-end; justify-content:center; backdrop-filter:blur(2px);
+  }
+  .profile-pop-overlay.open{ display:flex; }
+  .profile-pop{
+    background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:560px; max-height:88vh;
+    overflow-y:auto; box-shadow:0 -20px 60px rgba(17,17,17,0.25); position:relative;
+  }
+  .pop-gallery{ position:relative; aspect-ratio:4/3.1; background:var(--surface-alt); }
+  .pop-gallery img{ width:100%; height:100%; object-fit:cover; }
+  .pop-gallery .no-photo{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:44px; }
+  .pop-close{ position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; background:rgba(20,20,20,0.55); color:#fff; border:none; cursor:pointer; font-size:17px; display:flex; align-items:center; justify-content:center; z-index:2; }
+  .gal-nav{ position:absolute; bottom:12px; right:12px; background:rgba(20,20,20,0.55); color:#fff; font-size:11px; padding:4px 10px; border-radius:12px; }
+  .gal-arrow{ position:absolute; top:50%; transform:translateY(-50%); width:32px; height:32px; border-radius:50%; background:rgba(20,20,20,0.45); color:#fff; border:none; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; }
+  .gal-prev{ left:10px; } .gal-next{ right:10px; }
+
+  .pop-body{ padding:18px 20px 24px; }
+  .pop-id{ display:flex; gap:12px; align-items:center; margin-bottom:6px; }
+  .pop-avatar{ width:52px; height:52px; border-radius:50%; overflow:hidden; background:var(--surface-alt); flex-shrink:0; display:flex; align-items:center; justify-content:center; border:2px solid var(--line); font-family:'Instrument Serif', serif; font-style:italic; color:var(--gold); font-size:17px; }
+  .pop-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .pop-name{ font-family:'Instrument Serif', serif; font-style:italic; font-weight:400; font-size:22px; }
+  .pop-sub{ font-size:12px; color:var(--ink-dim); }
+  .pop-bio{ font-size:13px; line-height:1.6; margin:10px 0 4px; color:var(--ink); }
+  .pop-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
+  .pop-tag{ font-size:10.5px; border:1px solid var(--line); color:var(--ink-dim); padding:4px 9px; border-radius:20px; }
+  .pop-section-t{ font-family:'Instrument Serif', serif; font-style:italic; font-size:16px; font-weight:400; margin:16px 0 10px; }
+  .service-option{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; cursor:pointer; font-size:13px; }
+  .service-option:hover{ border-color:var(--gold); background:#FBF7EE; }
+  .service-option.selected{ border-color:var(--gold); background:#FBF7EE; box-shadow:inset 0 0 0 1px var(--gold); }
+  .booking-summary-line{ font-size:12.5px; color:var(--ink-dim); background:var(--surface-alt); padding:10px 14px; border-radius:12px; margin-bottom:14px; }
+  .booking-summary-line strong{ color:var(--gold); }
+  .svc-price{ font-weight:800; color:var(--gold); }
+  .day-tabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin:12px 0; scrollbar-width:none; }
+  .day-tabs::-webkit-scrollbar{ display:none; }
+  .day-tab{ flex-shrink:0; background:var(--surface-alt); border:1.5px solid var(--line); color:var(--ink-dim); padding:8px 12px; border-radius:12px; font-size:11.5px; cursor:pointer; min-width:50px; text-align:center; font-weight:700; }
+  .day-tab.active{ background:#141414; border-color:#141414; color:var(--gold-soft); }
+  .slot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  .slot-btn{ background:var(--surface-alt); border:1.5px solid var(--line); color:var(--ink); padding:10px 4px; border-radius:14px; font-size:12.5px; cursor:pointer; text-align:center; font-weight:700; }
+  .slot-btn:hover{ border-color:var(--gold); }
+  .slot-btn.selected{ background:var(--gold); border-color:var(--gold); color:#141414; font-weight:800; }
+  .slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .no-slots-msg{ grid-column:1/-1; text-align:center; padding:14px; color:var(--ink-dim); font-size:12.5px; }
+  .back-link{ font-size:12px; color:var(--ink-dim); cursor:pointer; display:inline-block; margin-bottom:8px; font-weight:600; }
+  .confirm-booking-btn{ grid-column:1/-1; margin-top:6px; background:#141414; color:var(--gold-soft); border:none; padding:14px; border-radius:var(--r-btn); font-size:13.5px; font-weight:700; cursor:pointer; font-family:'Inter', sans-serif; }
+  .confirm-booking-btn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .ref-photo-row{ grid-column:1/-1; margin-top:8px; }
+  .ref-photo-label{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-dim); cursor:pointer; padding:9px 12px; border:1px dashed var(--line); border-radius:14px; justify-content:center; }
+  .ref-photo-label:hover{ border-color:var(--gold); color:var(--gold); }
 </style>
 </head>
 <body>
@@ -399,7 +539,7 @@
   <div class="wrap home-section">
     <div class="home-section-head">
       <h3 data-i18n="nearby_h">Nearby barbers</h3>
-      <a href="browse.html" data-i18n="see_all">See all</a>
+      <a href="javascript:void(0)" data-nav="map" data-i18n="see_all">See all</a>
     </div>
     <div class="home-barber-scroll" id="homeNearbyRow"></div>
   </div>
@@ -407,7 +547,7 @@
   <div class="wrap home-section">
     <div class="home-section-head">
       <h3 data-i18n="top_h">Top rated</h3>
-      <a href="browse.html" data-i18n="see_all">See all</a>
+      <a href="javascript:void(0)" data-nav="map" data-i18n="see_all">See all</a>
     </div>
     <div class="home-barber-grid" id="homeTopGrid"></div>
   </div>
@@ -430,11 +570,47 @@
 <!-- ============ MAP ============ -->
 <div class="view" data-view="map">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span data-i18n="map_title">Your barber's spot</span></div>
-    <div id="mapStatusMsg"></div>
-    <div id="clientMapWrap" style="display:none;">
-      <div id="clientMapEl" style="height:320px; border-radius:var(--r-card); overflow:hidden; border:1px solid var(--line); box-shadow:var(--sh-soft);"></div>
-      <div id="mapBarberLabel" style="margin-top:14px; font-size:13.5px; color:var(--ink-dim);"></div>
+    <div class="section-title"><span data-i18n="map_title">Find a barber</span></div>
+
+    <div class="map-toolbar">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="mapSearchInput" data-i18n-ph="search_ph" placeholder="Search barbers or services">
+      </div>
+      <div class="search-box loc-box" id="mapLocBox">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input type="text" id="mapLocInput" data-i18n-ph="loc_ph" placeholder="Enter your location" autocomplete="off">
+        <button class="loc-clear" id="mapLocClear" type="button">&times;</button>
+        <div class="suggestions" id="mapLocSuggestions"></div>
+      </div>
+    </div>
+
+    <div class="chips-scroll" id="mapSpecialtyChips"></div>
+    <div class="meta-filters" id="mapMetaFilters">
+      <button type="button" class="meta-chip" data-filter="nearby">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span data-i18n="filter_nearby">Nearby</span>
+      </button>
+      <button type="button" class="meta-chip" data-filter="open">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span data-i18n="filter_open">Open now</span>
+      </button>
+      <button type="button" class="meta-chip" data-filter="rating">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span data-i18n="filter_rating">Rating 4.5+</span>
+      </button>
+    </div>
+    <div id="mapAreaBanner"></div>
+    <div id="mapResultsCount" style="font-size:12px; color:var(--ink-dim); font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin:4px 2px 2px;"></div>
+
+    <div class="map-view-toggle" id="mapViewToggle">
+      <button type="button" class="active" data-mode="list" data-i18n="view_list">List</button>
+      <button type="button" data-mode="map" data-i18n="view_map">Map</button>
+    </div>
+
+    <div id="mapResultsArea"></div>
+    <div id="mapMapPanelWrap" style="display:none;">
+      <div id="clientMapEl" style="position:relative; z-index:1; height:min(60vh, 460px); border-radius:var(--r-card); overflow:hidden; border:1px solid var(--line); box-shadow:var(--sh-soft);"></div>
     </div>
   </div>
 </div>
@@ -534,12 +710,8 @@ const I18N = {
   en:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Good to see you,",
     upcoming_title:"Upcoming", see_all:"See all",
-    map_title:"Your barber's spot",
-    map_no_booking:"Book an appointment to see your barber's location here.",
-    map_browse_hint:"Tap any barber on the map to view their profile and book.",
-    map_no_location:"Your barber hasn't set their exact location yet.",
+    map_title:"Find a barber",
     map_directions:"Get directions",
-    map_teaser_no_booking:"Book a cut to see it here", map_teaser_no_location:"Location coming soon",
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.", remove_booking:"Remove",
@@ -569,17 +741,27 @@ const I18N = {
     loyalty_member:"Member", visit_streak:"Visit streak", weeks:"weeks", favorite_barber:"Favorite barber", your_barber:"Your barber",
     checkin_streak_label:"{n}-day check-in streak", checkin_toast:"Day {streak} streak! +{points} pts",
     nearby_h:"Nearby barbers", top_h:"Top rated", price_from:"from", dist_km:"km", yrs:"yrs",
-    no_barbers_yet:"No barbers here yet — check back soon."
+    no_barbers_yet:"No barbers here yet — check back soon.",
+    search_ph:"Search barbers or services", loc_ph:"Enter your location",
+    filter_nearby:"Nearby", filter_open:"Open now", filter_rating:"Rating 4.5+",
+    area_empty_h:"No barbers in this area yet", area_empty_p:"We're adding more barbers here soon — try a wider search.",
+    loc_denied:"Couldn't get your location — check your browser permissions.",
+    results_one:"result", results_many:"results",
+    search_empty_h:"No barbers yet", search_noresults_h:"No matches", search_noresults_p:"Try a different search or clear your filters.",
+    view_list:"List", view_map:"Map",
+    choose_service:"Choose a service", book_title:"Pick a time", no_slots:"No availability set yet",
+    addon_title:"Add extras? (optional)", continue_btn:"Continue",
+    booking_failed:"That slot was just taken — pick another.", booking_confirmed:"Booked! Check your upcoming appointment.",
+    confirm_booking_btn:"Book this time", booking_in_progress:"Booking...", attach_reference:"Attach a photo of the style you want (optional)",
+    use_saved_style:"Use my saved style", using_saved_style:"Using your saved style ✓",
+    back:"Back", min:"min", book_now:"Book appointment",
+    day_short:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
   },
   uz:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Xush kelibsiz,",
     upcoming_title:"Kelgusi", see_all:"Barchasi",
-    map_title:"Sartaroshingiz joylashuvi",
-    map_no_booking:"Sartaroshingiz joylashuvini ko'rish uchun uchrashuvni band qiling.",
-    map_browse_hint:"Profilini ko'rish va band qilish uchun xaritadagi istalgan sartaroshga bosing.",
-    map_no_location:"Sartaroshingiz hali aniq joylashuvni belgilamagan.",
+    map_title:"Sartarosh toping",
     map_directions:"Yo'nalishni ko'rish",
-    map_teaser_no_booking:"Ko'rish uchun band qiling", map_teaser_no_location:"Joylashuv tez orada",
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.", remove_booking:"O'chirish",
@@ -609,17 +791,27 @@ const I18N = {
     loyalty_member:"A'zo", visit_streak:"Tashrif seriyasi", weeks:"hafta", favorite_barber:"Sevimli sartarosh", your_barber:"Sizning sartaroshingiz",
     checkin_streak_label:"{n} kunlik kirish seriyasi", checkin_toast:"{streak}-kun seriya! +{points} ball",
     nearby_h:"Yaqin atrofdagi sartaroshlar", top_h:"Top sartaroshlar", price_from:"dan", dist_km:"km", yrs:"yil",
-    no_barbers_yet:"Hozircha sartaroshlar yo'q — tez orada qaytib ko'ring."
+    no_barbers_yet:"Hozircha sartaroshlar yo'q — tez orada qaytib ko'ring.",
+    search_ph:"Sartarosh yoki xizmat qidiring", loc_ph:"Joylashuvingizni kiriting",
+    filter_nearby:"Yaqin atrofda", filter_open:"Hozir ochiq", filter_rating:"Reyting 4.5+",
+    area_empty_h:"Bu hududda hozircha sartaroshlar yo'q", area_empty_p:"Tez orada bu yerga ham sartaroshlar qo'shamiz — kengroq hududni sinab ko'ring.",
+    loc_denied:"Joylashuvingizni aniqlab bo'lmadi — brauzer ruxsatlarini tekshiring.",
+    results_one:"natija", results_many:"natija",
+    search_empty_h:"Hozircha sartaroshlar yo'q", search_noresults_h:"Mos natija topilmadi", search_noresults_p:"Boshqa qidiruvni sinab ko'ring yoki filtrlarni tozalang.",
+    view_list:"Ro'yxat", view_map:"Xarita",
+    choose_service:"Xizmatni tanlang", book_title:"Vaqtni tanlang", no_slots:"Hali ish vaqti sozlanmagan",
+    addon_title:"Qo'shimcha xizmatlar? (ixtiyoriy)", continue_btn:"Davom etish",
+    booking_failed:"Bu vaqt band bo'ldi — boshqasini tanlang.", booking_confirmed:"Band qilindi! Kelgusi tashrifingizni tekshiring.",
+    confirm_booking_btn:"Shu vaqtni band qilish", booking_in_progress:"Band qilinmoqda...", attach_reference:"Xohlagan surat uslubini yuklang (ixtiyoriy)",
+    use_saved_style:"Saqlangan uslubimni ishlatish", using_saved_style:"Saqlangan uslub ishlatilmoqda ✓",
+    back:"Orqaga", min:"daq", book_now:"Band qilish",
+    day_short:['Ya','Du','Se','Ch','Pa','Ju','Sh']
   },
   ru:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Рады видеть вас,",
     upcoming_title:"Предстоящие", see_all:"Все",
-    map_title:"Место вашего барбера",
-    map_no_booking:"Запишитесь на приём, чтобы увидеть местоположение барбера здесь.",
-    map_browse_hint:"Нажмите на любого барбера на карте, чтобы посмотреть профиль и записаться.",
-    map_no_location:"Ваш барбер ещё не указал точное местоположение.",
+    map_title:"Найти барбера",
     map_directions:"Проложить маршрут",
-    map_teaser_no_booking:"Запишитесь, чтобы увидеть", map_teaser_no_location:"Локация скоро",
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.", remove_booking:"Удалить",
@@ -649,7 +841,21 @@ const I18N = {
     loyalty_member:"Участник", visit_streak:"Серия визитов", weeks:"недель", favorite_barber:"Любимый барбер", your_barber:"Ваш барбер",
     checkin_streak_label:"{n}-дневная серия входов", checkin_toast:"День {streak} серии! +{points} очков",
     nearby_h:"Барберы рядом", top_h:"Лучшие барберы", price_from:"от", dist_km:"км", yrs:"лет",
-    no_barbers_yet:"Барберов пока нет — загляните позже."
+    no_barbers_yet:"Барберов пока нет — загляните позже.",
+    search_ph:"Поиск барберов или услуг", loc_ph:"Введите ваше местоположение",
+    filter_nearby:"Рядом", filter_open:"Открыто сейчас", filter_rating:"Рейтинг 4.5+",
+    area_empty_h:"Барберов в этом районе пока нет", area_empty_p:"Скоро добавим сюда барберов — попробуйте расширить область поиска.",
+    loc_denied:"Не удалось определить ваше местоположение — проверьте разрешения браузера.",
+    results_one:"результат", results_many:"результатов",
+    search_empty_h:"Барберов пока нет", search_noresults_h:"Ничего не найдено", search_noresults_p:"Попробуйте другой запрос или сбросьте фильтры.",
+    view_list:"Список", view_map:"Карта",
+    choose_service:"Выберите услугу", book_title:"Выберите время", no_slots:"Рабочие часы не настроены",
+    addon_title:"Добавить услуги? (необязательно)", continue_btn:"Продолжить",
+    booking_failed:"Это время заняли — выберите другое.", booking_confirmed:"Записано! Проверьте предстоящую запись.",
+    confirm_booking_btn:"Забронировать это время", booking_in_progress:"Бронирование...", attach_reference:"Прикрепите фото желаемой стрижки (необязательно)",
+    use_saved_style:"Использовать мой сохранённый стиль", using_saved_style:"Используется ваш стиль ✓",
+    back:"Назад", min:"мин", book_now:"Записаться",
+    day_short:['Вс','Пн','Вт','Ср','Чт','Пт','Сб']
   }
 };
 
@@ -680,6 +886,9 @@ function applyLang(lang){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     if(dict[el.dataset.i18n] !== undefined) el.textContent = dict[el.dataset.i18n];
   });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    if(dict[el.dataset.i18nPh] !== undefined) el.placeholder = dict[el.dataset.i18nPh];
+  });
   document.querySelectorAll('#langSwitch .lang-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.lang === lang);
   });
@@ -688,6 +897,7 @@ function applyLang(lang){
   renderHomeBookings();
   renderDashboardTiles();
   renderAllBookings();
+  if(mapDataLoaded){ renderSpecialtyChips(); renderMapResults(); }
   if(clientData){ renderInfoCard(); renderReferralCard(); setupTelegramConnect(); }
 }
 
@@ -1052,7 +1262,7 @@ function renderHomeBookings(){
         <div class="icon">✂️</div>
         <strong>${t('empty_h')}</strong>
         <span style="font-size:12px;">${t('empty_p')}</span><br>
-        <a href="browse.html" class="btn">${t('empty_btn')}</a>
+        <a href="javascript:void(0)" onclick="goToView('map')" class="btn">${t('empty_btn')}</a>
       </div>`;
     return;
   }
@@ -1162,7 +1372,7 @@ function renderAllBookings(){
         <div class="icon">✂️</div>
         <strong>${t('empty_h')}</strong><br>
         <span style="font-size:12.5px;">${t('empty_p')}</span><br>
-        <a href="browse.html" class="btn">${t('empty_btn')}</a>
+        <a href="javascript:void(0)" onclick="goToView('map')" class="btn">${t('empty_btn')}</a>
       </div>`;
     return;
   }
@@ -1254,37 +1464,24 @@ function renderReferralCard(){
 /* ---------- map teaser text logic kept for potential future use (map tab itself unaffected) ---------- */
 function renderMapTeaser(){ /* no-op: home no longer shows a map teaser tile, per new design reference */ }
 
-/* ---------- real map, lazy-initialized on first visit to Map tab ---------- */
-let clientMapMarkers = {};
+/* ================= MAP TAB: search + filters + list + booking (ported from browse.html) ================= */
+const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
+const SPECIALTIES_LOCAL = {
+  en: SPECIALTIES_EN,
+  uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
+  ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
+};
+const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const NEARBY_RADIUS_KM = 5;
 
-function renderClientMapPins(myBarberId){
-  Object.values(clientMapMarkers).forEach(m => clientMap.removeLayer(m));
-  clientMapMarkers = {};
-  allBarbersForMap.forEach(b => {
-    const isMine = b.id === myBarberId;
-    const avatarHtml = b.avatar_url
-      ? `<img src="${escapeHtml(b.avatar_url)}" alt="">`
-      : `<span>${(b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</span>`;
-    const icon = L.divIcon({
-      className: '',
-      html: `<div class="photo-pin${isMine ? ' active' : ''}">${avatarHtml}</div>`,
-      iconSize: null
-    });
-    const marker = L.marker([b.latitude, b.longitude], { icon }).addTo(clientMap);
-    const popupHtml = `
-      <div style="min-width:170px; font-family:'Inter',sans-serif;">
-        <div style="font-family:'Instrument Serif',serif; font-style:italic; font-weight:600; font-size:14px; margin-bottom:2px;">${escapeHtml(b.full_name)}</div>
-        <div style="font-size:11.5px; color:#6F6F6F; margin-bottom:8px;">${escapeHtml(b.shop_name || '')}${b.shop_name && b.district ? ' · ' : ''}${escapeHtml(b.district || '')}</div>
-        <a href="profile.html?id=${b.id}" style="display:block; text-align:center; background:#141414; color:#D4A94A; padding:8px; border-radius:10px; font-size:12px; font-weight:700; text-decoration:none;">View & book →</a>
-      </div>
-    `;
-    marker.bindPopup(popupHtml);
-    clientMapMarkers[b.id] = marker;
-  });
-}
-
-let clientMap = null;
-let mapInitialized = false;
+let mapAllBarbers = [], mapServicesByBarber = {}, mapPhotosByBarber = {}, mapAvgRatingByBarber = {};
+let mapSelectedSpecialtyFilters = [];
+let mapFavoriteIds = new Set();
+let mapUserLoc = null, mapNearbyLoc = null, mapNearbyCircle = null;
+const mapMetaFilters = { nearby:false, open:false, rating:false };
+let clientMap = null, mapInitialized = false, mapMarkersById = {};
+let mapViewMode = 'list';
+let mapDataLoaded = false;
 
 function nextBookingWithBarber(){
   const now = new Date();
@@ -1294,70 +1491,663 @@ function nextBookingWithBarber(){
   return upcoming[0] || null;
 }
 
-let allBarbersForMap = [];
+function localizeSpecialty(s){ const i = SPECIALTIES_EN.indexOf(s); return i === -1 ? s : SPECIALTIES_LOCAL[currentLang][i]; }
+function mapLowestPrice(barberId){
+  const svcs = (mapServicesByBarber[barberId] || []).filter(s => s.is_active);
+  if(!svcs.length) return null;
+  const prices = svcs.map(s => s.price).filter(p => p > 0);
+  return prices.length ? Math.min(...prices) : null;
+}
+function blocksForDay(b, dayKey){
+  if(b.availability && b.availability.length > 0) return b.availability.filter(block => block.day === dayKey);
+  if((b.work_days || []).includes(dayKey)){
+    return [{ start: (b.work_start || '09:00').slice(0,5), end: (b.work_end || '20:00').slice(0,5) }];
+  }
+  return [];
+}
+function isMapOpenNow(b){
+  const now = new Date();
+  const dayKey = JS_DAY_TO_KEY[now.getDay()];
+  const blocks = blocksForDay(b, dayKey);
+  if(!blocks.length) return false;
+  const mins = now.getHours()*60 + now.getMinutes();
+  return blocks.some(block=>{
+    const [sh, sm] = block.start.split(':').map(Number);
+    const [eh, em] = block.end.split(':').map(Number);
+    return mins >= (sh*60+sm) && mins < (eh*60+em);
+  });
+}
 
-async function setupClientMap(){
-  const statusMsg = document.getElementById('mapStatusMsg');
-  const mapWrap = document.getElementById('clientMapWrap');
+function renderSpecialtyChips(){
+  const row = document.getElementById('mapSpecialtyChips');
+  row.innerHTML = '';
+  SPECIALTIES_LOCAL[currentLang].forEach((label, i)=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (mapSelectedSpecialtyFilters.includes(i) ? ' selected' : '');
+    chip.textContent = label;
+    chip.addEventListener('click', ()=>{
+      if(mapSelectedSpecialtyFilters.includes(i)) mapSelectedSpecialtyFilters = mapSelectedSpecialtyFilters.filter(x=>x!==i);
+      else mapSelectedSpecialtyFilters.push(i);
+      renderSpecialtyChips(); renderMapResults();
+    });
+    row.appendChild(chip);
+  });
+}
+
+document.getElementById('mapMetaFilters').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.meta-chip');
+  if(!btn) return;
+  const key = btn.dataset.filter;
+  if(key === 'nearby' && !mapMetaFilters.nearby && !mapNearbyLoc){ requestMapNearbyLocation(btn); return; }
+  mapMetaFilters[key] = !mapMetaFilters[key];
+  btn.classList.toggle('active', mapMetaFilters[key]);
+  if(key === 'nearby' && !mapMetaFilters.nearby) clearMapNearbyCircle();
+  renderMapResults();
+});
+
+function requestMapNearbyLocation(btn){
+  if(!navigator.geolocation){ mapMetaFilters.nearby = true; btn.classList.add('active'); renderMapResults(); return; }
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      mapNearbyLoc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      mapMetaFilters.nearby = true; btn.disabled = false; btn.classList.add('active');
+      if(clientMap) clientMap.setView([mapNearbyLoc.lat, mapNearbyLoc.lng], 13);
+      renderMapResults();
+    },
+    ()=>{ btn.disabled = false; alert(t('loc_denied')); },
+    { timeout:8000 }
+  );
+}
+function clearMapNearbyCircle(){ if(mapNearbyCircle && clientMap){ clientMap.removeLayer(mapNearbyCircle); mapNearbyCircle = null; } }
+function drawMapNearbyCircle(center){
+  clearMapNearbyCircle();
+  if(!clientMap) return;
+  mapNearbyCircle = L.circle([center.lat, center.lng], {
+    radius: NEARBY_RADIUS_KM * 1000, color:'#B88A2A', weight:1.5, fillColor:'#B88A2A', fillOpacity:0.08
+  }).addTo(clientMap);
+}
+
+/* ---------- location autocomplete (Nominatim, no key) ---------- */
+const mapLocInput = document.getElementById('mapLocInput');
+const mapLocSuggestions = document.getElementById('mapLocSuggestions');
+const mapLocBox = document.getElementById('mapLocBox');
+let mapSuggestTimer = null, mapSuggestionItems = [], mapKbIndex = -1;
+
+mapLocInput.addEventListener('input', ()=>{
+  mapLocBox.classList.toggle('has-value', !!mapLocInput.value);
+  clearTimeout(mapSuggestTimer);
+  const q = mapLocInput.value.trim();
+  if(q.length < 2){ closeMapSuggestions(); return; }
+  mapSuggestTimer = setTimeout(()=> fetchMapSuggestions(q), 400);
+});
+async function fetchMapSuggestions(q){
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=uz&accept-language=${currentLang}&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { headers:{ 'Accept':'application/json' } });
+    const results = await res.json();
+    if(!Array.isArray(results) || results.length === 0){ closeMapSuggestions(); return; }
+    mapSuggestionItems = results; mapKbIndex = -1;
+    mapLocSuggestions.innerHTML = results.map((r, i)=>{
+      const parts = (r.display_name || '').split(',');
+      const main = parts[0] || r.display_name;
+      const sub = parts.slice(1, 3).join(',').trim();
+      return `<div class="suggestion" data-i="${i}"><div class="s-main">${escapeHtml(main)}</div>${sub ? `<div class="s-sub">${escapeHtml(sub)}</div>` : ''}</div>`;
+    }).join('');
+    mapLocSuggestions.classList.add('open');
+    mapLocSuggestions.querySelectorAll('.suggestion').forEach(el=>{
+      el.addEventListener('click', ()=> pickMapSuggestion(parseInt(el.dataset.i)));
+    });
+  } catch(e){ console.warn('Location suggest failed:', e); closeMapSuggestions(); }
+}
+function pickMapSuggestion(i){
+  const r = mapSuggestionItems[i];
+  if(!r) return;
+  mapLocInput.value = (r.display_name || '').split(',').slice(0,2).join(',');
+  mapLocBox.classList.add('has-value');
+  mapUserLoc = { lat: parseFloat(r.lat), lng: parseFloat(r.lon) };
+  closeMapSuggestions();
+  if(clientMap) clientMap.setView([mapUserLoc.lat, mapUserLoc.lng], 13);
+  renderMapResults();
+}
+function closeMapSuggestions(){ mapLocSuggestions.classList.remove('open'); mapLocSuggestions.innerHTML = ''; mapKbIndex = -1; }
+mapLocInput.addEventListener('keydown', (e)=>{
+  const items = mapLocSuggestions.querySelectorAll('.suggestion');
+  if(!items.length) return;
+  if(e.key === 'ArrowDown'){ e.preventDefault(); mapKbIndex = Math.min(mapKbIndex+1, items.length-1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); mapKbIndex = Math.max(mapKbIndex-1, 0); }
+  else if(e.key === 'Enter'){ e.preventDefault(); if(mapKbIndex >= 0) pickMapSuggestion(mapKbIndex); return; }
+  else if(e.key === 'Escape'){ closeMapSuggestions(); return; }
+  else return;
+  items.forEach((el, i)=> el.classList.toggle('kb-active', i === mapKbIndex));
+});
+document.addEventListener('click', (e)=>{ if(!mapLocBox.contains(e.target)) closeMapSuggestions(); });
+document.getElementById('mapLocClear').addEventListener('click', ()=>{
+  mapLocInput.value = ''; mapUserLoc = null; mapLocBox.classList.remove('has-value');
+  closeMapSuggestions(); renderMapResults();
+});
+document.getElementById('mapSearchInput').addEventListener('input', renderMapResults);
+
+/* ---------- list/map toggle ---------- */
+document.getElementById('mapViewToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-mode]');
+  if(!btn) return;
+  document.querySelectorAll('#mapViewToggle button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  mapViewMode = btn.dataset.mode;
+  document.getElementById('mapResultsArea').style.display = mapViewMode === 'list' ? 'block' : 'none';
+  document.getElementById('mapMapPanelWrap').style.display = mapViewMode === 'map' ? 'block' : 'none';
+  if(mapViewMode === 'map') ensureClientMapReady();
+});
+
+function ensureClientMapReady(){
+  const el = document.getElementById('clientMapEl');
+  if(!el || el.offsetWidth === 0){ requestAnimationFrame(ensureClientMapReady); return; }
+  if(!mapInitialized){
+    clientMap = L.map('clientMapEl').setView([41.2995, 69.2401], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution:'&copy; OpenStreetMap contributors', maxZoom:19
+    }).addTo(clientMap);
+    mapInitialized = true;
+    if(mapMetaFilters.nearby && mapNearbyLoc) drawMapNearbyCircle(mapNearbyLoc);
+  }
+  clientMap.invalidateSize();
+  renderMapPins(currentMapFiltered());
+}
+
+/* ---------- map pins ---------- */
+function photoIcon(barber, active){
+  const html = barber.avatar_url
+    ? `<img src="${escapeHtml(barber.avatar_url)}" alt="">`
+    : `<span>${(barber.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</span>`;
+  return L.divIcon({ className:'', html:`<div class="photo-pin${active ? ' active' : ''}">${html}</div>`, iconSize:null });
+}
+function renderMapPins(barbers){
+  if(!clientMap) return;
+  Object.values(mapMarkersById).forEach(m => clientMap.removeLayer(m));
+  mapMarkersById = {};
   const myBooking = nextBookingWithBarber();
   const myBarberId = myBooking ? myBooking.barber_id : null;
+  const bounds = [];
+  barbers.forEach(b=>{
+    if(!b.latitude || !b.longitude || !b.is_location_verified) return;
+    const marker = L.marker([b.latitude, b.longitude], { icon: photoIcon(b, b.id === myBarberId) }).addTo(clientMap);
+    marker.on('click', ()=>{ highlightMapBarber(b.id); openMapProfilePop(b); });
+    mapMarkersById[b.id] = marker;
+    bounds.push([b.latitude, b.longitude]);
+  });
+  if(!mapUserLoc && !mapNearbyLoc && bounds.length > 0) clientMap.fitBounds(bounds, { padding:[40,40], maxZoom:14 });
+}
+function highlightMapBarber(id){
+  Object.entries(mapMarkersById).forEach(([mid, m])=>{
+    const b = mapAllBarbers.find(x => x.id === mid);
+    if(b) m.setIcon(photoIcon(b, mid === id));
+  });
+  document.querySelectorAll('.bcard').forEach(c => c.classList.toggle('highlighted', c.dataset.id === id));
+}
 
-  const { data: barbers, error } = await supabaseClient
-    .from('barbers').select('id, full_name, avatar_url, shop_name, district, latitude, longitude, is_location_verified, phone')
-    .eq('is_published', true).eq('is_approved', true);
+/* ---------- availability strip ---------- */
+function availStripHtml(b){
+  const days = [];
+  for(let i=0; i<7; i++){
+    const d = new Date(); d.setDate(d.getDate()+i);
+    const key = JS_DAY_TO_KEY[d.getDay()];
+    const open = (b.work_days || []).includes(key);
+    days.push(`<div class="avail-day${open ? ' open' : ''}"><div class="d-label">${I18N[currentLang].day_short ? I18N[currentLang].day_short[d.getDay()] : ''}</div><div class="d-num">${d.getDate()}</div></div>`);
+  }
+  return `<div class="avail-row">${days.join('')}</div>`;
+}
 
+function currentMapFiltered(){
+  const search = (document.getElementById('mapSearchInput').value || '').trim().toLowerCase();
+  const activeSpecEn = mapSelectedSpecialtyFilters.map(i => SPECIALTIES_EN[i]);
+  let filtered = mapAllBarbers.filter(b=>{
+    if(search){
+      const inName = (b.full_name || '').toLowerCase().includes(search);
+      const inShop = (b.shop_name || '').toLowerCase().includes(search);
+      const inSpecs = (b.specialties || []).some(s => localizeSpecialty(s).toLowerCase().includes(search));
+      if(!inName && !inShop && !inSpecs) return false;
+    }
+    if(activeSpecEn.length){
+      const specs = b.specialties || [];
+      if(!activeSpecEn.every(s => specs.includes(s))) return false;
+    }
+    if(mapMetaFilters.open && !isMapOpenNow(b)) return false;
+    if(mapMetaFilters.rating && (mapAvgRatingByBarber[b.id] || 0) < 4.5) return false;
+    if(mapMetaFilters.nearby && mapNearbyLoc){
+      if(!b.latitude || !b.longitude) return false;
+      if(distKm(mapNearbyLoc, {lat:b.latitude, lng:b.longitude}) > NEARBY_RADIUS_KM) return false;
+    }
+    return true;
+  });
+  const sortOrigin = (mapMetaFilters.nearby && mapNearbyLoc) ? mapNearbyLoc : mapUserLoc;
+  if(sortOrigin){
+    filtered.sort((a,b)=>{
+      const da = (a.latitude && a.longitude) ? distKm(sortOrigin, {lat:a.latitude, lng:a.longitude}) : Infinity;
+      const db = (b.latitude && b.longitude) ? distKm(sortOrigin, {lat:b.latitude, lng:b.longitude}) : Infinity;
+      return da - db;
+    });
+  }
+  return filtered;
+}
+
+/* ---------- results ---------- */
+function renderMapResults(){
+  if(!mapDataLoaded) return;
+  const area = document.getElementById('mapResultsArea');
+  const filtered = currentMapFiltered();
+
+  if(mapMetaFilters.nearby && mapNearbyLoc && clientMap) drawMapNearbyCircle(mapNearbyLoc);
+  else clearMapNearbyCircle();
+
+  const count = filtered.length;
+  document.getElementById('mapResultsCount').textContent =
+    mapAllBarbers.length ? (count + ' ' + (count === 1 ? t('results_one') : t('results_many'))) : '';
+
+  const banner = document.getElementById('mapAreaBanner');
+  banner.innerHTML = '';
+
+  if(mapAllBarbers.length === 0){
+    area.innerHTML = `<div class="empty-state"><div class="icon">✂️</div><strong>${t('search_empty_h')}</strong><p>${t('no_barbers_yet')}</p></div>`;
+    if(clientMap) renderMapPins([]);
+    return;
+  }
+  if(count === 0 && mapMetaFilters.nearby && mapNearbyLoc){
+    banner.innerHTML = `<div class="info-banner"><div class="ib-icon">📍</div><div><div class="ib-title">${t('area_empty_h')}</div><div class="ib-sub">${t('area_empty_p')}</div></div></div>`;
+    area.innerHTML = '';
+    if(clientMap) renderMapPins([]);
+    return;
+  }
+  if(count === 0){
+    area.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><strong>${t('search_noresults_h')}</strong><p>${t('search_noresults_p')}</p></div>`;
+    if(clientMap) renderMapPins([]);
+    return;
+  }
+
+  area.innerHTML = filtered.map(b=>{
+    const photos = (mapPhotosByBarber[b.id] || []).slice(0,3);
+    const photoCells = [0,1,2].map(i =>
+      photos[i]
+        ? `<div class="ph"><img src="${escapeHtml(photos[i].photo_url)}" alt="" loading="lazy"></div>`
+        : `<div class="ph">${i === 1 ? '✂' : (b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()[i % 2] || '·'}</div>`
+    ).join('');
+    const price = mapLowestPrice(b.id);
+    const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : (b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const dist = ((mapMetaFilters.nearby && mapNearbyLoc || mapUserLoc) && b.latitude && b.longitude)
+      ? distKm((mapMetaFilters.nearby && mapNearbyLoc) || mapUserLoc, {lat:b.latitude, lng:b.longitude}).toFixed(1) + ' ' + t('dist_km') : '';
+    const rating = mapAvgRatingByBarber[b.id] ? ` <span class="card-rating">★ ${mapAvgRatingByBarber[b.id].toFixed(1)}</span>` : '';
+    return `
+      <div class="bcard" data-id="${b.id}">
+        <button class="fav-btn ${mapFavoriteIds.has(b.id) ? 'favorited' : ''}" data-fav="${b.id}">${mapFavoriteIds.has(b.id) ? '♥' : '♡'}</button>
+        ${photos.length ? `<div class="card-photos">${photoCells}</div>` : ''}
+        <div class="card-id-row">
+          <div class="card-avatar">${avatar}</div>
+          <div class="card-who">
+            <div class="card-name">${escapeHtml(b.full_name)}${rating}</div>
+            <div class="card-sub">${escapeHtml(b.shop_name || b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
+          </div>
+          <div class="card-right">
+            ${price !== null ? `<div class="card-price">${t('price_from')} ${formatPrice(price)}</div>` : ''}
+            ${dist ? `<div class="card-dist">${dist}</div>` : ''}
+          </div>
+        </div>
+        ${availStripHtml(b)}
+        <button class="book-btn" data-book="${b.id}">${t('book_now')}</button>
+      </div>`;
+  }).join('');
+
+  area.querySelectorAll('.bcard').forEach(card=>{
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-book]') || e.target.closest('[data-fav]')) return;
+      const b = mapAllBarbers.find(x => x.id === card.dataset.id);
+      openMapProfilePop(b);
+    });
+  });
+  area.querySelectorAll('[data-fav]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggleMapFavorite(btn.dataset.fav, btn); });
+  });
+  area.querySelectorAll('[data-book]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const b = mapAllBarbers.find(x => x.id === btn.dataset.book);
+      openMapProfilePop(b, true);
+    });
+  });
+
+  if(clientMap) renderMapPins(filtered);
+}
+
+async function toggleMapFavorite(barberId, btn){
+  const isFav = mapFavoriteIds.has(barberId);
+  btn.disabled = true;
+  if(isFav){
+    const { error } = await supabaseClient.from('favorites').delete().eq('client_id', clientData.id).eq('barber_id', barberId);
+    if(!error){ mapFavoriteIds.delete(barberId); btn.classList.remove('favorited'); btn.textContent = '♡'; }
+  } else {
+    const { error } = await supabaseClient.from('favorites').insert([{ client_id: clientData.id, barber_id: barberId }]);
+    if(!error){ mapFavoriteIds.add(barberId); btn.classList.add('favorited'); btn.textContent = '♥'; }
+  }
+  btn.disabled = false;
+}
+
+/* ---------- profile pop (bottom-sheet booking flow) ---------- */
+let mapPopGalleryIndex = 0, mapPopPhotos = [];
+
+function getMapProfilePopOverlay(){
+  let overlay = document.getElementById('mapProfilePopOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'mapProfilePopOverlay';
+    overlay.className = 'profile-pop-overlay';
+    overlay.innerHTML = '<div class="profile-pop" id="mapProfilePop"></div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.classList.remove('open'); });
+  }
+  return overlay;
+}
+
+function openMapProfilePop(b, jumpToBooking = false){
+  const overlay = getMapProfilePopOverlay();
+  const pop = document.getElementById('mapProfilePop');
+  mapPopPhotos = mapPhotosByBarber[b.id] || [];
+  mapPopGalleryIndex = 0;
+  const specs = (b.specialties || []).map(s=>`<span class="pop-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
+  const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : (b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+  pop.innerHTML = `
+    <div class="pop-gallery" id="mapPopGallery">
+      ${mapPopPhotos.length ? `<img id="mapPopGalleryImg" src="${escapeHtml(mapPopPhotos[0].photo_url)}" alt="">` : `<div class="no-photo">${(b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>`}
+      <button class="pop-close" id="mapPopClose">&times;</button>
+      ${mapPopPhotos.length > 1 ? `
+        <button class="gal-arrow gal-prev" id="mapGalPrev">‹</button>
+        <button class="gal-arrow gal-next" id="mapGalNext">›</button>
+        <div class="gal-nav" id="mapGalNav">1/${mapPopPhotos.length}</div>` : ''}
+    </div>
+    <div class="pop-body">
+      <div class="pop-id">
+        <div class="pop-avatar">${avatar}</div>
+        <div>
+          <div class="pop-name">${escapeHtml(b.full_name)}</div>
+          <div class="pop-sub">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
+        </div>
+      </div>
+      ${b.bio ? `<div class="pop-bio">${escapeHtml(b.bio)}</div>` : ''}
+      <div class="pop-tags">${specs}</div>
+      <div class="pop-section-t">${t('choose_service')}</div>
+      <div id="mapPopServiceList"></div>
+    </div>
+  `;
+  overlay.classList.add('open');
+  document.getElementById('mapPopClose').addEventListener('click', ()=> overlay.classList.remove('open'));
+
+  if(mapPopPhotos.length > 1){
+    const img = document.getElementById('mapPopGalleryImg');
+    const nav = document.getElementById('mapGalNav');
+    const show = (i)=>{
+      mapPopGalleryIndex = (i + mapPopPhotos.length) % mapPopPhotos.length;
+      img.src = mapPopPhotos[mapPopGalleryIndex].photo_url;
+      nav.textContent = (mapPopGalleryIndex+1) + '/' + mapPopPhotos.length;
+    };
+    document.getElementById('mapGalPrev').addEventListener('click', ()=> show(mapPopGalleryIndex-1));
+    document.getElementById('mapGalNext').addEventListener('click', ()=> show(mapPopGalleryIndex+1));
+  }
+
+  renderMapPopServices(b);
+  if(jumpToBooking) pop.querySelector('.pop-body').scrollIntoView({ behavior:'smooth' });
+}
+
+function renderMapPopServices(b){
+  const listEl = document.getElementById('mapPopServiceList');
+  const active = (mapServicesByBarber[b.id] || []).filter(s => s.is_active);
+  if(!active.length){ listEl.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
+  listEl.innerHTML = active.map(s=>`
+    <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
+      <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+      <span class="svc-price">${formatPrice(s.price)}</span>
+    </div>`).join('');
+  listEl.querySelectorAll('.service-option').forEach(opt=>{
+    opt.addEventListener('click', ()=> showMapAddonPicker(b, opt.dataset.key, parseInt(opt.dataset.duration), parseInt(opt.dataset.price) || 0, active));
+  });
+}
+
+function showMapAddonPicker(b, mainKey, mainDuration, mainPrice, allActiveServices){
+  const listEl = document.getElementById('mapPopServiceList');
+  const addonOptions = allActiveServices.filter(s => s.service_key !== mainKey);
+  if(addonOptions.length === 0){ showMapDayPicker(b, mainKey, mainDuration, mainPrice, []); return; }
+
+  const selectedAddons = new Set();
+  listEl.innerHTML = `
+    <span class="back-link" id="mapAddonBackBtn">← ${t('back')}</span>
+    <div class="pop-section-t">${t('addon_title')}</div>
+    ${addonOptions.map(s => `
+      <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
+        <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span class="svc-price">+${formatPrice(s.price)}</span>
+      </div>`).join('')}
+    <button class="confirm-booking-btn" id="mapContinueWithAddonsBtn">${t('continue_btn')}</button>
+  `;
+  document.getElementById('mapAddonBackBtn').addEventListener('click', ()=> renderMapPopServices(b));
+  listEl.querySelectorAll('.addon-option').forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      const key = opt.dataset.addonKey;
+      if(selectedAddons.has(key)){ selectedAddons.delete(key); opt.classList.remove('selected'); }
+      else { selectedAddons.add(key); opt.classList.add('selected'); }
+    });
+  });
+  document.getElementById('mapContinueWithAddonsBtn').addEventListener('click', ()=>{
+    let totalDuration = mainDuration, totalPrice = mainPrice;
+    const addonKeys = [];
+    selectedAddons.forEach(key => {
+      const svc = addonOptions.find(s => s.service_key === key);
+      if(svc){ totalDuration += svc.duration_minutes; totalPrice += (svc.price || 0); addonKeys.push(key); }
+    });
+    showMapDayPicker(b, mainKey, totalDuration, totalPrice, addonKeys);
+  });
+}
+
+function generateMapSlots(b, dateObj, duration, bookedIsoSet){
+  const dayKey = JS_DAY_TO_KEY[dateObj.getDay()];
+  const blocks = blocksForDay(b, dayKey);
+  if(blocks.length === 0) return [];
+  const out = []; const now = new Date();
+  blocks.forEach(block => {
+    const [sh, sm] = block.start.split(':').map(Number);
+    const [eh, em] = block.end.split(':').map(Number);
+    let cur = new Date(dateObj); cur.setHours(sh, sm, 0, 0);
+    const end = new Date(dateObj); end.setHours(eh, em, 0, 0);
+    while(cur < end){
+      if(cur > now){
+        const iso = cur.toISOString();
+        out.push({ label: cur.toLocaleTimeString(currentLang==='en'?'en-US':currentLang, {hour:'2-digit',minute:'2-digit'}), iso, taken: bookedIsoSet.has(iso) });
+      }
+      cur = new Date(cur.getTime() + duration*60000);
+    }
+  });
+  return out;
+}
+
+async function showMapDayPicker(b, serviceKey, duration, price, addonKeys = []){
+  const listEl = document.getElementById('mapPopServiceList');
+  const rs = new Date(); const re = new Date(); re.setDate(re.getDate()+7);
+  const { data: existing } = await supabaseClient.from('bookings').select('start_time')
+    .eq('barber_id', b.id).in('status',['pending','confirmed'])
+    .gte('start_time', rs.toISOString()).lte('start_time', re.toISOString());
+  const bookedIsoSet = new Set((existing||[]).map(x => new Date(x.start_time).toISOString()));
+
+  const days = [];
+  for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(b, JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
+
+  const summaryLine = addonKeys.length > 0
+    ? `<div class="booking-summary-line">${SERVICES_LOCAL[currentLang][serviceKey] || serviceKey} + ${addonKeys.map(k => SERVICES_LOCAL[currentLang][k] || k).join(', ')} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
+    : '';
+
+  listEl.innerHTML = `
+    <span class="back-link" id="mapPopBack">← ${t('back')}</span>
+    <div class="pop-section-t" style="margin-top:4px;">${t('book_title')}</div>
+    ${summaryLine}
+    ${days.length ? `<div class="day-tabs" id="mapPopDayTabs"></div><div class="slot-grid" id="mapPopSlotGrid"></div>` : `<div class="no-slots-msg">${t('no_slots')}</div>`}
+  `;
+  document.getElementById('mapPopBack').addEventListener('click', ()=> renderMapPopServices(b));
+  if(!days.length) return;
+
+  const tabs = document.getElementById('mapPopDayTabs');
+  const grid = document.getElementById('mapPopSlotGrid');
+  const dayShort = I18N[currentLang].day_short || ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let selectedSlotIso = null, selectedRefPhoto = null;
+
+  function selectDay(idx){
+    selectedSlotIso = null; selectedRefPhoto = null;
+    let useSavedStyle = false;
+    const hasSavedStyle = clientData && (clientData.style_notes || clientData.style_photo_url);
+    tabs.querySelectorAll('.day-tab').forEach((el,i)=> el.classList.toggle('active', i===idx));
+    const slots = generateMapSlots(b, days[idx], duration, bookedIsoSet);
+    if(!slots.length){ grid.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
+    grid.innerHTML = slots.map(s=>`<div class="slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
+      + (hasSavedStyle ? `
+        <div class="ref-photo-row" id="mapSavedStyleRow" style="display:none;">
+          <label class="ref-photo-label" id="mapUseSavedStyleBtn" style="cursor:pointer;">✨ <span>${t('use_saved_style')}</span></label>
+        </div>` : '')
+      + `<div class="ref-photo-row" id="mapRefPhotoRow" style="display:none;">
+           <label class="ref-photo-label" for="mapRefPhotoInput">📎 <span id="mapRefPhotoLabelText">${t('attach_reference')}</span></label>
+           <input type="file" id="mapRefPhotoInput" accept="image/*" style="display:none;">
+         </div>
+         <button class="confirm-booking-btn" id="mapConfirmBookingBtn" style="display:none;">${t('confirm_booking_btn')}</button>`;
+    const confirmBtn = document.getElementById('mapConfirmBookingBtn');
+    const refRow = document.getElementById('mapRefPhotoRow');
+    const refInput = document.getElementById('mapRefPhotoInput');
+    const savedStyleRow = document.getElementById('mapSavedStyleRow');
+    refInput.addEventListener('change', ()=>{
+      selectedRefPhoto = refInput.files[0] || null;
+      useSavedStyle = false;
+      document.getElementById('mapRefPhotoLabelText').textContent = selectedRefPhoto ? selectedRefPhoto.name : t('attach_reference');
+      const btn = document.getElementById('mapUseSavedStyleBtn');
+      if(btn) btn.querySelector('span').textContent = t('use_saved_style');
+    });
+    if(savedStyleRow){
+      document.getElementById('mapUseSavedStyleBtn').addEventListener('click', ()=>{
+        useSavedStyle = !useSavedStyle;
+        selectedRefPhoto = null;
+        document.getElementById('mapUseSavedStyleBtn').querySelector('span').textContent = useSavedStyle ? t('using_saved_style') : t('use_saved_style');
+        document.getElementById('mapRefPhotoLabelText').textContent = t('attach_reference');
+      });
+    }
+
+    grid.querySelectorAll('.slot-btn:not(.taken)').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        grid.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSlotIso = el.dataset.iso;
+        refRow.style.display = 'flex';
+        if(savedStyleRow) savedStyleRow.style.display = 'flex';
+        confirmBtn.style.display = 'block';
+        confirmBtn.textContent = t('confirm_booking_btn') + ' — ' + el.textContent;
+      });
+    });
+
+    confirmBtn.addEventListener('click', async ()=>{
+      if(!selectedSlotIso) return;
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = t('booking_in_progress');
+
+      let referencePhotoUrl = null, styleNotesToSave = null;
+      if(useSavedStyle && clientData){
+        referencePhotoUrl = clientData.style_photo_url || null;
+        styleNotesToSave = clientData.style_notes || null;
+      } else if(selectedRefPhoto){
+        const ext = selectedRefPhoto.name.split('.').pop();
+        const path = `${clientData.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabaseClient.storage.from('booking-references').upload(path, selectedRefPhoto);
+        if(!uploadError){
+          const { data: urlData } = supabaseClient.storage.from('booking-references').getPublicUrl(path);
+          referencePhotoUrl = urlData.publicUrl;
+        } else { console.warn('Reference photo upload failed, continuing without it:', uploadError); }
+      }
+
+      const { error } = await supabaseClient.from('bookings').insert([{
+        barber_id: b.id, client_id: clientData.id,
+        client_name: clientData.full_name, client_phone: clientData.phone,
+        start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
+        service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave,
+        addon_keys: addonKeys
+      }]);
+      if(error){
+        console.error('Booking insert failed:', error);
+        const msg = error.code === '23505' ? t('booking_failed')
+          : `${t('booking_failed')}<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>`;
+        grid.innerHTML = `<div class="no-slots-msg">${msg}</div>`;
+        return;
+      }
+      await refreshBookingsAfterNewBooking();
+      document.getElementById('mapProfilePopOverlay').classList.remove('open');
+      goToView('home');
+      showBookingToast();
+    });
+  }
+  tabs.innerHTML = days.map(d=>`<div class="day-tab">${dayShort[d.getDay()]} ${d.getDate()}</div>`).join('');
+  Array.from(tabs.children).forEach((el,i)=> el.addEventListener('click', ()=> selectDay(i)));
+  selectDay(0);
+}
+
+function showBookingToast(){
+  const toast = document.createElement('div');
+  toast.className = 'checkin-toast';
+  toast.innerHTML = `✅ <span>${t('booking_confirmed')}</span>`;
+  document.body.appendChild(toast);
+  requestAnimationFrame(()=> toast.classList.add('show'));
+  setTimeout(()=>{ toast.classList.remove('show'); setTimeout(()=> toast.remove(), 300); }, 2600);
+}
+
+async function refreshBookingsAfterNewBooking(){
+  const { data: bookings } = await supabaseClient
+    .from('bookings')
+    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district, phone)')
+    .eq('client_id', clientData.id)
+    .order('start_time', { ascending:true });
+  bookingsData = bookings || [];
+  renderHomeBookings();
+  renderDashboardTiles();
+  renderAllBookings();
+  renderRebookNudge();
+}
+
+/* ---------- initial load ---------- */
+async function setupClientMap(){
+  const { data: barbers, error } = await supabaseClient.from('barbers').select('*')
+    .eq('is_published', true).eq('is_approved', true)
+    .order('created_at', { ascending:false });
   if(error){
-    console.error('Failed to load barbers for map:', error);
-    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>Could not load the map: ${escapeHtml(error.message)}</div>`;
-    mapWrap.style.display = 'none';
+    console.error('Failed to load barbers for map tab:', error);
+    mapDataLoaded = true;
+    document.getElementById('mapResultsArea').innerHTML = `<div class="empty-state"><div class="icon">📍</div>Could not load barbers.</div>`;
     return;
   }
+  mapAllBarbers = barbers || [];
 
-  allBarbersForMap = (barbers || []).filter(b => b.latitude && b.longitude && b.is_location_verified);
-
-  if(allBarbersForMap.length === 0){
-    statusMsg.innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('map_no_booking')}</div>`;
-    mapWrap.style.display = 'none';
-    return;
+  if(mapAllBarbers.length){
+    const ids = mapAllBarbers.map(b => b.id);
+    const [{ data: services }, photosRes, reviewsRes, favsRes] = await Promise.all([
+      supabaseClient.from('services').select('*').in('barber_id', ids),
+      supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
+      supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
+      supabaseClient.from('favorites').select('barber_id').eq('client_id', clientData.id).then(r=>r).catch(()=>({ data: [] }))
+    ]);
+    mapServicesByBarber = {};
+    (services||[]).forEach(s=>{ (mapServicesByBarber[s.barber_id] = mapServicesByBarber[s.barber_id] || []).push(s); });
+    mapPhotosByBarber = {};
+    ((photosRes && photosRes.data) || []).forEach(p=>{ (mapPhotosByBarber[p.barber_id] = mapPhotosByBarber[p.barber_id] || []).push(p); });
+    const ratingSums = {};
+    ((reviewsRes && reviewsRes.data) || []).forEach(r=>{
+      const e = ratingSums[r.barber_id] || (ratingSums[r.barber_id] = { sum:0, count:0 });
+      e.sum += r.rating; e.count += 1;
+    });
+    mapAvgRatingByBarber = {};
+    Object.entries(ratingSums).forEach(([id, e])=>{ mapAvgRatingByBarber[id] = e.sum / e.count; });
+    mapFavoriteIds = new Set(((favsRes && favsRes.data) || []).map(f => f.barber_id));
   }
 
-  statusMsg.innerHTML = '';
-  mapWrap.style.display = 'block';
-
-  const myBarber = myBarberId ? allBarbersForMap.find(b => b.id === myBarberId) : null;
-  if(myBarber){
-    document.getElementById('mapBarberLabel').innerHTML =
-      `<strong>${escapeHtml(myBarber.shop_name || myBarber.full_name)}</strong> · ${escapeHtml(myBarber.district || '')}<br>` +
-      `<a href="https://www.openstreetmap.org/directions?to=${myBarber.latitude},${myBarber.longitude}" target="_blank" style="color:var(--gold); font-weight:600;">${t('map_directions')} →</a>`;
-  } else {
-    document.getElementById('mapBarberLabel').innerHTML = `<span style="color:var(--ink-dim);">${t('map_browse_hint')}</span>`;
-  }
-
-  const tryInit = () => {
-    const el = document.getElementById('clientMapEl');
-    if(el.offsetWidth === 0){ requestAnimationFrame(tryInit); return; }
-    if(!mapInitialized){
-      clientMap = L.map('clientMapEl').setView([41.2995, 69.2401], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
-      }).addTo(clientMap);
-      mapInitialized = true;
-    }
-    renderClientMapPins(myBarberId);
-    if(myBarber){
-      clientMap.setView([myBarber.latitude, myBarber.longitude], 15);
-    } else {
-      const bounds = allBarbersForMap.map(b => [b.latitude, b.longitude]);
-      clientMap.fitBounds(bounds, { padding:[40,40], maxZoom:14 });
-    }
-    clientMap.invalidateSize();
-  };
-
-  if(document.querySelector('.view[data-view="map"]').classList.contains('active')){
-    tryInit();
-  } else {
-    document.querySelector('.nav-btn[data-view="map"]').addEventListener('click', tryInit, { once:true });
-  }
+  mapDataLoaded = true;
+  renderSpecialtyChips();
+  renderMapResults();
 }
 
 /* ---------- favorites (legacy hook kept for compatibility; favorites now render inside dashboard tiles) ---------- */
