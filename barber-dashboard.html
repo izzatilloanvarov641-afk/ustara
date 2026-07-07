@@ -163,14 +163,16 @@
   .profile-view.hidden{ display:none; }
 
   /* services */
-  .service-row{
-    display:flex; align-items:center; justify-content:space-between; gap:14px;
-    padding:16px 0; border-bottom:1px solid var(--line); flex-wrap:wrap;
-  }
-  .service-row:last-child{ border-bottom:none; }
-  .service-name{ font-weight:600; font-size:14.5px; min-width:150px; }
-  .service-inputs{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-  .service-inputs input{ width:100px; padding:9px 12px; font-size:13px; }
+  .svc-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:14px; }
+  .svc-card{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px 20px; transition:border-color .15s; }
+  .svc-card.active-svc{ border-color:var(--brass); }
+  .svc-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .svc-card-id{ display:flex; align-items:center; gap:10px; }
+  .svc-card-name{ font-weight:700; font-size:14.5px; }
+  .svc-inputs-row{ display:flex; gap:10px; }
+  .svc-inputs-row .field-group{ flex:1; margin-bottom:0; }
+  .svc-inputs-row label{ font-size:11px; margin-bottom:5px; }
+  .svc-inputs-row input{ padding:9px 10px; font-size:13px; }
   .toggle-switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
   .toggle-switch input{ opacity:0; width:0; height:0; }
   .toggle-slider{ position:absolute; inset:0; background:var(--line); border-radius:14px; cursor:pointer; transition:background .2s; }
@@ -211,11 +213,20 @@
 
   /* bookings */
   .booking-row{
-    display:flex; justify-content:space-between; align-items:center; padding:16px 20px;
-    background:var(--surface); border:1px solid var(--line); border-radius:8px; margin-bottom:10px;
-    font-size:14px; gap:12px; flex-wrap:wrap;
+    display:flex; align-items:flex-start; padding:16px 20px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; margin-bottom:10px;
+    font-size:14px; gap:14px; flex-wrap:wrap;
   }
-  .booking-status{ font-size:11.5px; padding:4px 10px; border-radius:12px; text-transform:capitalize; background:var(--surface-alt); flex-shrink:0; }
+  .booking-icon{ width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .booking-body{ flex:1; min-width:180px; }
+  .booking-status{
+    display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 11px;
+    border-radius:12px; text-transform:capitalize; flex-shrink:0;
+  }
+  .status-pending{ background:#FBF0DC; color:#96701A; }
+  .status-confirmed{ background:#DFF1EF; color:#2F7A72; }
+  .status-cancelled{ background:#FBE7E9; color:#B5495A; }
+  .status-completed{ background:#E7EEF7; color:#3B6EA8; }
   .ref-photo-thumb{
     width:44px; height:44px; border-radius:8px; overflow:hidden; flex-shrink:0; border:1px solid var(--line);
     display:block;
@@ -231,6 +242,117 @@
     border:1px solid var(--line); color:var(--ink-dim); background:var(--surface);
   }
   .filter-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; font-weight:600; }
+
+  /* ---------- analytics ---------- */
+  .an-tiles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:28px; }
+  .an-tile{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px 20px; }
+  .an-tile .an-label{ font-size:11.5px; color:var(--ink-dim); margin-bottom:6px; }
+  .an-tile .an-num{ font-family:'Fraunces', serif; font-size:24px; }
+  .an-tile .an-trend{ font-size:11.5px; margin-top:4px; font-weight:600; }
+  .an-tile-icon{
+    width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; margin-bottom:12px;
+  }
+  .chip-gold{ background:#FBF0DC; color:#96701A; }
+  .chip-teal{ background:#DFF1EF; color:#2F7A72; }
+  .an-trend.up{ color:var(--ok); } .an-trend.down{ color:var(--err); }
+  .an-svc-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .an-svc-row:last-child{ border-bottom:none; }
+  .an-svc-row .an-svc-bar{ flex:1; height:6px; background:var(--surface-alt); border-radius:4px; margin:0 14px; position:relative; overflow:hidden; }
+  .an-svc-row .an-svc-bar::after{ content:''; position:absolute; left:0; top:0; bottom:0; width:var(--pct,0%); background:var(--brass); border-radius:4px; }
+
+  /* ---------- onboarding checklist ---------- */
+  .onboarding-card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:22px 24px; margin-bottom:28px; }
+  .onboarding-eyebrow{ font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:4px; }
+  .onboarding-card h3{ font-family:'Fraunces', serif; font-size:26px; margin:0 0 14px; }
+  .onboarding-bar{ height:8px; background:var(--surface-alt); border-radius:6px; overflow:hidden; margin-bottom:18px; }
+  .onboarding-bar-fill{ height:100%; background:var(--brass); border-radius:6px; transition:width .3s ease; }
+  .onb-step{ display:flex; align-items:center; gap:14px; padding:12px 0; border-top:1px solid var(--line); cursor:pointer; }
+  .onb-step:first-child{ border-top:none; }
+  .onb-step-icon{ width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; background:var(--surface-alt); color:var(--ink-dim); }
+  .onb-step.done .onb-step-icon{ background:#EEF5EE; color:var(--ok); }
+  .onb-step-title{ font-size:14px; font-weight:600; }
+  .onb-step-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .onb-step.done .onb-step-title{ color:var(--ink-dim); }
+
+  .lang-row{ display:flex; gap:8px; }
+  .lang-btn{ border:1px solid var(--line); color:var(--ink-dim); padding:9px 16px; border-radius:20px; font-size:13px; cursor:pointer; background:var(--bg); font-weight:600; font-family:'Inter', sans-serif; }
+  .lang-btn.active{ background:var(--brass); border-color:var(--brass); color:#fff; }
+
+  /* ---------- walk-in booking modal ---------- */
+  .walkin-modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .walkin-modal{ background:var(--surface); border-radius:14px; padding:28px 26px; max-width:440px; width:100%; max-height:88vh; overflow-y:auto; position:relative; }
+  .walkin-modal-close{ position:absolute; top:14px; right:14px; background:var(--surface-alt); border:none; width:30px; height:30px; border-radius:50%; font-size:16px; color:var(--ink-dim); cursor:pointer; }
+  .walkin-svc-option{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; font-size:13.5px; }
+  .walkin-svc-option.selected{ border-color:var(--brass); background:#FBF3E3; }
+  .walkin-day-tabs{ display:flex; gap:6px; overflow-x:auto; margin:10px 0; padding-bottom:4px; }
+  .walkin-day-tab{ flex-shrink:0; background:var(--bg); border:1.5px solid var(--line); padding:8px 12px; border-radius:10px; font-size:12px; cursor:pointer; font-weight:600; }
+  .walkin-day-tab.active{ background:var(--brass); border-color:var(--brass); color:#fff; }
+  .walkin-slot-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+  .walkin-slot-btn{ background:var(--bg); border:1.5px solid var(--line); padding:9px 4px; border-radius:8px; font-size:12px; cursor:pointer; text-align:center; font-weight:600; }
+  .walkin-slot-btn.selected{ background:var(--brass); border-color:var(--brass); color:#fff; }
+  .walkin-slot-btn.taken{ opacity:0.3; cursor:not-allowed; text-decoration:line-through; }
+  .walkin-total{ display:flex; justify-content:space-between; align-items:center; font-size:14px; font-weight:700; margin:16px 0; padding-top:14px; border-top:1px solid var(--line); }
+  .walkin-total .amt{ color:var(--brass); font-family:'Fraunces', serif; font-size:20px; }
+
+  /* ---------- clients (CRM) ---------- */
+  .client-row{
+    display:flex; justify-content:space-between; align-items:center; padding:16px 20px;
+    background:var(--surface); border:1px solid var(--line); border-radius:8px; margin-bottom:10px;
+    font-size:14px; gap:12px; flex-wrap:wrap;
+  }
+  .client-row .cr-name{ font-weight:600; }
+  .client-row .cr-phone{ font-size:12.5px; color:var(--ink-dim); margin-top:2px; }
+  .client-row .cr-phone a{ color:var(--brass); }
+  .client-row .cr-meta{ text-align:right; font-size:12.5px; color:var(--ink-dim); }
+  .client-row .cr-visits{ font-weight:700; color:var(--brass); font-size:14px; }
+
+  /* ---------- motion utilities ---------- */
+  .letter{ display:inline-block; opacity:0; filter:blur(6px); transform:scale(1.12); }
+  .letter.in{ animation:letterFocus .5s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes letterFocus{ to{ opacity:1; filter:blur(0); transform:scale(1); } }
+
+  .reveal{ opacity:0; transform:translateY(12px); transition:opacity .5s cubic-bezier(.2,.7,.3,1), transform .5s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .letter{ opacity:1 !important; filter:none !important; transform:none !important; }
+    .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+  }
+
+  /* ---------- sticker / badge accents ---------- */
+  .new-badge{
+    display:inline-flex; align-items:center; font-size:9.5px; font-weight:800; letter-spacing:.03em;
+    text-transform:uppercase; background:var(--brass); color:#fff; padding:3px 8px; border-radius:20px;
+    transform:rotate(-4deg); margin-left:7px; vertical-align:middle;
+  }
+  .icon-accent{
+    position:absolute; opacity:0.09; font-size:64px; pointer-events:none; user-select:none;
+    transform:rotate(-12deg);
+  }
+
+  /* ---------- icon-chip menu row (Profile settings) ---------- */
+  .chip-row{ display:flex; align-items:center; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); }
+  .chip-row:last-child{ border-bottom:none; }
+  .chip-row-icon{
+    width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; flex-shrink:0;
+  }
+  .chip-row-body{ flex:1; min-width:0; }
+  .chip-row-title{ font-size:14px; font-weight:700; }
+  .chip-row-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .chip-blue{ background:#E7EEF7; color:#3B6EA8; }
+  .chip-green{ background:#E7F2E9; color:#3F7D52; }
+  .chip-terracotta{ background:#F7EAE3; color:#B0602F; }
+
+  /* ---------- chunky day checkmark (working hours) ---------- */
+  .day-check{
+    width:30px; height:30px; border-radius:50%; border:2px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:pointer;
+    transition:background .15s, border-color .15s; font-size:14px; color:transparent; padding:0;
+    font-family:inherit;
+  }
+  .day-check.checked{ background:var(--brass); border-color:var(--brass); color:#fff; }
 </style>
 </head>
 <body>
@@ -276,6 +398,11 @@
         <span data-i18n="nav_bookings">Bookings</span>
         <span id="bookingsNavBadge" style="display:none; position:absolute; top:6px; left:26px; width:8px; height:8px; border-radius:50%; background:var(--err);"></span>
       </button>
+      <button class="nav-item" data-view="clients" style="position:relative;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span data-i18n="nav_clients">Clients</span>
+        <span style="position:absolute; top:6px; left:26px; width:8px; height:8px; border-radius:50%; background:var(--brass);"></span>
+      </button>
     </nav>
     <div class="sidebar-foot">
       <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
@@ -290,7 +417,10 @@
   <main>
     <!-- ============ OVERVIEW ============ -->
     <div class="view active" data-view="overview">
-      <h1><span data-i18n="ov_title">Welcome back</span><span id="nameInsert"></span></h1>
+      <div style="position:relative;">
+        <span class="icon-accent" aria-hidden="true" style="top:-18px; right:-8px;">✂️</span>
+        <h1 id="ovGreeting">Welcome back</h1>
+      </div>
       <p class="page-sub" data-i18n="ov_sub">Here's where things stand today.</p>
 
       <div class="status-banner" id="statusBanner">
@@ -313,16 +443,23 @@
         </div>
       </div>
 
+      <div class="onboarding-card reveal" id="onboardingCard" style="display:none;">
+        <div class="onboarding-eyebrow" data-i18n="onb_eyebrow">Complete your profile</div>
+        <h3 id="onboardingPct">0%</h3>
+        <div class="onboarding-bar"><div class="onboarding-bar-fill" id="onboardingBarFill" style="width:0%;"></div></div>
+        <div id="onboardingSteps"></div>
+      </div>
+
       <div class="stat-row">
-        <div class="stat-card">
+        <div class="stat-card reveal">
           <div class="stat-num" id="statUpcoming">—</div>
           <div class="stat-label" data-i18n="stat_upcoming">Upcoming bookings</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card reveal">
           <div class="stat-num" id="statPending">—</div>
           <div class="stat-label" data-i18n="stat_pending">Awaiting your confirmation</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card reveal">
           <div class="stat-num" id="statServices">—</div>
           <div class="stat-label" data-i18n="stat_services">Active services</div>
         </div>
@@ -337,22 +474,91 @@
       <h1 data-i18n="nav_analytics">Analytics</h1>
       <p class="page-sub" data-i18n="an_sub">How your business has been doing.</p>
 
-      <div class="stats-row" style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:24px;">
-        <div class="card" style="flex:1; min-width:140px;">
-          <div style="font-size:11.5px; color:var(--ink-dim); margin-bottom:6px;" data-i18n="an_revenue">Last 8 weeks revenue</div>
-          <div id="anRevenueTotal" style="font-family:'Instrument Serif',serif; font-style:italic; font-size:26px;">—</div>
+      <div class="filter-tabs" id="anPeriodTabs">
+        <div class="filter-tab" data-period="day" data-i18n="an_p_day">Day</div>
+        <div class="filter-tab active" data-period="week" data-i18n="an_p_week">Week</div>
+        <div class="filter-tab" data-period="month" data-i18n="an_p_month">Month</div>
+        <div class="filter-tab" data-period="year" data-i18n="an_p_year">Year</div>
+      </div>
+      <div id="anRangeLabel" style="font-size:12.5px; color:var(--ink-dim); margin-bottom:20px;"></div>
+
+      <div class="an-tiles">
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-gold">💰</div>
+          <div class="an-label" data-i18n="an_period_revenue">Period revenue</div>
+          <div class="an-num" id="anPeriodRevenue" style="color:#96701A;">—</div>
+          <div class="an-trend" id="anPeriodTrend"></div>
         </div>
-        <div class="card" style="flex:1; min-width:140px;">
-          <div style="font-size:11.5px; color:var(--ink-dim); margin-bottom:6px;" data-i18n="an_avgticket">Average ticket</div>
-          <div id="anAvgTicket" style="font-family:'Instrument Serif',serif; font-style:italic; font-size:26px;">—</div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-blue">📅</div>
+          <div class="an-label" data-i18n="an_bookings_count">Bookings</div>
+          <div class="an-num" id="anBookingsCount" style="color:#3B6EA8;">—</div>
         </div>
-        <div class="card" style="flex:1; min-width:140px;">
-          <div style="font-size:11.5px; color:var(--ink-dim); margin-bottom:6px;" data-i18n="an_repeat">Repeat-client rate</div>
-          <div id="anRepeatRate" style="font-family:'Instrument Serif',serif; font-style:italic; font-size:26px;">—</div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-green">🎟️</div>
+          <div class="an-label" data-i18n="an_avgticket">Average ticket</div>
+          <div class="an-num" id="anAvgTicket" style="color:#3F7D52;">—</div>
         </div>
-        <div class="card" style="flex:1; min-width:140px;">
-          <div style="font-size:11.5px; color:var(--ink-dim); margin-bottom:6px;" data-i18n="an_completion">Completion rate</div>
-          <div id="anCompletionRate" style="font-family:'Instrument Serif',serif; font-style:italic; font-size:26px;">—</div>
+      </div>
+
+      <div class="section-title"><span data-i18n="an_clients_title">Clients</span></div>
+      <div class="an-tiles">
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-green">🌱</div>
+          <div class="an-label" data-i18n="an_new_clients">New</div>
+          <div class="an-num" id="anNewClients" style="color:#3F7D52;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-blue">🔁</div>
+          <div class="an-label" data-i18n="an_returning_clients">Returning</div>
+          <div class="an-num" id="anReturningClients" style="color:#3B6EA8;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-gold">⭐</div>
+          <div class="an-label" data-i18n="an_avg_rating">Average rating</div>
+          <div class="an-num" id="anAvgRating" style="color:#96701A;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-teal">💬</div>
+          <div class="an-label" data-i18n="an_reviews_count">Reviews</div>
+          <div class="an-num" id="anReviewsCount" style="color:#2F7A72;">—</div>
+        </div>
+      </div>
+
+      <div class="section-title"><span data-i18n="an_revenue_by_service">Revenue by service</span></div>
+      <div class="card" style="padding:8px 26px;" id="anServiceBreakdown"></div>
+
+      <div class="section-title"><span data-i18n="an_other_title">Other</span></div>
+      <div class="an-tiles">
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-blue">📊</div>
+          <div class="an-label" data-i18n="an_total_bookings">Total bookings</div>
+          <div class="an-num" id="anTotalBookings" style="color:#3B6EA8;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-teal">⏰</div>
+          <div class="an-label" data-i18n="an_peak_hour">Peak hour</div>
+          <div class="an-num" id="anPeakHour" style="color:#2F7A72;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-terracotta">📆</div>
+          <div class="an-label" data-i18n="an_peak_day">Peak day</div>
+          <div class="an-num" id="anPeakDay" style="color:#B0602F;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-green">🔄</div>
+          <div class="an-label" data-i18n="an_repeat">Repeat-client rate</div>
+          <div class="an-num" id="anRepeatRate" style="color:#3F7D52;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-teal">✅</div>
+          <div class="an-label" data-i18n="an_completion">Completion rate</div>
+          <div class="an-num" id="anCompletionRate" style="color:#2F7A72;">—</div>
+        </div>
+        <div class="an-tile reveal">
+          <div class="an-tile-icon chip-gold">💵</div>
+          <div class="an-label" data-i18n="an_total_revenue">Total revenue</div>
+          <div class="an-num" id="anTotalRevenue" style="color:#96701A;">—</div>
         </div>
       </div>
 
@@ -368,16 +574,53 @@
       <h1 data-i18n="nav_profile">Profile</h1>
       <p class="page-sub" data-i18n="profile_sub">This is what clients see when they find you.</p>
 
-      <div class="section-title"><span data-i18n="profile_link_title">Your public profile</span></div>
-      <div class="card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-        <span id="profileLinkPreview" style="font-size:13px; color:var(--ink-dim); word-break:break-all;"></span>
-        <button class="btn btn-secondary" id="copyLinkBtn" data-i18n="copy_link">Copy my profile link</button>
-      </div>
+      <div class="section-title"><span data-i18n="account_section_title">Account</span></div>
+      <div class="card reveal" style="padding:2px 22px;">
+        <div class="chip-row">
+          <div class="chip-row-icon chip-terracotta">🔗</div>
+          <div class="chip-row-body">
+            <div class="chip-row-title" data-i18n="profile_link_title">Your public profile</div>
+            <div class="chip-row-sub" id="profileLinkPreview" style="word-break:break-all;"></div>
+            <button class="btn btn-secondary" id="copyLinkBtn" data-i18n="copy_link" style="margin-top:10px; padding:8px 14px; font-size:12.5px;">Copy my profile link</button>
+          </div>
+        </div>
 
-      <div class="section-title"><span data-i18n="telegram_title">Telegram alerts</span></div>
-      <div class="card" style="padding:18px 20px;">
-        <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="telegram_sub_barber">Get a Telegram message the moment a client books, cancels, or a reminder is due.</p>
-        <div id="telegramStatus"></div>
+        <div class="chip-row">
+          <div class="chip-row-icon chip-blue">✈️</div>
+          <div class="chip-row-body">
+            <div class="chip-row-title" data-i18n="telegram_title">Telegram alerts</div>
+            <div class="chip-row-sub" data-i18n="telegram_sub_barber">Get a Telegram message the moment a client books, cancels, or a reminder is due.</div>
+            <div id="telegramStatus" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div class="chip-row">
+          <div class="chip-row-icon chip-terracotta">🔔</div>
+          <div class="chip-row-body" style="width:100%;">
+            <div class="chip-row-title"><span data-i18n="auto_reminders_title">Client reminders</span><span class="new-badge" data-i18n="badge_new">New</span></div>
+            <div class="chip-row-sub" data-i18n="auto_reminders_sub">Automatically nudge past clients to rebook after they've gone quiet.</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px;">
+              <span style="font-size:13px; font-weight:600;" data-i18n="auto_reminders_enable">Enable automatic reminders</span>
+              <label class="toggle-switch"><input type="checkbox" id="autoRemindersToggle"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="field-group" style="margin-top:12px; margin-bottom:0;">
+              <label data-i18n="auto_reminders_days">Remind after this many days of inactivity</label>
+              <input type="number" id="autoReminderDaysInput" min="7" max="180" step="1">
+            </div>
+          </div>
+        </div>
+
+        <div class="chip-row">
+          <div class="chip-row-icon chip-green">🌐</div>
+          <div class="chip-row-body">
+            <div class="chip-row-title" data-i18n="language_title">Language</div>
+            <div class="lang-row" id="langSwitch" style="margin-top:10px;">
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="uz">UZ</button>
+          <button type="button" class="lang-btn" data-lang="ru">RU</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="section-title">
@@ -456,7 +699,7 @@
     <div class="view" data-view="services">
       <h1 data-i18n="nav_services">Services</h1>
       <p class="page-sub" data-i18n="services_sub">Turn on what you offer, set your own duration and price for each.</p>
-      <div class="card" id="servicesCard"></div>
+      <div class="svc-grid" id="servicesCard"></div>
       <div class="btn-row">
         <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
       </div>
@@ -495,13 +738,24 @@
     <div class="view" data-view="bookings">
       <h1 data-i18n="nav_bookings">Bookings</h1>
       <p class="page-sub" data-i18n="bookings_sub">Everyone who's booked with you.</p>
+      <button class="btn btn-primary" id="addWalkinBtn" style="margin-bottom:20px;" data-i18n="add_walkin">+ Add walk-in</button><span class="new-badge" data-i18n="badge_new" style="margin-left:10px; vertical-align:middle;">New</span>
       <div class="filter-tabs" id="bookingFilterTabs">
-        <div class="filter-tab active" data-status="all" data-i18n="filter_all">All</div>
-        <div class="filter-tab" data-status="pending" data-i18n="filter_pending">Pending</div>
-        <div class="filter-tab" data-status="confirmed" data-i18n="filter_confirmed">Confirmed</div>
-        <div class="filter-tab" data-status="cancelled" data-i18n="filter_cancelled">Cancelled</div>
+        <div class="filter-tab active" data-status="all">📋 <span data-i18n="filter_all">All</span></div>
+        <div class="filter-tab" data-status="pending">⏳ <span data-i18n="filter_pending">Pending</span></div>
+        <div class="filter-tab" data-status="confirmed">✅ <span data-i18n="filter_confirmed">Confirmed</span></div>
+        <div class="filter-tab" data-status="cancelled">❌ <span data-i18n="filter_cancelled">Cancelled</span></div>
       </div>
       <div id="bookingsArea"></div>
+    </div>
+
+    <!-- ============ CLIENTS ============ -->
+    <div class="view" data-view="clients">
+      <div style="position:relative;">
+        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💈</span>
+        <h1 data-i18n="nav_clients">Clients</h1>
+      </div>
+      <p class="page-sub" data-i18n="clients_sub">Everyone who's booked with you, at a glance.</p>
+      <div id="clientsArea"></div>
     </div>
   </main>
 </div>
@@ -549,9 +803,30 @@ const I18N = {
     nav_overview:"Overview", nav_analytics:"Analytics", nav_profile:"Profile", nav_hours:"Working hours", nav_services:"Services",
     an_sub:"How your business has been doing.", an_revenue:"Last 8 weeks revenue", an_avgticket:"Average ticket",
     an_repeat:"Repeat-client rate", an_completion:"Completion rate", an_revenue_chart:"Revenue by week", an_hours_chart:"Busiest hours",
+    an_p_day:"Day", an_p_week:"Week", an_p_month:"Month", an_p_year:"Year",
+    an_period_revenue:"Period revenue", an_bookings_count:"Bookings", an_vs_prev:"vs. previous period",
+    an_clients_title:"Clients", an_new_clients:"New", an_returning_clients:"Returning",
+    an_avg_rating:"Average rating", an_reviews_count:"Reviews", an_no_reviews:"No reviews yet",
+    an_revenue_by_service:"Revenue by service", an_no_service_revenue:"No completed bookings in this period yet.",
+    an_other_title:"Other", an_total_bookings:"Total bookings", an_peak_hour:"Peak hour", an_peak_day:"Peak day",
+    an_total_revenue:"Total revenue (all time)",
     telegram_title:"Telegram alerts", telegram_sub_barber:"Get a Telegram message the moment a client books, cancels, or a reminder is due.",
     telegram_connect_btn:"Connect Telegram", telegram_connected:"Connected", telegram_checking:"Checking…",
     telegram_waiting:"Opening Telegram… come back here once you've tapped Start.",
+    language_title:"Language",
+    add_walkin:"+ Add walk-in", walkin_title:"Walk-in client",
+    walkin_phone:"Phone number", walkin_name:"Client name (optional)", walkin_name_ph:"e.g. Aziz",
+    walkin_existing:"Or pick a returning client", walkin_existing_ph:"Search by name or phone…",
+    walkin_service:"Service", walkin_pick_time:"Date & time", walkin_no_slots:"No availability set for this day.",
+    walkin_total:"Total", walkin_submit:"Add booking", walkin_submitting:"Adding…",
+    walkin_success:"Walk-in booked!", walkin_error:"Couldn't add this booking — that slot may already be taken.",
+    walkin_phone_required:"Enter a phone number first.", walkin_pick_service_first:"Choose a service first.",
+    walkin_no_services:"Turn on at least one service (with a price) in Services first.",
+    nav_clients:"Clients", clients_sub:"Everyone who's booked with you, at a glance.",
+    empty_clients:"No clients yet.", cr_visits:"visits", cr_visit:"visit", cr_last_visit:"Last visit",
+    auto_reminders_title:"Client reminders", auto_reminders_sub:"Automatically nudge past clients to rebook after they've gone quiet.",
+    auto_reminders_enable:"Enable automatic reminders", auto_reminders_days:"Remind after this many days of inactivity",
+    account_section_title:"Account", badge_new:"New",
     nav_photos:"Photos", nav_bookings:"Bookings", logout:"Log out",
     foot_terms:"Terms", foot_privacy:"Privacy",
     ov_title:"Welcome back", ov_sub:"Here's where things stand today.",
@@ -560,6 +835,12 @@ const I18N = {
     cancellation_alert_one:"A client cancelled their booking.", cancellation_alert_many:"{n} clients cancelled their bookings.",
     cancellation_alert_sub:"Tap to review.",
     ov_next:"Next up",
+    onb_eyebrow:"Complete your profile",
+    onb_step1_t:"Personal info", onb_step1_s:"District, years of experience",
+    onb_step2_t:"Service category", onb_step2_s:"Pick at least one specialty",
+    onb_step3_t:"About your location", onb_step3_s:"Place your shop pin on the map",
+    onb_step4_t:"Services & prices", onb_step4_s:"Turn on at least one service with a price",
+    onb_step5_t:"Photo & hours", onb_step5_s:"Add your photo and set your working hours",
     status_live_h:"You're live", status_live_s:"Clients can find and book you.",
     status_pending_h:"Pending review", status_pending_s:"We'll notify you once the founder approves your profile.",
     status_unpublished_h:"You're approved — one step left", status_unpublished_s:"Turn on \"Live\" below to become visible to clients.",
@@ -590,9 +871,30 @@ const I18N = {
     nav_overview:"Umumiy", nav_analytics:"Tahlil", nav_profile:"Profil", nav_hours:"Ish vaqti", nav_services:"Xizmatlar",
     an_sub:"Biznesingiz qanday ketmoqda.", an_revenue:"Oxirgi 8 haftalik daromad", an_avgticket:"O'rtacha chek",
     an_repeat:"Qaytgan mijozlar ulushi", an_completion:"Yakunlanish darajasi", an_revenue_chart:"Haftalik daromad", an_hours_chart:"Eng band soatlar",
+    an_p_day:"Kun", an_p_week:"Hafta", an_p_month:"Oy", an_p_year:"Yil",
+    an_period_revenue:"Davr daromadi", an_bookings_count:"Yozuvlar", an_vs_prev:"oldingi davrga nisbatan",
+    an_clients_title:"Mijozlar", an_new_clients:"Yangilar", an_returning_clients:"Qaytganlar",
+    an_avg_rating:"O'rtacha reyting", an_reviews_count:"Izohlar", an_no_reviews:"Hali izohlar yo'q",
+    an_revenue_by_service:"Xizmatlar bo'yicha daromad", an_no_service_revenue:"Bu davrda bajarilgan bandlar yo'q.",
+    an_other_title:"Boshqa", an_total_bookings:"Jami yozuvlar", an_peak_hour:"Avj soat", an_peak_day:"Avj kun",
+    an_total_revenue:"Umumiy daromad (hammasi)",
     telegram_title:"Telegram xabarnomalari", telegram_sub_barber:"Mijoz band qilganda, bekor qilganda yoki eslatma vaqti kelganda Telegramda xabar oling.",
     telegram_connect_btn:"Telegramni ulash", telegram_connected:"Ulangan", telegram_checking:"Tekshirilmoqda…",
     telegram_waiting:"Telegram ochilmoqda… Start tugmasini bosgach shu yerga qayting.",
+    language_title:"Til",
+    add_walkin:"+ Mijoz qo'shish", walkin_title:"Yangi mijoz",
+    walkin_phone:"Telefon raqami", walkin_name:"Mijoz ismi (ixtiyoriy)", walkin_name_ph:"masalan, Aziz",
+    walkin_existing:"Yoki qaytgan mijozni tanlang", walkin_existing_ph:"Ism yoki telefon bo'yicha qidiring…",
+    walkin_service:"Xizmat", walkin_pick_time:"Sana va vaqt", walkin_no_slots:"Bu kun uchun ish vaqti belgilanmagan.",
+    walkin_total:"Jami", walkin_submit:"Yozuv qo'shish", walkin_submitting:"Qo'shilmoqda…",
+    walkin_success:"Mijoz band qilindi!", walkin_error:"Qo'shib bo'lmadi — bu vaqt allaqachon band bo'lishi mumkin.",
+    walkin_phone_required:"Avval telefon raqamini kiriting.", walkin_pick_service_first:"Avval xizmatni tanlang.",
+    walkin_no_services:"Avval Xizmatlar bo'limida kamida bitta xizmatni narx bilan yoqing.",
+    nav_clients:"Mijozlar", clients_sub:"Siz bilan band qilganlarning barchasi, bir qarashda.",
+    empty_clients:"Hozircha mijozlar yo'q.", cr_visits:"tashrif", cr_visit:"tashrif", cr_last_visit:"Oxirgi tashrif",
+    auto_reminders_title:"Mijozlarga eslatmalar", auto_reminders_sub:"Uzoq vaqt kelmagan mijozlarga avtomatik ravishda qayta band qilishni eslatadi.",
+    auto_reminders_enable:"Avtomatik eslatmalarni yoqish", auto_reminders_days:"Necha kun faolsizlikdan so'ng eslatish",
+    account_section_title:"Hisob", badge_new:"Yangi",
     nav_photos:"Suratlar", nav_bookings:"Bandlar", logout:"Chiqish",
     foot_terms:"Shartlar", foot_privacy:"Maxfiylik",
     ov_title:"Xush kelibsiz", ov_sub:"Bugungi holat shu yerda.",
@@ -601,6 +903,12 @@ const I18N = {
     cancellation_alert_one:"Mijoz o'z bandini bekor qildi.", cancellation_alert_many:"{n} mijoz o'z bandlarini bekor qildi.",
     cancellation_alert_sub:"Ko'rish uchun bosing.",
     ov_next:"Navbatdagi",
+    onb_eyebrow:"Anketani to'ldiring",
+    onb_step1_t:"Shaxsiy ma'lumotlar", onb_step1_s:"Tuman, tajriba (yil)",
+    onb_step2_t:"Xizmat toifasi", onb_step2_s:"Kamida bitta mutaxassislikni tanlang",
+    onb_step3_t:"Ob'ekt haqida", onb_step3_s:"Xaritada do'koningiz pinini joylashtiring",
+    onb_step4_t:"Xizmatlar va narxlar", onb_step4_s:"Kamida bitta xizmatni narx bilan yoqing",
+    onb_step5_t:"Surat va ish vaqti", onb_step5_s:"Suratingizni qo'shing va ish vaqtini belgilang",
     status_live_h:"Siz faolsiz", status_live_s:"Mijozlar sizni topib, band qilishlari mumkin.",
     status_pending_h:"Ko'rib chiqilmoqda", status_pending_s:"Asoschi profilingizni tasdiqlagach xabar beramiz.",
     status_unpublished_h:"Hali ko'rinmaydi", status_unpublished_s:"Tayyor bo'lganingizda profilda \"Faol\"ni yoqing.",
@@ -631,9 +939,30 @@ const I18N = {
     nav_overview:"Обзор", nav_analytics:"Аналитика", nav_profile:"Профиль", nav_hours:"Рабочие часы", nav_services:"Услуги",
     an_sub:"Как идут дела в вашем бизнесе.", an_revenue:"Доход за 8 недель", an_avgticket:"Средний чек",
     an_repeat:"Доля повторных клиентов", an_completion:"Процент завершения", an_revenue_chart:"Доход по неделям", an_hours_chart:"Самые загруженные часы",
+    an_p_day:"День", an_p_week:"Неделя", an_p_month:"Месяц", an_p_year:"Год",
+    an_period_revenue:"Доход за период", an_bookings_count:"Записи", an_vs_prev:"по сравнению с предыдущим периодом",
+    an_clients_title:"Клиенты", an_new_clients:"Новые", an_returning_clients:"Вернувшиеся",
+    an_avg_rating:"Средний рейтинг", an_reviews_count:"Отзывы", an_no_reviews:"Отзывов пока нет",
+    an_revenue_by_service:"Доход по услугам", an_no_service_revenue:"В этом периоде нет завершённых записей.",
+    an_other_title:"Другое", an_total_bookings:"Всего записей", an_peak_hour:"Пиковый час", an_peak_day:"Пиковый день",
+    an_total_revenue:"Общий доход (за всё время)",
     telegram_title:"Уведомления в Telegram", telegram_sub_barber:"Получайте сообщение в Telegram, как только клиент забронирует, отменит запись или наступит время напоминания.",
     telegram_connect_btn:"Подключить Telegram", telegram_connected:"Подключено", telegram_checking:"Проверка…",
     telegram_waiting:"Открываем Telegram… вернитесь сюда после нажатия Start.",
+    language_title:"Язык",
+    add_walkin:"+ Добавить клиента", walkin_title:"Новый клиент",
+    walkin_phone:"Номер телефона", walkin_name:"Имя клиента (необязательно)", walkin_name_ph:"например, Азиз",
+    walkin_existing:"Или выберите постоянного клиента", walkin_existing_ph:"Поиск по имени или телефону…",
+    walkin_service:"Услуга", walkin_pick_time:"Дата и время", walkin_no_slots:"На этот день рабочие часы не заданы.",
+    walkin_total:"Итого", walkin_submit:"Добавить запись", walkin_submitting:"Добавление…",
+    walkin_success:"Клиент записан!", walkin_error:"Не удалось добавить — это время уже может быть занято.",
+    walkin_phone_required:"Сначала введите номер телефона.", walkin_pick_service_first:"Сначала выберите услугу.",
+    walkin_no_services:"Сначала включите хотя бы одну услугу с ценой в разделе Услуги.",
+    nav_clients:"Клиенты", clients_sub:"Все, кто записывался к вам, в одном месте.",
+    empty_clients:"Клиентов пока нет.", cr_visits:"визитов", cr_visit:"визит", cr_last_visit:"Последний визит",
+    auto_reminders_title:"Напоминания клиентам", auto_reminders_sub:"Автоматически напоминать давним клиентам записаться снова, когда они пропадают.",
+    auto_reminders_enable:"Включить автоматические напоминания", auto_reminders_days:"Напоминать после стольких дней бездействия",
+    account_section_title:"Аккаунт", badge_new:"Новое",
     nav_photos:"Фото", nav_bookings:"Записи", logout:"Выйти",
     foot_terms:"Условия", foot_privacy:"Конфиденциальность",
     ov_title:"С возвращением", ov_sub:"Вот как обстоят дела сегодня.",
@@ -642,6 +971,12 @@ const I18N = {
     cancellation_alert_one:"Клиент отменил свою запись.", cancellation_alert_many:"{n} клиентов отменили свои записи.",
     cancellation_alert_sub:"Нажмите, чтобы посмотреть.",
     ov_next:"Далее",
+    onb_eyebrow:"Заполните анкету",
+    onb_step1_t:"Личные данные", onb_step1_s:"Район, опыт (лет)",
+    onb_step2_t:"Категория услуг", onb_step2_s:"Выберите хотя бы одну специализацию",
+    onb_step3_t:"О вашей локации", onb_step3_s:"Поставьте метку салона на карте",
+    onb_step4_t:"Услуги и цены", onb_step4_s:"Включите хотя бы одну услугу с ценой",
+    onb_step5_t:"Фото и часы работы", onb_step5_s:"Добавьте фото и укажите рабочие часы",
     status_live_h:"Вы активны", status_live_s:"Клиенты могут найти и записаться к вам.",
     status_pending_h:"На рассмотрении", status_pending_s:"Сообщим, как только основатель одобрит профиль.",
     status_unpublished_h:"Пока не виден", status_unpublished_s:"Включите \"Активен\" в профиле, когда будете готовы.",
@@ -671,11 +1006,33 @@ const I18N = {
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
-const currentLang = I18N[browserLang] ? browserLang : 'en';
+let currentLang = I18N[browserLang] ? browserLang : 'en';
 function t(key){ return I18N[currentLang][key]; }
-document.querySelectorAll('[data-i18n]').forEach(el=>{
-  if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
-});
+
+function applyLang(lang){
+  currentLang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
+  });
+  document.querySelectorAll('#langSwitch .lang-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.lang === currentLang);
+  });
+  if(barberData){
+    renderGreeting();
+    renderStatusBanner();
+    renderOnboardingChecklist();
+    renderProfileView();
+    renderEditChips();
+    renderAvailabilityEditor();
+    renderServices();
+    renderOverviewBookings();
+    renderBookingsList();
+    renderCancellationAlert();
+    renderClientsList();
+    if(document.querySelector('.view[data-view="analytics"]').classList.contains('active')) renderAnalytics();
+    revealViewTitle(document.querySelector('.view.active'));
+  }
+}
 
 let barberData = null;
 let servicesData = [];
@@ -684,9 +1041,47 @@ let selectedSpecialties = [];
 let availabilityData = []; // array of { day, start, end }
 let currentBookingFilter = 'all';
 
+applyLang(currentLang);
+document.getElementById('langSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.lang-btn');
+  if(btn) applyLang(btn.dataset.lang);
+});
+
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 function localizeSpecialty(enTag){ const i = SPECIALTIES_EN.indexOf(enTag); return i === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][i]; }
 function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '—'; }
+
+/* ---------- motion helpers ---------- */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function letterReveal(el, text, startDelay){
+  if(!el) return;
+  startDelay = startDelay || 0;
+  if(prefersReducedMotion){ el.textContent = text; return; }
+  el.innerHTML = '';
+  [...text].forEach((ch, i)=>{
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = ch === ' ' ? ' ' : ch;
+    span.style.animationDelay = (startDelay + i * 22) + 'ms';
+    el.appendChild(span);
+  });
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    el.querySelectorAll('.letter').forEach(s => s.classList.add('in'));
+  }));
+}
+
+function revealViewTitle(viewEl){
+  if(!viewEl) return;
+  const h1 = viewEl.querySelector('h1[data-i18n]');
+  if(h1) letterReveal(h1, t(h1.dataset.i18n));
+}
+
+function revealNow(container){
+  (container ? container.querySelectorAll('.reveal') : document.querySelectorAll('.reveal')).forEach((el, i)=>{
+    setTimeout(()=> el.classList.add('in'), i * 60);
+  });
+}
 
 /* ---------- sidebar nav ---------- */
 document.getElementById('sidebarNav').addEventListener('click', (e)=>{
@@ -696,6 +1091,8 @@ document.getElementById('sidebarNav').addEventListener('click', (e)=>{
   btn.classList.add('active');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.dataset.view === btn.dataset.view));
   if(btn.dataset.view === 'analytics') renderAnalytics();
+  revealNow(document.querySelector(`.view[data-view="${btn.dataset.view}"]`));
+  revealViewTitle(document.querySelector(`.view[data-view="${btn.dataset.view}"]`));
 });
 
 /* ---------- init ---------- */
@@ -738,7 +1135,7 @@ async function initInner(){
     availabilityData = [];
   }
 
-  document.getElementById('nameInsert').textContent = ', ' + barber.full_name.split(' ')[0];
+  renderGreeting();
 
   renderStatusBanner();
   renderProfileView();
@@ -748,10 +1145,12 @@ async function initInner(){
   setupProfileLink();
   setupLocationPicker();
   setupTelegramConnect();
+  renderAutoReminders();
 
   const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', userId);
   servicesData = services || [];
   renderServices();
+  renderOnboardingChecklist();
 
   const { data: bookings } = await supabaseClient.from('bookings').select('*').eq('barber_id', userId).order('start_time', { ascending:true });
   bookingsData = bookings || [];
@@ -759,12 +1158,23 @@ async function initInner(){
   renderOverviewBookings();
   renderBookingsList();
   renderCancellationAlert();
+  renderClientsList();
 
   const { data: photos } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', userId).order('position', { ascending:true });
   renderPortfolio(photos || []);
+
+  const { data: reviews } = await supabaseClient.from('reviews').select('rating').eq('barber_id', userId).then(r=>r).catch(()=>({ data: [] }));
+  reviewsData = reviews || [];
+
+  revealNow(document.querySelector('.view[data-view="overview"]'));
 }
 
 /* ---------- overview ---------- */
+function renderGreeting(){
+  const name = barberData ? ', ' + barberData.full_name.split(' ')[0] : '';
+  letterReveal(document.getElementById('ovGreeting'), t('ov_title') + name);
+}
+
 function renderStatusBanner(){
   const banner = document.getElementById('statusBanner');
   const headline = document.getElementById('statusHeadline');
@@ -774,22 +1184,68 @@ function renderStatusBanner(){
 
   if(!barberData.is_approved){
     banner.className = 'status-banner pending';
-    headline.textContent = t('status_pending_h');
-    sub.textContent = t('status_pending_s');
+    letterReveal(headline, t('status_pending_h'));
+    letterReveal(sub, t('status_pending_s'), 120);
     toggleWrap.style.display = 'none';
   } else {
     toggleWrap.style.display = 'block';
     toggle.checked = !!barberData.is_published;
     if(barberData.is_published){
       banner.className = 'status-banner live';
-      headline.textContent = t('status_live_h');
-      sub.textContent = t('status_live_s');
+      letterReveal(headline, t('status_live_h'));
+      letterReveal(sub, t('status_live_s'), 120);
     } else {
       banner.className = 'status-banner pending';
-      headline.textContent = t('status_unpublished_h');
-      sub.textContent = t('status_unpublished_s');
+      letterReveal(headline, t('status_unpublished_h'));
+      letterReveal(sub, t('status_unpublished_s'), 120);
     }
   }
+}
+
+function goToBarberView(viewName){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.nav-item[data-view="${viewName}"]`).classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.dataset.view === viewName));
+  if(viewName === 'analytics') renderAnalytics();
+  revealNow(document.querySelector(`.view[data-view="${viewName}"]`));
+  revealViewTitle(document.querySelector(`.view[data-view="${viewName}"]`));
+}
+
+function renderOnboardingChecklist(){
+  const card = document.getElementById('onboardingCard');
+  const steps = [
+    { done: !!(barberData.district && barberData.years_experience), view:'profile', t:'onb_step1_t', s:'onb_step1_s' },
+    { done: (barberData.specialties || []).length > 0, view:'profile', t:'onb_step2_t', s:'onb_step2_s' },
+    { done: !!(barberData.latitude && barberData.longitude), view:'location', t:'onb_step3_t', s:'onb_step3_s' },
+    { done: servicesData.some(s => s.is_active && s.price > 0), view:'services', t:'onb_step4_t', s:'onb_step4_s' },
+    { done: !!barberData.avatar_url && availabilityData.length > 0, view:'photos', t:'onb_step5_t', s:'onb_step5_s' }
+  ];
+  const doneCount = steps.filter(s => s.done).length;
+  const pct = Math.round(doneCount / steps.length * 100);
+
+  if(doneCount === steps.length){ card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  letterReveal(document.querySelector('#onboardingCard .onboarding-eyebrow'), t('onb_eyebrow'));
+  letterReveal(document.getElementById('onboardingPct'), pct + '%', 100);
+  document.getElementById('onboardingBarFill').style.width = pct + '%';
+  const stepsEl = document.getElementById('onboardingSteps');
+  stepsEl.innerHTML = steps.map(s => `
+    <div class="onb-step ${s.done ? 'done' : ''}" data-goto="${s.view}">
+      <div class="onb-step-icon">${s.done ? '✓' : '→'}</div>
+      <div>
+        <div class="onb-step-title"></div>
+        <div class="onb-step-sub"></div>
+      </div>
+    </div>
+  `).join('');
+  stepsEl.querySelectorAll('.onb-step').forEach((row, i)=>{
+    letterReveal(row.querySelector('.onb-step-title'), t(steps[i].t), 250 + i * 130);
+    letterReveal(row.querySelector('.onb-step-sub'), t(steps[i].s), 250 + i * 130 + 60);
+  });
+  stepsEl.querySelectorAll('[data-goto]').forEach(el=>{
+    el.addEventListener('click', ()=> goToBarberView(el.dataset.goto));
+  });
 }
 
 document.getElementById('publishToggle').addEventListener('change', async function(){
@@ -827,6 +1283,34 @@ function renderOverviewBookings(){
   area.innerHTML = upcoming.map(b => bookingRowHtml(b, false)).join('');
 }
 
+/* ---------- automated client reminders ---------- */
+function renderAutoReminders(){
+  document.getElementById('autoRemindersToggle').checked = !!barberData.auto_reminders_enabled;
+  document.getElementById('autoReminderDaysInput').value = barberData.auto_reminder_days || 21;
+}
+document.getElementById('autoRemindersToggle').addEventListener('change', async function(){
+  const newVal = this.checked;
+  this.disabled = true;
+  const { error } = await supabaseClient.from('barbers').update({ auto_reminders_enabled: newVal }).eq('id', barberData.id);
+  this.disabled = false;
+  if(!error){
+    barberData.auto_reminders_enabled = newVal;
+  } else {
+    this.checked = !newVal;
+    console.error('Failed to update auto_reminders_enabled:', error);
+  }
+});
+document.getElementById('autoReminderDaysInput').addEventListener('change', async function(){
+  const newVal = parseInt(this.value) || 21;
+  this.value = newVal;
+  const { error } = await supabaseClient.from('barbers').update({ auto_reminder_days: newVal }).eq('id', barberData.id);
+  if(!error){
+    barberData.auto_reminder_days = newVal;
+  } else {
+    console.error('Failed to update auto_reminder_days:', error);
+  }
+});
+
 /* ---------- telegram connect ---------- */
 async function setupTelegramConnect(){
   const box = document.getElementById('telegramStatus');
@@ -860,35 +1344,146 @@ async function setupTelegramConnect(){
 
 /* ---------- analytics ---------- */
 let analyticsRendered = false;
+let currentAnPeriod = 'week';
+let reviewsData = [];
+
+function getPeriodRange(period){
+  const now = new Date();
+  let start, end, prevStart, prevEnd;
+  if(period === 'day'){
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    end = new Date(start); end.setDate(end.getDate()+1);
+    prevStart = new Date(start); prevStart.setDate(prevStart.getDate()-1);
+    prevEnd = start;
+  } else if(period === 'month'){
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now.getFullYear(), now.getMonth()+1, 1);
+    prevStart = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    prevEnd = start;
+  } else if(period === 'year'){
+    start = new Date(now.getFullYear(), 0, 1);
+    end = new Date(now.getFullYear()+1, 0, 1);
+    prevStart = new Date(now.getFullYear()-1, 0, 1);
+    prevEnd = start;
+  } else { // week — Monday-start, matching DAY_KEYS
+    const dow = (now.getDay() + 6) % 7;
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+    end = new Date(start); end.setDate(end.getDate()+7);
+    prevStart = new Date(start); prevStart.setDate(prevStart.getDate()-7);
+    prevEnd = start;
+  }
+  return { start, end, prevStart, prevEnd };
+}
+
+document.getElementById('anPeriodTabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.filter-tab');
+  if(!tab) return;
+  document.querySelectorAll('#anPeriodTabs .filter-tab').forEach(x=>x.classList.remove('active'));
+  tab.classList.add('active');
+  currentAnPeriod = tab.dataset.period;
+  renderAnalytics();
+});
+
 function renderAnalytics(){
+  document.querySelectorAll('.view[data-view="analytics"] .an-tile.reveal').forEach(el => el.classList.remove('in'));
   const completed = bookingsData.filter(b => b.status === 'completed');
   const totalBookings = bookingsData.filter(b => b.status !== 'pending').length;
+  const dateOf = b => new Date(b.completed_at || b.start_time);
+  const { start, end, prevStart, prevEnd } = getPeriodRange(currentAnPeriod);
+  const localeTag = currentLang === 'en' ? 'en-US' : currentLang;
 
-  // revenue by week, last 8 weeks
-  const weeks = [];
-  const now = new Date();
-  for(let i = 7; i >= 0; i--){
-    const start = new Date(now); start.setDate(now.getDate() - (i*7 + now.getDay()));
-    start.setHours(0,0,0,0);
-    const end = new Date(start); end.setDate(start.getDate() + 7);
-    const revenue = completed
-      .filter(b => new Date(b.completed_at || b.start_time) >= start && new Date(b.completed_at || b.start_time) < end)
-      .reduce((sum,b) => sum + (Number(b.service_price) || 0), 0);
-    weeks.push({ label: `${start.getMonth()+1}/${start.getDate()}`, revenue });
+  document.getElementById('anRangeLabel').textContent =
+    start.toLocaleDateString(localeTag, { day:'numeric', month:'short', year:'numeric' }) +
+    ' – ' + new Date(end - 1).toLocaleDateString(localeTag, { day:'numeric', month:'short', year:'numeric' });
+
+  const inPeriod = completed.filter(b => dateOf(b) >= start && dateOf(b) < end);
+  const inPrevPeriod = completed.filter(b => dateOf(b) >= prevStart && dateOf(b) < prevEnd);
+  const periodRevenue = inPeriod.reduce((s,b)=> s + (Number(b.service_price)||0), 0);
+  const prevRevenue = inPrevPeriod.reduce((s,b)=> s + (Number(b.service_price)||0), 0);
+  document.getElementById('anPeriodRevenue').textContent = formatPrice(periodRevenue);
+  const trendEl = document.getElementById('anPeriodTrend');
+  if(prevRevenue > 0){
+    const pct = Math.round((periodRevenue - prevRevenue) / prevRevenue * 100);
+    trendEl.textContent = (pct >= 0 ? '+' : '') + pct + '% ' + t('an_vs_prev');
+    trendEl.className = 'an-trend ' + (pct >= 0 ? 'up' : 'down');
+  } else {
+    trendEl.textContent = ''; trendEl.className = 'an-trend';
   }
-  const totalRevenue = weeks.reduce((s,w)=>s+w.revenue, 0);
-  document.getElementById('anRevenueTotal').textContent = formatPrice(totalRevenue);
+  document.getElementById('anBookingsCount').textContent = inPeriod.length;
 
-  const avgTicket = completed.length ? Math.round(completed.reduce((s,b)=> s + (Number(b.service_price)||0), 0) / completed.length) : 0;
+  const avgTicket = inPeriod.length ? Math.round(periodRevenue / inPeriod.length) : 0;
   document.getElementById('anAvgTicket').textContent = avgTicket ? formatPrice(avgTicket) : '—';
+
+  // new vs returning clients within the selected period
+  const seenBeforePeriod = {};
+  completed.forEach(b => { if(dateOf(b) < start) seenBeforePeriod[b.client_id] = true; });
+  let newCount = 0, returningCount = 0;
+  const countedInPeriod = new Set();
+  inPeriod.forEach(b=>{
+    if(countedInPeriod.has(b.client_id)) return;
+    countedInPeriod.add(b.client_id);
+    if(seenBeforePeriod[b.client_id]) returningCount++; else newCount++;
+  });
+  document.getElementById('anNewClients').textContent = newCount;
+  document.getElementById('anReturningClients').textContent = returningCount;
+
+  // ratings & reviews (all-time)
+  document.getElementById('anAvgRating').textContent = reviewsData.length
+    ? '★ ' + (reviewsData.reduce((s,r)=>s+r.rating,0) / reviewsData.length).toFixed(1)
+    : '—';
+  document.getElementById('anReviewsCount').textContent = reviewsData.length;
+
+  // revenue by service, within the selected period
+  const svcTotals = {};
+  inPeriod.forEach(b=>{
+    const key = b.service_key || 'other';
+    svcTotals[key] = (svcTotals[key] || 0) + (Number(b.service_price)||0);
+  });
+  const svcEntries = Object.entries(svcTotals).sort((a,b)=> b[1]-a[1]);
+  const svcMax = svcEntries.length ? svcEntries[0][1] : 0;
+  const breakdownEl = document.getElementById('anServiceBreakdown');
+  breakdownEl.innerHTML = svcEntries.length
+    ? svcEntries.map(([key, amt])=>{
+        const name = SERVICES_LOCAL[currentLang][key] || key;
+        const pct = svcMax ? Math.round(amt/svcMax*100) : 0;
+        return `<div class="an-svc-row"><span>${escapeHtml(name)}</span><span class="an-svc-bar" style="--pct:${pct}%;"></span><span>${formatPrice(amt)}</span></div>`;
+      }).join('')
+    : `<div style="padding:18px 0; color:var(--ink-dim); font-size:13px;">${t('an_no_service_revenue')}</div>`;
+
+  // all-time tiles
+  document.getElementById('anTotalBookings').textContent = bookingsData.length;
+  const hourCountsAll = new Array(24).fill(0);
+  const dayCounts = new Array(7).fill(0); // 0=Mon..6=Sun, matching DAY_KEYS
+  bookingsData.filter(b => b.status !== 'cancelled').forEach(b => {
+    const d = new Date(b.start_time);
+    hourCountsAll[d.getHours()]++;
+    dayCounts[(d.getDay()+6)%7]++;
+  });
+  document.getElementById('anPeakHour').textContent = bookingsData.length
+    ? (()=>{ const h = hourCountsAll.indexOf(Math.max(...hourCountsAll)); return `${h}:00–${h+1}:00`; })() : '—';
+  document.getElementById('anPeakDay').textContent = bookingsData.length
+    ? t('day_' + DAY_KEYS[dayCounts.indexOf(Math.max(...dayCounts))].toLowerCase()) : '—';
 
   const clientCounts = {};
   completed.forEach(b => { clientCounts[b.client_id] = (clientCounts[b.client_id]||0) + 1; });
   const uniqueClients = Object.keys(clientCounts).length;
   const repeatClients = Object.values(clientCounts).filter(c => c > 1).length;
   document.getElementById('anRepeatRate').textContent = uniqueClients ? Math.round(repeatClients/uniqueClients*100) + '%' : '—';
-
   document.getElementById('anCompletionRate').textContent = totalBookings ? Math.round(completed.length/totalBookings*100) + '%' : '—';
+  document.getElementById('anTotalRevenue').textContent = formatPrice(completed.reduce((s,b)=> s + (Number(b.service_price)||0), 0));
+
+  // revenue by week, last 8 weeks (supplementary detail chart, unchanged)
+  const weeks = [];
+  const now = new Date();
+  for(let i = 7; i >= 0; i--){
+    const wstart = new Date(now); wstart.setDate(now.getDate() - (i*7 + now.getDay()));
+    wstart.setHours(0,0,0,0);
+    const wend = new Date(wstart); wend.setDate(wstart.getDate() + 7);
+    const revenue = completed
+      .filter(b => dateOf(b) >= wstart && dateOf(b) < wend)
+      .reduce((sum,b) => sum + (Number(b.service_price) || 0), 0);
+    weeks.push({ label: `${wstart.getMonth()+1}/${wstart.getDate()}`, revenue });
+  }
 
   // revenue bar chart (inline SVG)
   const maxRev = Math.max(1, ...weeks.map(w=>w.revenue));
@@ -921,6 +1516,8 @@ function renderAnalytics(){
     `;
   }).join('');
   document.getElementById('anHoursChart').innerHTML = `<svg viewBox="0 0 ${hSvgW} ${hChartH+22}" width="100%" style="max-width:${hSvgW}px; display:block;">${hBars}</svg>`;
+
+  revealNow(document.querySelector('.view[data-view="analytics"]'));
 }
 
 /* ---------- profile ---------- */
@@ -978,6 +1575,7 @@ document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
   if(!error){
     Object.assign(barberData, updates);
     renderProfileView();
+    renderOnboardingChecklist();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
@@ -999,10 +1597,14 @@ function renderAvailabilityEditor(){
   const container = document.getElementById('availabilityEditor');
   container.innerHTML = DAY_KEYS.map(day => {
     const blocks = availabilityData.filter(b => b.day === day);
+    const open = blocks.length > 0;
     return `
       <div class="day-block" data-day="${day}">
         <div class="day-block-head">
-          <span class="day-block-name">${t('day_' + day.toLowerCase())}</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button type="button" class="day-check ${open ? 'checked' : ''}" data-toggle-day="${day}" aria-pressed="${open}" aria-label="${t('day_' + day.toLowerCase())}">✓</button>
+            <span class="day-block-name">${t('day_' + day.toLowerCase())}</span>
+          </div>
           <span class="add-block-btn" data-add-day="${day}">+ ${t('add_block')}</span>
         </div>
         <div class="blocks-list">
@@ -1021,6 +1623,18 @@ function renderAvailabilityEditor(){
     `;
   }).join('');
 
+  container.querySelectorAll('[data-toggle-day]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const day = el.dataset.toggleDay;
+      const hasBlocks = availabilityData.some(b => b.day === day);
+      if(hasBlocks){
+        availabilityData = availabilityData.filter(b => b.day !== day);
+      } else {
+        availabilityData.push({ day, start:'09:00', end:'18:00' });
+      }
+      renderAvailabilityEditor();
+    });
+  });
   container.querySelectorAll('[data-add-day]').forEach(el=>{
     el.addEventListener('click', ()=>{
       const day = el.dataset.addDay;
@@ -1077,6 +1691,7 @@ document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
   if(!error){
     Object.assign(barberData, updates);
     availabilityData = newAvailability;
+    renderOnboardingChecklist();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
@@ -1090,29 +1705,47 @@ document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
 });
 
 /* ---------- services ---------- */
+const SERVICE_ICONS = { haircut:'✂️', beard_trim:'🧔', haircut_beard:'💇', kids_haircut:'🧒', lineup:'📏', coloring:'🎨' };
+const SERVICE_CHIP_CLASSES = ['chip-gold','chip-blue','chip-green','chip-terracotta','chip-teal'];
+
 function renderServices(){
   const card = document.getElementById('servicesCard');
-  card.innerHTML = SERVICE_KEYS.map(key => {
+  card.innerHTML = SERVICE_KEYS.map((key, i) => {
     const existing = servicesData.find(s => s.service_key === key) || {};
+    const chipClass = SERVICE_CHIP_CLASSES[i % SERVICE_CHIP_CLASSES.length];
     return `
-      <div class="service-row" data-key="${key}">
-        <div class="service-name">${SERVICES_LOCAL[currentLang][key]}</div>
-        <div class="service-inputs">
+      <div class="svc-card ${existing.is_active ? 'active-svc' : ''}" data-key="${key}">
+        <div class="svc-card-head">
+          <div class="svc-card-id">
+            <div class="an-tile-icon ${chipClass}" style="margin-bottom:0;">${SERVICE_ICONS[key] || '✂️'}</div>
+            <div class="svc-card-name">${SERVICES_LOCAL[currentLang][key]}</div>
+          </div>
           <label class="toggle-switch">
             <input type="checkbox" class="svc-active" ${existing.is_active ? 'checked' : ''}>
             <span class="toggle-slider"></span>
           </label>
-          <input type="number" class="svc-duration" placeholder="${t('min')}" min="5" step="5" value="${existing.duration_minutes || ''}">
-          <input type="number" class="svc-price" placeholder="UZS" min="0" step="1000" value="${existing.price || ''}">
+        </div>
+        <div class="svc-inputs-row">
+          <div class="field-group">
+            <label>${t('min')}</label>
+            <input type="number" class="svc-duration" min="5" step="5" value="${existing.duration_minutes || ''}">
+          </div>
+          <div class="field-group">
+            <label>UZS</label>
+            <input type="number" class="svc-price" min="0" step="1000" value="${existing.price || ''}">
+          </div>
         </div>
       </div>
     `;
   }).join('');
+  card.querySelectorAll('.svc-active').forEach(cb=>{
+    cb.addEventListener('change', ()=> cb.closest('.svc-card').classList.toggle('active-svc', cb.checked));
+  });
 }
 document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('saveServicesBtn');
   btn.disabled = true;
-  const rows = document.querySelectorAll('.service-row');
+  const rows = document.querySelectorAll('.svc-card');
   const upserts = [];
   rows.forEach(row => {
     const key = row.dataset.key;
@@ -1128,6 +1761,7 @@ document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
     const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', barberData.id);
     servicesData = services || [];
     renderOverviewStats();
+    renderOnboardingChecklist();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
@@ -1162,6 +1796,7 @@ document.getElementById('avatarInput').addEventListener('change', async (e)=>{
   if(!dbError){
     barberData.avatar_url = publicUrl;
     renderAvatar();
+    renderOnboardingChecklist();
   }
 });
 
@@ -1224,12 +1859,20 @@ function clientVisitBadge(clientId){
   return '';
 }
 
+const BOOKING_STATUS_META = {
+  pending:   { icon:'⏳', chip:'status-pending' },
+  confirmed: { icon:'✅', chip:'status-confirmed' },
+  cancelled: { icon:'❌', chip:'status-cancelled' },
+  completed: { icon:'🏁', chip:'status-completed' }
+};
+
 function bookingRowHtml(b, withActions = true){
   const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
   const statusLabel = t(b.status) || b.status;
+  const meta = BOOKING_STATUS_META[b.status] || BOOKING_STATUS_META.pending;
   const refPhoto = b.reference_photo_url
     ? `<a href="${escapeHtml(b.reference_photo_url)}" target="_blank" class="ref-photo-thumb"><img src="${escapeHtml(b.reference_photo_url)}" alt=""></a>`
-    : '';
+    : `<div class="booking-icon ${meta.chip}">${meta.icon}</div>`;
   const styleNote = b.style_notes
     ? `<div style="font-size:12px; color:var(--brass); margin-top:4px; font-style:italic;">"${escapeHtml(b.style_notes)}"</div>`
     : '';
@@ -1239,7 +1882,7 @@ function bookingRowHtml(b, withActions = true){
   return `
     <div class="booking-row">
       ${refPhoto}
-      <div>
+      <div class="booking-body">
         <strong>${escapeHtml(b.client_name)}</strong> ${clientVisitBadge(b.client_id)}${svcName ? ' · ' + escapeHtml(svcName) : ''}${addonNames ? ' + ' + escapeHtml(addonNames) : ''}<br>
         <span style="color:var(--ink-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
         ${styleNote}
@@ -1253,7 +1896,7 @@ function bookingRowHtml(b, withActions = true){
         <div class="booking-actions">
           <button class="btn btn-primary" data-complete="${b.id}" data-service-key="${b.service_key || ''}" data-existing-price="${b.service_price ?? ''}">${t('mark_completed')}</button>
         </div>
-      ` : `<span class="booking-status">${statusLabel}</span>`}
+      ` : `<span class="booking-status ${meta.chip}">${meta.icon} ${statusLabel}</span>`}
     </div>
   `;
 }
@@ -1332,7 +1975,247 @@ async function refreshBookings(){
   renderOverviewBookings();
   renderBookingsList();
   renderCancellationAlert();
+  renderClientsList();
 }
+
+/* ---------- clients (CRM) ---------- */
+function renderClientsList(){
+  const area = document.getElementById('clientsArea');
+  const byKey = {};
+  bookingsData.forEach(b=>{
+    const key = b.client_phone || b.client_id || b.client_name;
+    if(!key) return;
+    const entry = byKey[key] || (byKey[key] = { name: b.client_name, phone: b.client_phone, visits: 0, lastVisit: null });
+    if(b.status === 'completed') entry.visits++;
+    const t = new Date(b.start_time);
+    if(!entry.lastVisit || t > entry.lastVisit) entry.lastVisit = t;
+    // keep the most recently-used name/phone in case they changed over time
+    if(!entry.lastVisit || t >= entry.lastVisit){ entry.name = b.client_name; entry.phone = b.client_phone; }
+  });
+  const clients = Object.values(byKey).sort((a,b) => (b.lastVisit||0) - (a.lastVisit||0));
+
+  if(clients.length === 0){
+    area.innerHTML = `<div class="empty-state">${t('empty_clients')}</div>`;
+    return;
+  }
+  area.innerHTML = clients.map(c => `
+    <div class="client-row">
+      <div>
+        <div class="cr-name">${escapeHtml(c.name)}</div>
+        ${c.phone ? `<div class="cr-phone"><a href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a></div>` : ''}
+      </div>
+      <div class="cr-meta">
+        <div class="cr-visits">${c.visits} ${c.visits === 1 ? t('cr_visit') : t('cr_visits')}</div>
+        <div>${t('cr_last_visit')}: ${c.lastVisit ? c.lastVisit.toLocaleDateString() : '—'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ---------- walk-in booking ---------- */
+function blocksForWalkinDay(dayKey){
+  return availabilityData.filter(b => b.day === dayKey);
+}
+
+function generateWalkinSlots(dateObj, duration){
+  const dayKey = DAY_KEYS[(dateObj.getDay()+6)%7];
+  const blocks = blocksForWalkinDay(dayKey);
+  if(!blocks.length) return [];
+  const bookedIso = new Set(
+    bookingsData.filter(b => b.status === 'pending' || b.status === 'confirmed')
+      .map(b => new Date(b.start_time).toISOString())
+  );
+  const out = []; const now = new Date();
+  blocks.forEach(block=>{
+    const [sh, sm] = block.start.split(':').map(Number);
+    const [eh, em] = block.end.split(':').map(Number);
+    let cur = new Date(dateObj); cur.setHours(sh, sm, 0, 0);
+    const end = new Date(dateObj); end.setHours(eh, em, 0, 0);
+    while(cur < end){
+      if(cur > now){
+        const iso = cur.toISOString();
+        out.push({ label: cur.toLocaleTimeString(currentLang==='en'?'en-US':currentLang, {hour:'2-digit',minute:'2-digit'}), iso, taken: bookedIso.has(iso) });
+      }
+      cur = new Date(cur.getTime() + duration*60000);
+    }
+  });
+  return out;
+}
+
+function getWalkinModalOverlay(){
+  let overlay = document.getElementById('walkinModalOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'walkinModalOverlay';
+    overlay.className = 'walkin-modal-overlay';
+    overlay.innerHTML = '<div class="walkin-modal" id="walkinModal"></div>';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.remove(); });
+  }
+  return overlay;
+}
+
+function openWalkinModal(){
+  const overlay = getWalkinModalOverlay();
+  const modal = document.getElementById('walkinModal');
+
+  // unique past clients, most recent first, for the "returning client" shortcut
+  const seenPhones = new Set();
+  const pastClients = [];
+  [...bookingsData].reverse().forEach(b=>{
+    const key = b.client_phone || b.client_name;
+    if(!key || seenPhones.has(key)) return;
+    seenPhones.add(key);
+    pastClients.push({ name: b.client_name, phone: b.client_phone || '' });
+  });
+
+  const activeServices = servicesData.filter(s => s.is_active);
+
+  modal.innerHTML = `
+    <button class="walkin-modal-close" id="walkinCloseBtn">&times;</button>
+    <h2 style="font-family:'Fraunces',serif; font-size:22px; margin-bottom:18px;">${t('walkin_title')}</h2>
+
+    <div class="field-group">
+      <label>${t('walkin_phone')}</label>
+      <input type="tel" id="walkinPhone" placeholder="+998 90 123 45 67">
+    </div>
+    <div class="field-group">
+      <label>${t('walkin_name')}</label>
+      <input type="text" id="walkinName" placeholder="${t('walkin_name_ph')}">
+    </div>
+    ${pastClients.length ? `
+      <div class="field-group">
+        <label>${t('walkin_existing')}</label>
+        <input type="text" id="walkinExistingSearch" placeholder="${t('walkin_existing_ph')}" list="walkinClientList">
+        <datalist id="walkinClientList">
+          ${pastClients.map(c => `<option value="${escapeHtml(c.name)}${c.phone ? ' — ' + escapeHtml(c.phone) : ''}">`).join('')}
+        </datalist>
+      </div>
+    ` : ''}
+
+    <div class="field-group">
+      <label>${t('walkin_service')}</label>
+      <div id="walkinServiceList">
+        ${activeServices.length ? activeServices.map(s => `
+          <div class="walkin-svc-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
+            <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+            <span style="font-weight:800; color:var(--brass);">${formatPrice(s.price)}</span>
+          </div>`).join('') : `<div class="empty-state" style="padding:20px;">${t('walkin_no_services')}</div>`}
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>${t('walkin_pick_time')}</label>
+      <div class="walkin-day-tabs" id="walkinDayTabs"></div>
+      <div class="walkin-slot-grid" id="walkinSlotGrid"></div>
+    </div>
+
+    <div class="walkin-total">
+      <span>${t('walkin_total')}</span>
+      <span class="amt" id="walkinTotalAmt">${formatPrice(0)}</span>
+    </div>
+    <div id="walkinMsg" style="font-size:12.5px; color:var(--err); margin-bottom:10px; display:none;"></div>
+    <button class="btn btn-primary" id="walkinSubmitBtn" style="width:100%;">${t('walkin_submit')}</button>
+  `;
+
+  overlay.classList.add('open');
+  document.getElementById('walkinCloseBtn').addEventListener('click', ()=> overlay.remove());
+
+  if(pastClients.length){
+    document.getElementById('walkinExistingSearch').addEventListener('change', (e)=>{
+      const picked = pastClients.find(c => e.target.value === `${c.name}${c.phone ? ' — ' + c.phone : ''}`);
+      if(picked){
+        document.getElementById('walkinName').value = picked.name;
+        document.getElementById('walkinPhone').value = picked.phone;
+      }
+    });
+  }
+
+  let selectedService = null;
+  let selectedSlotIso = null;
+
+  function renderWalkinDays(){
+    const days = [];
+    for(let i=0;i<14;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForWalkinDay(DAY_KEYS[(d.getDay()+6)%7]).length > 0) days.push(d); }
+    const tabs = document.getElementById('walkinDayTabs');
+    tabs.innerHTML = days.map((d,i)=>`<div class="walkin-day-tab ${i===0?'active':''}" data-idx="${i}">${t('day_'+DAY_KEYS[(d.getDay()+6)%7].toLowerCase())} ${d.getDate()}</div>`).join('');
+    tabs.querySelectorAll('.walkin-day-tab').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        tabs.querySelectorAll('.walkin-day-tab').forEach(x=>x.classList.remove('active'));
+        el.classList.add('active');
+        renderWalkinSlots(days[parseInt(el.dataset.idx)]);
+      });
+    });
+    if(days.length) renderWalkinSlots(days[0]);
+    else document.getElementById('walkinSlotGrid').innerHTML = `<div class="no-slots-msg" style="grid-column:1/-1; color:var(--ink-dim); font-size:12.5px;">${t('walkin_no_slots')}</div>`;
+  }
+
+  function renderWalkinSlots(dateObj){
+    selectedSlotIso = null;
+    const grid = document.getElementById('walkinSlotGrid');
+    if(!selectedService){ grid.innerHTML = `<div class="no-slots-msg" style="grid-column:1/-1; color:var(--ink-dim); font-size:12.5px;">${t('walkin_pick_service_first')}</div>`; return; }
+    const slots = generateWalkinSlots(dateObj, selectedService.duration);
+    grid.innerHTML = slots.length
+      ? slots.map(s=>`<div class="walkin-slot-btn ${s.taken?'taken':''}" data-iso="${s.iso}">${s.label}</div>`).join('')
+      : `<div class="no-slots-msg" style="grid-column:1/-1; color:var(--ink-dim); font-size:12.5px;">${t('walkin_no_slots')}</div>`;
+    grid.querySelectorAll('.walkin-slot-btn:not(.taken)').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        grid.querySelectorAll('.walkin-slot-btn').forEach(x=>x.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSlotIso = el.dataset.iso;
+      });
+    });
+  }
+
+  document.getElementById('walkinServiceList').querySelectorAll('.walkin-svc-option').forEach(opt=>{
+    opt.addEventListener('click', ()=>{
+      document.querySelectorAll('.walkin-svc-option').forEach(x=>x.classList.remove('selected'));
+      opt.classList.add('selected');
+      selectedService = { key: opt.dataset.key, duration: parseInt(opt.dataset.duration), price: parseInt(opt.dataset.price) || 0 };
+      document.getElementById('walkinTotalAmt').textContent = formatPrice(selectedService.price);
+      const activeTab = document.querySelector('.walkin-day-tab.active');
+      const days = []; for(let i=0;i<14;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForWalkinDay(DAY_KEYS[(d.getDay()+6)%7]).length > 0) days.push(d); }
+      if(activeTab) renderWalkinSlots(days[parseInt(activeTab.dataset.idx)]);
+    });
+  });
+
+  renderWalkinDays();
+
+  document.getElementById('walkinSubmitBtn').addEventListener('click', async ()=>{
+    const msg = document.getElementById('walkinMsg');
+    msg.style.display = 'none';
+    const phone = document.getElementById('walkinPhone').value.trim();
+    const name = document.getElementById('walkinName').value.trim();
+    if(!phone){ msg.textContent = t('walkin_phone_required'); msg.style.display = 'block'; return; }
+    if(!selectedService){ msg.textContent = t('walkin_pick_service_first'); msg.style.display = 'block'; return; }
+    if(!selectedSlotIso){ msg.textContent = t('walkin_no_slots'); msg.style.display = 'block'; return; }
+
+    const btn = document.getElementById('walkinSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = t('walkin_submitting');
+
+    const { error } = await supabaseClient.from('bookings').insert([{
+      barber_id: barberData.id, client_id: null,
+      client_name: name || phone, client_phone: phone,
+      start_time: selectedSlotIso, status: 'confirmed',
+      service_key: selectedService.key, service_duration_minutes: selectedService.duration,
+      service_price: selectedService.price
+    }]);
+
+    if(error){
+      console.error('Walk-in booking insert failed:', error);
+      btn.disabled = false;
+      btn.textContent = t('walkin_submit');
+      msg.textContent = t('walkin_error');
+      msg.style.display = 'block';
+      return;
+    }
+    overlay.remove();
+    await refreshBookings();
+  });
+}
+
+document.getElementById('addWalkinBtn').addEventListener('click', openWalkinModal);
 
 function renderCancellationAlert(){
   const unseen = bookingsData.filter(b => b.status === 'cancelled' && b.cancelled_by === 'client' && b.barber_seen_cancellation === false);
@@ -1473,6 +2356,7 @@ document.getElementById('saveLocationBtn').addEventListener('click', async ()=>{
   if(!error){
     Object.assign(barberData, updates);
     updateLocationStatusMsg();
+    renderOnboardingChecklist();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
