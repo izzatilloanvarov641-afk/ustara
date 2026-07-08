@@ -3,603 +3,851 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ustara — Find your barber, not just a shop</title>
+<meta name="description" content="Ustara — book trusted barbers near you in seconds. Real reviews, live availability, zero waiting lines.">
+<title>Ustara — Your barber, booked</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#14120F">
+<meta name="theme-color" content="#12151c">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-  :root{
-    --ink: #14120F;
-    --paper: #F6F1E7;
-    --paper-alt: #EFE9D8;
-    --surface: #FFFFFF;
-    --line: rgba(20,18,15,0.12);
-    --line-strong: rgba(20,18,15,0.22);
-    --dim: #6E6656;
-    --gold: #C99A2E;
-    --gold-deep: #A47D1F;
-    --on-ink: #F3EEE0;
-  }
-  *{ margin:0; padding:0; box-sizing:border-box; }
-  html{ scroll-behavior:smooth; }
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:'Inter', sans-serif;
-    line-height:1.5;
-    -webkit-font-smoothing:antialiased;
-    overflow-x:hidden;
-  }
-  .display{ font-family:'Unbounded', sans-serif; }
-  a{ color:inherit; text-decoration:none; }
-  ::selection{ background:var(--gold); color:var(--ink); }
-  :focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
-
-  .wrap{ max-width:1200px; margin:0 auto; padding:0 32px; }
-  @media (max-width:640px){ .wrap{ padding:0 20px; } }
-
-  .eyebrow{
-    font-size:11.5px; letter-spacing:0.14em; text-transform:uppercase;
-    color:var(--gold-deep); font-weight:700;
-  }
-  .eyebrow.on-ink{ color:var(--gold); }
-
-  .accent{ color:var(--gold); }
-
-  section{ padding:104px 0; }
-  @media (max-width:700px){ section{ padding:64px 0; } }
-  .section-head{ max-width:640px; margin-bottom:56px; }
-  @media (max-width:700px){ .section-head{ margin-bottom:36px; } }
-  .section-head h2{ font-family:'Unbounded', sans-serif; font-weight:700; letter-spacing:-0.01em; text-transform:uppercase; font-size:clamp(28px, 3.6vw, 42px); line-height:1.14; margin-top:16px; }
-  .section-head p{ color:var(--dim); font-size:16px; margin-top:16px; line-height:1.7; max-width:52ch; }
-
-  hr.rule{ border:none; height:1px; background:var(--line-strong); }
-
-  /* ---------- buttons ---------- */
-  .btn{
-    display:inline-flex; align-items:center; justify-content:center; gap:8px;
-    padding:16px 28px; font-size:13.5px; font-weight:700; letter-spacing:0.03em;
-    text-transform:uppercase; border-radius:2px; transition:transform .15s ease, background .15s ease, color .15s ease, border-color .15s ease;
-    white-space:nowrap;
-  }
-  .btn-solid{ background:var(--ink); color:var(--on-ink); }
-  .btn-solid:hover{ background:#000; transform:translateY(-1px); }
-  .btn-outline{ border:1.5px solid var(--ink); color:var(--ink); }
-  .btn-outline:hover{ background:var(--ink); color:var(--on-ink); }
-  .btn-on-ink{ border:1.5px solid var(--on-ink); color:var(--on-ink); }
-  .btn-on-ink:hover{ background:var(--on-ink); color:var(--ink); }
-  .btn-gold{ background:var(--gold); color:var(--ink); }
-  .btn-gold:hover{ background:var(--gold-deep); transform:translateY(-1px); }
-
-  /* ---------- nav ---------- */
-  nav{
-    position:sticky; top:0; z-index:60;
-    background:var(--paper);
-    border-bottom:1px solid var(--line-strong);
-  }
-  nav .wrap{ display:flex; align-items:center; justify-content:space-between; height:76px; gap:20px; }
-  .logo{ font-family:'Unbounded', sans-serif; font-size:19px; font-weight:700; letter-spacing:-0.01em; text-transform:uppercase; flex-shrink:0; }
-  .logo .accent{ color:var(--gold); }
-  .nav-links{ display:flex; gap:30px; align-items:center; font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink); }
-  .nav-links a{ position:relative; padding-bottom:2px; }
-  .nav-links a::after{ content:''; position:absolute; left:0; right:100%; bottom:-2px; height:2px; background:var(--gold); transition:right .18s ease; }
-  .nav-links a:hover::after{ right:0; }
-  .nav-right{ display:flex; align-items:center; gap:16px; }
-
-  .nav-login{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--dim); white-space:nowrap; }
-  .nav-login a:hover{ color:var(--gold-deep); }
-  .nav-login .sep{ opacity:0.5; }
-  @media (max-width:560px){ .nav-login .client-login{ display:none; } .nav-login .sep{ display:none; } }
-  @media (max-width:400px){ .nav-login{ display:none; } }
-
-  .lang-switch{ display:flex; border:1.5px solid var(--line-strong); border-radius:2px; padding:2px; }
-  .lang-switch button{
-    background:none; border:none; color:var(--dim);
-    font-family:'Inter', sans-serif; font-size:11.5px; font-weight:700;
-    padding:6px 10px; border-radius:1px; cursor:pointer; letter-spacing:0.03em;
-    transition:all .15s ease;
-  }
-  .lang-switch button.active{ background:var(--ink); color:var(--on-ink); }
-
-  .nav-cta{ padding:10px 18px; font-size:12px; }
-  @media (max-width:820px){ .nav-links{ display:none; } }
-  @media (max-width:480px){
-    nav .wrap{ height:64px; }
-    .logo{ font-size:16px; }
-    .lang-switch button{ padding:5px 7px; font-size:10.5px; }
-    .nav-cta{ padding:9px 12px; font-size:11px; }
-  }
-
-  /* ---------- hero ---------- */
-  .hero{ position:relative; min-height:88vh; display:flex; align-items:flex-end; overflow:hidden; }
-  @media (max-width:700px){ .hero{ min-height:78vh; } }
-  .hero-media{ position:absolute; inset:0; z-index:0; background:var(--ink); }
-  .hero-media video{
-    position:absolute; top:50%; left:50%; width:100%; height:140%; min-height:100%;
-    transform:translate(-50%,-50%); object-fit:cover; will-change:transform;
-  }
-  .hero-scrim{
-    position:absolute; inset:0;
-    background:linear-gradient(180deg, rgba(20,18,15,0.25) 0%, rgba(20,18,15,0.35) 45%, rgba(20,18,15,0.88) 100%);
-  }
-  .hero-content{ position:relative; z-index:2; width:100%; padding-bottom:150px; }
-  @media (max-width:700px){ .hero-content{ padding-bottom:190px; } }
-  .launch-pill{
-    display:inline-flex; align-items:center; gap:8px; border:1px solid rgba(243,238,224,0.35);
-    padding:8px 16px; border-radius:2px; font-size:11px;
-    letter-spacing:0.1em; text-transform:uppercase; color:var(--on-ink); margin-bottom:26px;
-  }
-  .launch-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); box-shadow:0 0 8px var(--gold); }
-
-  .hero h1{
-    font-family:'Unbounded', sans-serif; font-weight:700; letter-spacing:-0.01em; text-transform:uppercase;
-    font-size:clamp(34px, 7vw, 84px); line-height:1.03; max-width:900px; color:var(--on-ink);
-  }
-  .hero p.lede{
-    font-size:16px; color:rgba(243,238,224,0.78); max-width:460px; line-height:1.65;
-    margin-top:22px;
-  }
-  .hero-video-caption{
-    position:absolute; left:24px; top:20px; z-index:2; display:flex; align-items:center; gap:9px;
-    font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--on-ink); font-weight:600;
-  }
-  .hero-video-caption .rec-dot{ width:7px; height:7px; border-radius:50%; background:#e6543f; box-shadow:0 0 8px rgba(230,84,63,0.7); animation:pulse-rec 1.8s ease-in-out infinite; }
-  @keyframes pulse-rec{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
-
-  /* ---------- torn paper CTA card ---------- */
-  .hero-card-wrap{ position:relative; z-index:3; margin-top:-96px; }
-  @media (max-width:700px){ .hero-card-wrap{ margin-top:-150px; } }
-  .hero-card{
-    position:relative; max-width:900px; margin:0 auto; padding:44px 48px 40px;
-    background-color:var(--paper);
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/></svg>");
-    background-blend-mode:multiply;
-    clip-path:polygon(0% 4%,4% 0%,9% 3%,14% 0%,20% 3%,26% 0%,32% 3%,38% 0%,44% 3%,50% 0%,56% 3%,62% 0%,68% 3%,74% 0%,80% 3%,86% 0%,92% 3%,96% 0%,100% 4%,100% 96%,96% 100%,92% 97%,86% 100%,80% 97%,74% 100%,68% 97%,62% 100%,56% 97%,50% 100%,44% 97%,38% 100%,32% 97%,26% 100%,20% 97%,14% 100%,9% 97%,4% 100%,0% 96%);
-    box-shadow:0 30px 60px -20px rgba(20,18,15,0.4);
-    transform:rotate(-0.4deg);
-  }
-  @media (max-width:700px){ .hero-card{ padding:32px 22px 28px; } }
-  .hero-card-inner{ text-align:center; }
-  .hero-card .eyebrow{ display:block; margin-bottom:14px; }
-  .hero-card-ctas{ display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; margin-top:22px; }
-  @media (max-width:480px){
-    .hero-card-ctas{ flex-direction:column; }
-    .hero-card-ctas .btn{ width:100%; }
-  }
-  #installAppBtn{ margin-top:16px; background:none; border:none; font-size:12.5px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:var(--dim); cursor:pointer; }
-
-  /* ---------- strip ticker ---------- */
-  .strip{
-    background:var(--ink); overflow:hidden; white-space:nowrap; padding:18px 0;
-    border-top:1px solid rgba(201,154,46,0.35); border-bottom:1px solid rgba(201,154,46,0.35);
-  }
-  .strip-track{
-    display:inline-flex; gap:48px; animation:scroll 28s linear infinite;
-    font-family:'Unbounded', sans-serif; font-weight:500; font-size:13px; letter-spacing:0.06em;
-    text-transform:uppercase; color:var(--gold);
-  }
-  .strip-track span{ display:inline-flex; align-items:center; gap:48px; }
-  .strip-track span::after{ content:'\2014'; color:rgba(201,154,46,0.4); margin-left:48px; }
-  @keyframes scroll{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
-
-  /* ---------- loop ---------- */
-  .loop-section{ background:var(--paper); }
-  .loop{ display:grid; grid-template-columns:repeat(4, 1fr); gap:0; position:relative; }
-  .loop::before{ content:''; position:absolute; top:28px; left:0; right:0; height:2px; background:var(--line-strong); }
-  .loop-step{ padding-right:28px; position:relative; }
-  .loop-num{
-    font-family:'Unbounded', sans-serif; font-weight:700; font-size:13px; color:var(--paper);
-    background:var(--ink); width:34px; height:34px; display:flex; align-items:center; justify-content:center;
-    position:relative; z-index:2; margin-bottom:24px; border-radius:1px;
-  }
-  .loop-step h3{ font-family:'Unbounded', sans-serif; font-weight:700; text-transform:uppercase; font-size:16.5px; letter-spacing:0.01em; margin-bottom:10px; }
-  .loop-step p{ color:var(--dim); font-size:14.5px; line-height:1.65; }
-  @media (max-width:900px){
-    .loop{ grid-template-columns:1fr; gap:32px; }
-    .loop::before{ display:none; }
-    .loop-step{ padding-left:0; padding-right:0; }
-  }
-
-  /* ---------- portfolio / mock ---------- */
-  .mock-section{ background:var(--surface); }
-  .mock-wrap{ display:grid; grid-template-columns:0.85fr 1.15fr; gap:64px; align-items:center; }
-  .mock-card{ background:var(--ink); border-radius:2px; padding:26px; position:relative; overflow:hidden; }
-  .mock-avatar{
-    width:100%; aspect-ratio:4/3; border-radius:1px;
-    background:#211E18; margin-bottom:20px; position:relative; overflow:hidden;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .mock-avatar::before{
-    content:''; position:absolute; inset:0;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23g)' opacity='0.5'/></svg>");
-    mix-blend-mode:overlay; opacity:0.5;
-  }
-  .mock-monogram{ font-family:'Unbounded', sans-serif; font-weight:900; font-size:64px; color:rgba(201,154,46,0.85); letter-spacing:-0.02em; position:relative; z-index:1; }
-  .mock-name{ font-family:'Unbounded', sans-serif; font-weight:700; font-size:19px; color:var(--on-ink); margin-bottom:5px; text-transform:uppercase; }
-  .mock-meta{ font-size:13px; color:rgba(243,238,224,0.6); margin-bottom:18px; }
-  .mock-tags{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px; }
-  .mock-tag{ font-size:11px; border:1px solid rgba(243,238,224,0.3); color:rgba(243,238,224,0.85); padding:5px 10px; border-radius:2px; text-transform:uppercase; letter-spacing:0.03em; }
-  .mock-btn{ background:var(--gold); color:var(--ink); text-align:center; padding:14px; border-radius:1px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; }
-  .mock-copy .eyebrow{ margin-bottom:18px; display:block; }
-  .mock-copy h2{ font-family:'Unbounded', sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(26px,3.4vw,38px); line-height:1.16; margin-bottom:20px; }
-  .mock-copy p{ color:var(--dim); font-size:16px; line-height:1.75; margin-bottom:16px; max-width:50ch; }
-  @media (max-width:900px){ .mock-wrap{ grid-template-columns:1fr; gap:36px; } }
-
-  /* ---------- statement (full-bleed black) ---------- */
-  .statement{ background:var(--ink); color:var(--on-ink); text-align:center; }
-  .statement-inner{ max-width:820px; margin:0 auto; }
-  .statement h2{
-    font-family:'Unbounded', sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em;
-    font-size:clamp(28px, 5vw, 54px); line-height:1.14; margin:18px 0 32px;
-  }
-  .statement-ctas{ display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; }
-  @media (max-width:480px){ .statement-ctas{ flex-direction:column; } .statement-ctas .btn{ width:100%; } }
-
-  /* ---------- split cards ---------- */
-  .split-section{ background:var(--paper); }
-  .split{ display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-strong); border:1px solid var(--line-strong); }
-  .split-card{ background:var(--surface); padding:52px 44px; }
-  .split-card .eyebrow{ margin-bottom:18px; display:block; }
-  .split-card h3{ font-family:'Unbounded', sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:-0.005em; font-size:26px; margin-bottom:22px; line-height:1.2; }
-  .split-list{ list-style:none; margin:26px 0 32px; }
-  .split-list li{ display:flex; gap:12px; padding:13px 0; border-top:1px solid var(--line); font-size:14.5px; color:var(--dim); }
-  .split-list li:last-child{ border-bottom:1px solid var(--line); }
-  .split-list li::before{ content:''; width:5px; height:5px; margin-top:7px; flex-shrink:0; background:var(--gold); }
-  @media (max-width:760px){ .split{ grid-template-columns:1fr; } .split-card{ padding:40px 24px; } }
-
-  /* ---------- get started ---------- */
-  .get-started{ background:var(--paper-alt); }
-  .get-started-inner{ text-align:center; max-width:660px; margin:0 auto; }
-  .get-started .eyebrow{ display:block; }
-  .get-started h2{ font-family:'Unbounded', sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:-0.01em; font-size:clamp(30px,4.8vw,50px); line-height:1.12; margin:18px 0 16px; }
-  .get-started p{ color:var(--dim); font-size:16px; margin-bottom:36px; }
-  .get-started-ctas{ display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; }
-  @media (max-width:480px){ .get-started-ctas{ flex-direction:column; } .get-started-ctas .btn{ width:100%; } }
-
-  /* ---------- footer ---------- */
-  footer{ background:var(--ink); color:var(--on-ink); padding:52px 0 36px; }
-  footer .logo{ font-size:18px; }
-  footer .foot-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:24px; padding-bottom:32px; border-bottom:1px solid rgba(243,238,224,0.16); }
-  footer .foot-links{ display:flex; gap:26px; flex-wrap:wrap; font-size:13px; color:rgba(243,238,224,0.7); }
-  footer .foot-links a:hover{ color:var(--gold); }
-  footer .foot-copy{ font-size:12.5px; color:rgba(243,238,224,0.5); margin-top:20px; }
-
-  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
-  .reveal.in{ opacity:1; transform:translateY(0); }
-
-  @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } }
+:root{
+  --ink:#12151c; --paper:#f6f1e4; --paper-dim:#ece5d2; --line:#d8cfb8; --line-on-ink:#2b3140;
+  --text:#1c1a14; --text-muted:#6b6455; --text-on-ink:#f3efe2; --text-on-ink-muted:#9aa0ad;
+  --lime:#cdff5e; --lime-deep:#a9db3a; --coral:#ff6a4d; --sky:#5b8def; --sun:#ffb84d;
+  --font-display:'Space Grotesk',sans-serif; --font-body:'IBM Plex Sans',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+  --container:1180px;
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{ font-family:var(--font-body); background:var(--paper); color:var(--text); line-height:1.6; overflow-x:hidden; }
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font:inherit; cursor:pointer; }
+:focus-visible{ outline:2px solid var(--sky); outline-offset:2px; }
+.container{ max-width:var(--container); margin:0 auto; padding:0 24px; }
+section{ padding:96px 0; }
+section.has-photo{ position:relative; overflow:hidden; }
+section.has-photo .container{ position:relative; z-index:1; }
+h1,h2,h3{ font-family:var(--font-display); line-height:1.12; text-wrap:balance; font-weight:700; }
+h1{ font-size:clamp(2.6rem,6vw,4.4rem); letter-spacing:-0.02em; }
+h2{ font-size:clamp(2rem,4vw,3rem); letter-spacing:-0.015em; }
+h3{ font-size:1.25rem; font-weight:600; }
+.eyebrow{ display:inline-flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-muted); margin-bottom:20px; }
+.eyebrow .dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.dot--lime{ background:var(--lime-deep); } .dot--coral{ background:var(--coral); } .dot--sky{ background:var(--sky); } .dot--sun{ background:var(--sun); }
+.section-head{ max-width:640px; margin-bottom:56px; }
+.section-head p{ margin-top:16px; color:var(--text-muted); font-size:1.06rem; max-width:58ch; }
+.highlight{ background:linear-gradient(transparent 58%, var(--lime) 58%); padding:0 2px; }
+.on-ink .highlight, .hero .highlight{ background:none; color:var(--lime); }
+.btn{ display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:14px 28px; font-family:var(--font-display); font-weight:600; font-size:1rem; border:1px solid transparent; transition:transform .16s ease, background .16s ease, border-color .16s ease; }
+.btn:hover{ transform:translateY(-2px); }
+.btn--primary{ background:var(--lime); color:var(--ink); }
+.btn--primary:hover{ background:var(--lime-deep); }
+.btn--ghost{ background:transparent; border-color:var(--line); color:var(--text); }
+.btn--ghost:hover{ border-color:var(--text); }
+.on-ink .btn--ghost, .hero .btn--ghost{ border-color:rgba(243,239,226,0.4); color:var(--text-on-ink); }
+.on-ink .btn--ghost:hover, .hero .btn--ghost:hover{ border-color:var(--text-on-ink); }
+.btn--ink{ background:var(--ink); color:var(--text-on-ink); }
+.btn--ink:hover{ background:#232838; }
+.btn--sm{ padding:10px 20px; font-size:0.88rem; }
+.reveal{ opacity:0; filter:blur(6px); transition:opacity .7s ease, transform .7s cubic-bezier(.22,1,.36,1), filter .7s ease; will-change:opacity,transform,filter; }
+.reveal--left{ transform:translateX(-44px); } .reveal--right{ transform:translateX(44px); } .reveal--up{ transform:translateY(36px); }
+.reveal.is-in{ opacity:1; transform:none; filter:blur(0); }
+@media (prefers-reduced-motion:reduce){ .reveal{ opacity:1; transform:none; filter:none; transition:none; } }
+.section-photo{ position:absolute; inset:-80px 0; z-index:0; pointer-events:none; }
+.section-photo__img{ position:absolute; inset:0; background-size:cover; opacity:0.16; filter:saturate(.25); will-change:transform; }
+.section-photo::before,.section-photo::after{ content:''; position:absolute; left:0; right:0; height:140px; z-index:1; }
+.section-photo::before{ top:0; background:linear-gradient(var(--paper),transparent); }
+.section-photo::after{ bottom:0; background:linear-gradient(transparent,var(--paper)); }
+.section--dim .section-photo::before{ background:linear-gradient(var(--paper-dim),transparent); }
+.section--dim .section-photo::after{ background:linear-gradient(transparent,var(--paper-dim)); }
+.section--dim{ background:var(--paper-dim); }
+.section--dim .concept-card,.section--dim .path-card,.section--dim .aud-card{ background:var(--paper); }
+.icon-chip{ width:44px; height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.icon-chip svg{ width:22px; height:22px; }
+.icon-chip--lime{ background:var(--lime); color:var(--ink); }
+.icon-chip--coral{ background:var(--coral); color:var(--ink); }
+.icon-chip--sky{ background:var(--sky); color:#fff; }
+.icon-chip--sun{ background:var(--sun); color:var(--ink); }
+.nav{ position:sticky; top:0; z-index:50; background:rgba(246,241,228,.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+.nav__inner{ display:flex; align-items:center; justify-content:space-between; height:68px; gap:20px; }
+.nav__logo{ font-family:var(--font-display); font-weight:700; font-size:1.3rem; letter-spacing:-0.02em; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.nav__logo-mark{ width:28px; height:28px; border-radius:8px; background:var(--ink); color:var(--lime); display:inline-flex; align-items:center; justify-content:center; font-size:.95rem; }
+.nav__links{ display:flex; gap:26px; font-weight:500; font-size:.95rem; }
+.nav__links a{ color:var(--text-muted); transition:color .15s; }
+.nav__links a:hover{ color:var(--text); }
+.nav__right{ display:flex; align-items:center; gap:16px; }
+.nav__login{ display:flex; align-items:center; gap:8px; font-size:.82rem; color:var(--text-muted); white-space:nowrap; }
+.nav__login a:hover{ color:var(--text); }
+.nav__login .sep{ opacity:.5; }
+.lang-switch{ display:flex; border:1.5px solid var(--line); border-radius:999px; padding:2px; flex-shrink:0; }
+.lang-switch button{ background:none; border:none; color:var(--text-muted); font-family:var(--font-mono); font-size:.72rem; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer; letter-spacing:.03em; transition:all .15s ease; }
+.lang-switch button.active{ background:var(--ink); color:var(--text-on-ink); }
+@media (max-width:900px){ .nav__links{ display:none; } }
+@media (max-width:560px){ .nav__login .client-login{ display:none; } .nav__login .sep{ display:none; } }
+@media (max-width:420px){ .nav__login{ display:none; } }
+.hero{ position:relative; min-height:92vh; display:flex; align-items:center; padding:120px 0; overflow:hidden; color:var(--text-on-ink); }
+.hero__video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
+.hero__scrim{ position:absolute; inset:0; z-index:1; background:linear-gradient(rgba(18,21,28,.72),rgba(18,21,28,.55) 45%,rgba(18,21,28,.85)); }
+.hero .container{ position:relative; z-index:2; }
+.hero__content{ max-width:720px; }
+.hero__kicker{ font-family:var(--font-mono); font-size:.82rem; font-weight:600; text-transform:uppercase; letter-spacing:.16em; color:var(--lime); margin-bottom:24px; display:inline-flex; align-items:center; gap:10px; }
+.hero__content>p{ margin-top:24px; font-size:1.15rem; color:var(--text-on-ink); opacity:.85; max-width:52ch; }
+.hero__ctas{ display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; align-items:center; }
+#installAppBtn{ background:none; border:none; font-family:var(--font-mono); font-size:.8rem; font-weight:600; letter-spacing:.03em; text-transform:uppercase; color:var(--text-on-ink-muted); cursor:pointer; }
+.hero__pill{ position:absolute; z-index:2; display:none; align-items:center; gap:8px; background:rgba(18,21,28,.65); backdrop-filter:blur(8px); border:1px solid var(--line-on-ink); border-radius:999px; padding:10px 18px; font-family:var(--font-mono); font-size:.8rem; font-weight:600; color:var(--text-on-ink); animation:bob 5s ease-in-out infinite; }
+.hero__pill .dot{ width:9px; height:9px; border-radius:50%; }
+@keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+@media (min-width:1000px){ .hero__pill{ display:inline-flex; } }
+@media (prefers-reduced-motion:reduce){ .hero__pill{ animation:none; } }
+.cards-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.concept-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:32px 28px; }
+.concept-card .icon-chip{ margin-bottom:20px; }
+.concept-card__term{ font-family:var(--font-mono); font-size:.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.12em; color:var(--text-muted); margin-bottom:8px; }
+.concept-card h3{ margin-bottom:12px; }
+.concept-card p{ color:var(--text-muted); font-size:.98rem; }
+@media (max-width:900px){ .cards-3{ grid-template-columns:1fr; } }
+.steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+.step{ background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:28px 24px; }
+.step__num{ font-family:var(--font-mono); font-weight:600; font-size:.85rem; color:var(--text-muted); margin-bottom:18px; }
+.step .icon-chip{ margin-bottom:18px; }
+.step h3{ font-size:1.1rem; margin-bottom:10px; }
+.step p{ color:var(--text-muted); font-size:.94rem; }
+@media (max-width:1000px){ .steps{ grid-template-columns:repeat(2,1fr); } }
+@media (max-width:600px){ .steps{ grid-template-columns:1fr; } }
+.paths{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.path-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:34px 30px; display:flex; flex-direction:column; gap:14px; }
+.path-card__top{ display:flex; align-items:center; gap:14px; }
+.path-card h3{ font-size:1.3rem; }
+.path-card>p{ color:var(--text-muted); }
+.path-card__meta{ display:flex; gap:18px; margin-top:auto; padding-top:10px; font-family:var(--font-mono); font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); }
+@media (max-width:800px){ .paths{ grid-template-columns:1fr; } }
+.testimonials{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.tst-card{ background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:34px 30px; }
+.tst-card__stars{ color:var(--sun); letter-spacing:3px; font-size:1.05rem; margin-bottom:18px; }
+.tst-card blockquote{ font-size:1.08rem; line-height:1.65; margin-bottom:24px; }
+.tst-card__who{ display:flex; align-items:center; gap:12px; }
+.tst-card__avatar{ width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; font-size:.95rem; }
+.tst-card__name{ font-weight:600; font-size:.95rem; }
+.tst-card__role{ color:var(--text-muted); font-size:.85rem; }
+@media (max-width:800px){ .testimonials{ grid-template-columns:1fr; } }
+.problem-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:60px; align-items:start; }
+.problem-grid p{ color:var(--text-muted); font-size:1.08rem; max-width:54ch; }
+.problem-grid p+p{ margin-top:18px; }
+.problem-grid strong{ color:var(--text); }
+@media (max-width:800px){ .problem-grid{ grid-template-columns:1fr; gap:28px; } }
+.exp-grid{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start; }
+.checklist{ list-style:none; display:flex; flex-direction:column; gap:18px; }
+.checklist li{ display:flex; gap:14px; align-items:flex-start; }
+.checklist__check{ width:26px; height:26px; border-radius:50%; background:var(--lime); color:var(--ink); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.checklist__check svg{ width:14px; height:14px; }
+.checklist strong{ display:block; font-size:1.02rem; }
+.checklist span{ color:var(--text-muted); font-size:.94rem; }
+.soon-panel{ border:2px dashed var(--line); border-radius:16px; padding:32px 28px; }
+.soon-panel__tag{ display:inline-block; font-family:var(--font-mono); font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.12em; background:var(--sun); color:var(--ink); border-radius:999px; padding:5px 14px; margin-bottom:18px; }
+.soon-panel h3{ margin-bottom:16px; }
+.soon-panel ul{ list-style:none; display:flex; flex-direction:column; gap:12px; color:var(--text-muted); }
+.soon-panel li{ display:flex; gap:10px; align-items:center; }
+.soon-panel li::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--sun); flex-shrink:0; }
+@media (max-width:800px){ .exp-grid{ grid-template-columns:1fr; } }
+.audience-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.aud-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:30px 28px; display:flex; gap:18px; align-items:flex-start; }
+.aud-card h3{ font-size:1.08rem; margin-bottom:8px; }
+.aud-card p{ color:var(--text-muted); font-size:.95rem; }
+@media (max-width:700px){ .audience-grid{ grid-template-columns:1fr; } }
+.on-ink{ background:var(--ink); color:var(--text-on-ink); }
+.on-ink .eyebrow{ color:var(--text-on-ink-muted); }
+.on-ink .section-head p{ color:var(--text-on-ink-muted); }
+.showcase-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:24px; }
+.mock-card{ background:#191d27; border:1px solid var(--line-on-ink); border-radius:16px; padding:28px; }
+.mock-card__label{ font-family:var(--font-mono); font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.12em; color:var(--text-on-ink-muted); margin-bottom:20px; }
+.mock-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; background:rgba(255,255,255,.04); border:1px solid var(--line-on-ink); border-radius:12px; }
+.mock-row+.mock-row{ margin-top:10px; }
+.mock-row__left{ display:flex; align-items:center; gap:12px; min-width:0; }
+.mock-row__icon{ width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.95rem; }
+.mock-row strong{ font-size:.92rem; display:block; }
+.mock-row small{ color:var(--text-on-ink-muted); font-size:.78rem; }
+.mock-row__val{ font-family:var(--font-mono); font-weight:600; font-size:.88rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.mock-bars{ display:flex; align-items:flex-end; gap:10px; height:110px; margin-top:18px; padding:0 6px; }
+.mock-bars .bar{ flex:1; border-radius:6px 6px 0 0; background:var(--line-on-ink); transform-origin:bottom; }
+.mock-bars .bar--lit{ background:var(--lime); }
+.bars-anim .bar{ animation:barPulse 2.6s ease-in-out infinite; }
+.bars-anim .bar:nth-child(2){ animation-delay:.2s; } .bars-anim .bar:nth-child(3){ animation-delay:.4s; } .bars-anim .bar:nth-child(4){ animation-delay:.6s; } .bars-anim .bar:nth-child(5){ animation-delay:.8s; } .bars-anim .bar:nth-child(6){ animation-delay:1s; } .bars-anim .bar:nth-child(7){ animation-delay:1.2s; }
+@keyframes barPulse{ 0%,100%{ transform:scaleY(1); } 50%{ transform:scaleY(.82); } }
+@media (prefers-reduced-motion:reduce){ .bars-anim .bar{ animation:none; } }
+.pill-status{ font-family:var(--font-mono); font-size:.72rem; font-weight:600; border-radius:999px; padding:4px 12px; white-space:nowrap; }
+.pill-status--lime{ background:var(--lime); color:var(--ink); } .pill-status--sun{ background:var(--sun); color:var(--ink); } .pill-status--sky{ background:var(--sky); color:#fff; }
+@media (max-width:800px){ .showcase-grid{ grid-template-columns:1fr; } }
+.streak-card{ background:var(--ink); color:var(--text-on-ink); border-radius:16px; padding:36px 32px; }
+.streak-card__flame{ margin-bottom:18px; color:var(--sun); }
+.streak-card__big{ font-family:var(--font-display); font-weight:700; font-size:2.6rem; line-height:1.1; letter-spacing:-0.02em; }
+.streak-card__big em{ font-style:normal; color:var(--lime); }
+.streak-card p{ margin-top:12px; color:var(--text-on-ink-muted); }
+.streak-card__meta{ display:flex; gap:8px; margin-top:24px; }
+.streak-card__meta span{ width:34px; height:34px; border-radius:10px; background:rgba(255,255,255,.06); border:1px solid var(--line-on-ink); display:inline-flex; align-items:center; justify-content:center; font-size:.85rem; }
+.streak-card__meta span.done{ background:var(--lime); border-color:var(--lime); color:var(--ink); }
+.cta-band h2{ max-width:620px; }
+.cta-band__ctas{ display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; }
+.cta-band__sub{ margin-top:22px; color:var(--text-on-ink-muted); font-size:.92rem; }
+.cta-band__sub a{ color:var(--lime); font-weight:600; }
+.footer{ background:var(--ink); color:var(--text-on-ink); border-top:1px solid var(--line-on-ink); padding:72px 0 40px; }
+.footer__grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; margin-bottom:56px; }
+.footer__brand p{ color:var(--text-on-ink-muted); font-size:.92rem; margin-top:14px; max-width:30ch; }
+.footer h4{ font-family:var(--font-mono); font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.12em; color:var(--text-on-ink-muted); margin-bottom:18px; }
+.footer ul{ list-style:none; display:flex; flex-direction:column; gap:12px; font-size:.94rem; }
+.footer ul a{ color:var(--text-on-ink); opacity:.85; }
+.footer ul a:hover{ opacity:1; color:var(--lime); }
+.footer__bottom{ border-top:1px solid var(--line-on-ink); padding-top:28px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; color:var(--text-on-ink-muted); font-size:.85rem; }
+@media (max-width:800px){ .footer__grid{ grid-template-columns:1fr 1fr; } }
+@media (max-width:500px){ .footer__grid{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="wrap">
-    <div class="logo">Ust<span class="accent">a</span>ra</div>
-    <div class="nav-links">
-      <a href="#loop" data-i18n="nav_how">How it works</a>
+<nav class="nav">
+  <div class="container nav__inner">
+    <a href="#" class="nav__logo"><span class="nav__logo-mark">✂</span>Ustara</a>
+    <div class="nav__links">
+      <a href="#how" data-i18n="nav_how">How it works</a>
+      <a href="#features" data-i18n="nav_features">Features</a>
       <a href="#barbers" data-i18n="nav_barbers">For barbers</a>
-      <a href="#clients" data-i18n="nav_clients">For clients</a>
+      <a href="#reviews" data-i18n="nav_reviews">Reviews</a>
     </div>
-    <div class="nav-right">
-      <div class="nav-login">
-        <a href="auth.html" class="client-login" data-i18n="foot_client_login">Client login</a>
+    <div class="nav__right">
+      <div class="nav__login">
+        <a href="auth.html" class="client-login" data-i18n="nav_login_client">Client login</a>
         <span class="sep">/</span>
-        <a href="auth.html?role=barber" data-i18n="foot_barber_login">Barber login</a>
+        <a href="auth.html?role=barber" data-i18n="nav_login_barber">Barber login</a>
       </div>
       <div class="lang-switch" id="langSwitch">
         <button type="button" data-lang="en" class="active">EN</button>
         <button type="button" data-lang="uz">UZ</button>
         <button type="button" data-lang="ru">RU</button>
       </div>
-      <a href="#get-started" class="btn btn-solid nav-cta" data-i18n="nav_cta">Get started</a>
+      <a href="auth.html" class="btn btn--ink btn--sm" data-i18n="nav_cta">Book a chair</a>
     </div>
   </div>
 </nav>
 
-<header class="hero" id="heroVideoFrame">
-  <div class="hero-media">
-    <video autoplay muted loop playsinline id="heroVideo"
-      src="https://videos.pexels.com/video-files/7686550/7686550-sd_640_360_24fps.mp4"></video>
-    <div class="hero-scrim"></div>
-  </div>
-  <span class="hero-video-caption"><span class="rec-dot"></span> <span data-i18n="hero_video_caption">Real cuts, real barbers</span></span>
-
-  <div class="hero-content wrap">
-    <span class="launch-pill"><span class="dot"></span><span data-i18n="launch_pill">Now live in Tashkent</span></span>
-    <h1 data-i18n="hero_title">Find your <span class="accent">barber.</span><br>Not just a shop.</h1>
-    <p class="lede" data-i18n="hero_lede">Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.</p>
+<header class="hero" id="heroFrame">
+  <video class="hero__video" id="heroVideo" src="https://videos.pexels.com/video-files/7686555/7686555-hd_1920_1080_24fps.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+  <div class="hero__scrim" aria-hidden="true"></div>
+  <span class="hero__pill" style="top:22%;right:12%;" data-i18n="hero_pill1"><span class="dot dot--lime"></span>No waiting line</span>
+  <span class="hero__pill" style="top:38%;right:6%;animation-delay:1.2s;" data-i18n="hero_pill2"><span class="dot dot--coral"></span>4.9★ rated masters</span>
+  <span class="hero__pill" style="top:58%;right:14%;animation-delay:2.4s;" data-i18n="hero_pill3"><span class="dot dot--sky"></span>Open now near you</span>
+  <span class="hero__pill" style="top:74%;right:8%;animation-delay:3.6s;" data-i18n="hero_pill4"><span class="dot dot--sun"></span>Free to book</span>
+  <div class="container">
+    <div class="hero__content">
+      <span class="hero__kicker reveal reveal--left" data-i18n="hero_kicker">Barber booking · Uzbekistan</span>
+      <h1 class="reveal reveal--left" style="transition-delay:80ms" data-i18n="hero_h1">Your next haircut is already <span class="highlight">waiting for you</span></h1>
+      <p class="reveal reveal--left" style="transition-delay:160ms" data-i18n="hero_p">Ustara shows you the barbers near you, their real reviews, their live schedule — and books your seat in under a minute. Walk in at your time, not after three other heads.</p>
+      <div class="hero__ctas reveal reveal--left" style="transition-delay:240ms">
+        <a href="auth.html" class="btn btn--primary" data-i18n="hero_cta_client">Find your barber</a>
+        <a href="auth.html?role=barber" class="btn btn--ghost" data-i18n="hero_cta_barber">I'm a barber</a>
+        <button type="button" id="installAppBtn" style="display:none;" data-i18n="install_btn">📲 Install app</button>
+      </div>
+    </div>
   </div>
 </header>
 
-<div class="hero-card-wrap wrap">
-  <div class="hero-card reveal">
-    <div class="hero-card-inner">
-      <span class="eyebrow" data-i18n="card_eyebrow">Get started in seconds</span>
-      <div class="hero-card-ctas">
-        <a href="auth.html" class="btn btn-solid" data-i18n="hero_cta_client">I'm a client</a>
-        <a href="auth.html?role=barber" class="btn btn-outline" data-i18n="hero_cta_barber">I'm a barber</a>
-      </div>
-      <button type="button" id="installAppBtn" style="display:none;">📲 Install app</button>
+<section class="has-photo" id="concepts-section">
+  <div class="section-photo" id="photo-concepts"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/785537/pexels-photo-785537.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="concepts_eyebrow"><span class="dot dot--lime"></span> Why Ustara exists</span>
+      <h2 class="reveal reveal--right" data-i18n="concepts_h2">Three things every man knows about haircuts</h2>
     </div>
-  </div>
-</div>
-
-<div class="strip">
-  <div class="strip-track" id="stripTrack"></div>
-</div>
-
-<section class="loop-section" id="loop">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <span class="eyebrow" data-i18n="loop_eyebrow">The loop</span>
-      <h2 data-i18n="loop_h2">One relationship. Not one visit.</h2>
-      <p data-i18n="loop_p">Most booking apps end at checkout. Ustara is built around what happens after — the next cut, the next referral, the next five years.</p>
-    </div>
-    <div class="loop">
-      <div class="loop-step reveal">
-        <div class="loop-num">01</div>
-        <h3 data-i18n="loop1_h">Discover</h3>
-        <p data-i18n="loop1_p">Browse barbers by portfolio and style — not a random list of nearby shops.</p>
+    <div class="cards-3">
+      <div class="concept-card reveal reveal--left">
+        <span class="icon-chip icon-chip--lime">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 12 12 7" class="clockhand"><animateTransform attributeName="transform" type="rotate" values="0 12 12;30 12 12;60 12 12;90 12 12;120 12 12;150 12 12;180 12 12;210 12 12;240 12 12;270 12 12;300 12 12;330 12 12;360 12 12" dur="6s" calcMode="discrete" repeatCount="indefinite"/></path>
+            <path d="M12 12 15.5 12"></path>
+          </svg>
+        </span>
+        <div class="concept-card__term" data-i18n="c1_term">the wait</div>
+        <h3 data-i18n="c1_title">Nobody plans for it</h3>
+        <p data-i18n="c1_body">You show up, the chair is taken, two more are ahead of you. Forty minutes of your day, gone before the first snip. Ustara replaces the queue with a reserved time.</p>
       </div>
-      <div class="loop-step reveal">
-        <div class="loop-num">02</div>
-        <h3 data-i18n="loop2_h">Book</h3>
-        <p data-i18n="loop2_p">Pick a slot, confirm instantly. No calls, no back-and-forth on Instagram DMs.</p>
+      <div class="concept-card reveal reveal--right" style="transition-delay:80ms">
+        <span class="icon-chip icon-chip--coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <g><animateTransform attributeName="transform" type="rotate" values="0 8 8;-14 8 8;0 8 8" dur="1.6s" repeatCount="indefinite"/><circle cx="6" cy="6" r="2.6"></circle><path d="M8 8 20 20"></path></g>
+            <g><animateTransform attributeName="transform" type="rotate" values="0 8 16;14 8 16;0 8 16" dur="1.6s" repeatCount="indefinite"/><circle cx="6" cy="18" r="2.6"></circle><path d="M8 16 20 4"></path></g>
+          </svg>
+        </span>
+        <div class="concept-card__term" data-i18n="c2_term">the regular</div>
+        <h3 data-i18n="c2_title">A barber who knows your cut</h3>
+        <p data-i18n="c2_body">The best haircut is the second one from the same master. Ustara keeps your history so rebooking the barber who got it right takes one tap.</p>
       </div>
-      <div class="loop-step reveal">
-        <div class="loop-num">03</div>
-        <h3 data-i18n="loop3_h">Sit</h3>
-        <p data-i18n="loop3_p">Check in, get the cut, pay in the app. Simple, on time, no surprises.</p>
-      </div>
-      <div class="loop-step reveal">
-        <div class="loop-num">04</div>
-        <h3 data-i18n="loop4_h">Return</h3>
-        <p data-i18n="loop4_p">Your barber's profile stays with you — even if they move shops.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="mock-section">
-  <div class="wrap mock-wrap reveal">
-    <div class="mock-card">
-      <div class="mock-avatar"><span class="mock-monogram">JA</span></div>
-      <div class="mock-name">Jasur A.</div>
-      <div class="mock-meta" data-i18n="mock_meta">Fade specialist · 6 yrs · Yunusabad</div>
-      <div class="mock-tags">
-        <span class="mock-tag" data-i18n="mock_tag1">Skin fade</span>
-        <span class="mock-tag" data-i18n="mock_tag2">Beard shaping</span>
-        <span class="mock-tag" data-i18n="mock_tag3">Classic cuts</span>
-      </div>
-      <div class="mock-btn" data-i18n="mock_btn">Book with Jasur</div>
-    </div>
-    <div class="mock-copy">
-      <span class="eyebrow" data-i18n="mock_eyebrow">The professional profile</span>
-      <h2 data-i18n="mock_h2">A portfolio that's actually theirs.</h2>
-      <p data-i18n="mock_p1">Every barber gets a real profile — before &amp; afters, specialties, reviews, availability. It's built once and it travels with them for their entire career.</p>
-      <p data-i18n="mock_p2">Salons get the tools to run a business. Barbers get an identity that outlasts any one shop.</p>
-    </div>
-  </div>
-</section>
-
-<section class="statement">
-  <div class="wrap reveal">
-    <div class="statement-inner">
-      <span class="eyebrow on-ink" data-i18n="stmt_eyebrow">The philosophy</span>
-      <h2 data-i18n="stmt_h2">Your chair. Your clients. <span class="accent">Your name.</span></h2>
-      <div class="statement-ctas">
-        <a href="auth.html" class="btn btn-on-ink" data-i18n="hero_cta_client">I'm a client</a>
-        <a href="auth.html?role=barber" class="btn btn-gold" data-i18n="hero_cta_barber">I'm a barber</a>
+      <div class="concept-card reveal reveal--left" style="transition-delay:160ms">
+        <span class="icon-chip icon-chip--sky">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1L3.2 9.4l6.1-.8L12 3Z">
+              <animateTransform attributeName="transform" type="scale" values="1;1.12;1" dur="2.2s" repeatCount="indefinite" additive="sum"/>
+              <animateTransform attributeName="transform" type="translate" values="0 0;-1.4 -1.4;0 0" dur="2.2s" repeatCount="indefinite"/>
+            </path>
+          </svg>
+        </span>
+        <div class="concept-card__term" data-i18n="c3_term">the gamble</div>
+        <h3 data-i18n="c3_title">No more coin-flip haircuts</h3>
+        <p data-i18n="c3_body">A new barbershop used to be a leap of faith. Real ratings from real completed bookings mean you know how the chair performs before you sit in it.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="split-section" id="barbers">
-  <div class="wrap reveal">
-    <div class="split">
-      <div class="split-card" id="clients">
-        <span class="eyebrow" data-i18n="cl_eyebrow">For clients</span>
-        <h3 data-i18n="cl_h3">Find your barber.<br>Not just a shop.</h3>
-        <ul class="split-list">
-          <li data-i18n="cl_li1">Search by style, not by pin on a map</li>
-          <li data-i18n="cl_li2">See real before &amp; after work before you book</li>
-          <li data-i18n="cl_li3">Book in seconds, no phone calls</li>
-          <li data-i18n="cl_li4">Your barber's profile follows them if they move</li>
-        </ul>
-        <a href="#get-started" class="btn btn-outline" data-i18n="cl_btn">Join as a client</a>
+<section id="how" class="has-photo section--dim">
+  <div class="section-photo" id="photo-how"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/7697714/pexels-photo-7697714.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center 30%;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="how_eyebrow"><span class="dot dot--coral"></span> How it works</span>
+      <h2 class="reveal reveal--right" data-i18n="how_h2">From "I need a cut" to the chair in <span class="highlight">four steps</span></h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal reveal--left">
+        <div class="step__num">01</div>
+        <span class="icon-chip icon-chip--lime">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"></path><circle cx="12" cy="11" r="2.4"></circle>
+            <circle cx="12" cy="11" r="4" stroke-width="1" opacity="0"><animate attributeName="r" values="3;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="2s" repeatCount="indefinite"/></circle>
+            <circle cx="12" cy="11" r="4" stroke-width="1" opacity="0"><animate attributeName="r" values="3;8" dur="2s" begin="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="2s" begin="1s" repeatCount="indefinite"/></circle>
+          </svg>
+        </span>
+        <h3 data-i18n="s1_title">See who's around you</h3>
+        <p data-i18n="s1_body">Open the map and every barber near you appears with their rating, prices and today's free slots.</p>
       </div>
-      <div class="split-card">
-        <span class="eyebrow" data-i18n="br_eyebrow">For barbers</span>
-        <h3 data-i18n="br_h3">Build a reputation<br>that's yours to keep.</h3>
-        <ul class="split-list">
-          <li data-i18n="br_li1">A profile that belongs to you, not the salon</li>
-          <li data-i18n="br_li2">Fill your chair without chasing DMs</li>
-          <li data-i18n="br_li3">Manage your own schedule and pricing</li>
-          <li data-i18n="br_li4">Get paid inside the app, no cash chasing</li>
-        </ul>
-        <a href="#get-started" class="btn btn-outline" data-i18n="br_btn">Join as a barber</a>
+      <div class="step reveal reveal--right" style="transition-delay:80ms">
+        <div class="step__num">02</div>
+        <span class="icon-chip icon-chip--coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path>
+            <circle cx="12" cy="15.5" r="1.6" fill="currentColor" stroke="none"><animate attributeName="opacity" values="1;0.15;1" dur="1.8s" repeatCount="indefinite"/></circle>
+          </svg>
+        </span>
+        <h3 data-i18n="s2_title">Pick a service and time</h3>
+        <p data-i18n="s2_body">Haircut, beard, full grooming — choose what you need and grab a slot that fits your day.</p>
+      </div>
+      <div class="step reveal reveal--left" style="transition-delay:160ms">
+        <div class="step__num">03</div>
+        <span class="icon-chip icon-chip--sky">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <g><animateTransform attributeName="transform" type="rotate" values="0 12 4;12 12 4;-12 12 4;8 12 4;-8 12 4;0 12 4;0 12 4" keyTimes="0;0.12;0.24;0.36;0.48;0.6;1" dur="3.4s" repeatCount="indefinite"/>
+            <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"></path><path d="M10.5 19.5a1.8 1.8 0 0 0 3 0"></path></g>
+          </svg>
+        </span>
+        <h3 data-i18n="s3_title">Get reminded</h3>
+        <p data-i18n="s3_body">A Telegram nudge before your visit means you never blank on an appointment again.</p>
+      </div>
+      <div class="step reveal reveal--right" style="transition-delay:240ms">
+        <div class="step__num">04</div>
+        <span class="icon-chip icon-chip--sun">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <g><animateTransform attributeName="transform" type="rotate" values="0 8 8;-14 8 8;0 8 8" dur="1.6s" repeatCount="indefinite"/><circle cx="6" cy="6" r="2.6"></circle><path d="M8 8 20 20"></path></g>
+            <g><animateTransform attributeName="transform" type="rotate" values="0 8 16;14 8 16;0 8 16" dur="1.6s" repeatCount="indefinite"/><circle cx="6" cy="18" r="2.6"></circle><path d="M8 16 20 4"></path></g>
+          </svg>
+        </span>
+        <h3 data-i18n="s4_title">Walk in, sit down</h3>
+        <p data-i18n="s4_body">Your chair is ready at your time. No queue, no small talk with strangers ahead of you.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="get-started" id="get-started">
-  <div class="wrap">
-    <div class="get-started-inner reveal">
-      <span class="eyebrow" data-i18n="gs_eyebrow">Now live in Tashkent</span>
-      <h2 data-i18n="gs_h2">Ready for the <span class="accent">chair?</span></h2>
-      <p data-i18n="gs_p">Create your account and get started today — no waitlist, no waiting.</p>
-      <div class="get-started-ctas">
-        <a href="auth.html" class="btn btn-solid" data-i18n="hero_cta_client">I'm a client</a>
-        <a href="auth.html?role=barber" class="btn btn-outline" data-i18n="hero_cta_barber">I'm a barber</a>
+<section class="has-photo" id="features">
+  <div class="section-photo" id="photo-features"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/4969864/pexels-photo-4969864.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="features_eyebrow"><span class="dot dot--sky"></span> What you get</span>
+      <h2 class="reveal reveal--right" data-i18n="features_h2">Built around the chair, <span class="highlight">both sides of it</span></h2>
+    </div>
+    <div class="paths">
+      <div class="path-card reveal reveal--left">
+        <div class="path-card__top">
+          <span class="icon-chip icon-chip--lime">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"></path><circle cx="12" cy="11" r="2.4"></circle>
+              <circle cx="12" cy="11" r="4" stroke-width="1" opacity="0"><animate attributeName="r" values="3;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0" dur="2s" repeatCount="indefinite"/></circle>
+            </svg>
+          </span>
+          <h3 data-i18n="f1_title">Live map search</h3>
+        </div>
+        <p data-i18n="f1_body">Filter by open-now, distance and rating. You leave the house already knowing which chair is yours.</p>
+        <div class="path-card__meta"><span data-i18n="f1_meta1">Nearby radius</span><span data-i18n="f1_meta2">Open now</span></div>
+      </div>
+      <div class="path-card reveal reveal--right" style="transition-delay:80ms">
+        <div class="path-card__top">
+          <span class="icon-chip icon-chip--coral">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1L3.2 9.4l6.1-.8L12 3Z"><animateTransform attributeName="transform" type="scale" values="1;1.12;1" dur="2.2s" repeatCount="indefinite" additive="sum"/></path>
+            </svg>
+          </span>
+          <h3 data-i18n="f2_title">Reviews you can trust</h3>
+        </div>
+        <p data-i18n="f2_body">Only clients who actually sat in the chair can rate it. No planted five-stars, no anonymous revenge.</p>
+        <div class="path-card__meta"><span data-i18n="f2_meta1">Verified visits</span><span data-i18n="f2_meta2">Photo portfolios</span></div>
+      </div>
+      <div class="path-card reveal reveal--left" style="transition-delay:160ms">
+        <div class="path-card__top">
+          <span class="icon-chip icon-chip--sky">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <g><animateTransform attributeName="transform" type="rotate" values="0 12 4;12 12 4;-12 12 4;8 12 4;-8 12 4;0 12 4;0 12 4" keyTimes="0;0.12;0.24;0.36;0.48;0.6;1" dur="3.4s" repeatCount="indefinite"/>
+              <path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"></path><path d="M10.5 19.5a1.8 1.8 0 0 0 3 0"></path></g>
+            </svg>
+          </span>
+          <h3 data-i18n="f3_title">Reminders that rebook you</h3>
+        </div>
+        <p data-i18n="f3_body">Three weeks after your cut, right when it starts growing out, Ustara asks if you want the same slot again.</p>
+        <div class="path-card__meta"><span data-i18n="f3_meta1">Telegram alerts</span><span data-i18n="f3_meta2">One-tap rebook</span></div>
+      </div>
+      <div class="path-card reveal reveal--right" style="transition-delay:240ms">
+        <div class="path-card__top">
+          <span class="icon-chip icon-chip--sun">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 20V12"><animate attributeName="d" values="M5 20V12;M5 20V16;M5 20V12" dur="1.4s" repeatCount="indefinite"/></path>
+              <path d="M10 20V6"><animate attributeName="d" values="M10 20V6;M10 20V11;M10 20V6" dur="1.4s" begin="0.2s" repeatCount="indefinite"/></path>
+              <path d="M15 20V10"><animate attributeName="d" values="M15 20V10;M15 20V15;M15 20V10" dur="1.4s" begin="0.4s" repeatCount="indefinite"/></path>
+              <path d="M20 20V4"><animate attributeName="d" values="M20 20V4;M20 20V9;M20 20V4" dur="1.4s" begin="0.6s" repeatCount="indefinite"/></path>
+            </svg>
+          </span>
+          <h3 data-i18n="f4_title">A real business panel for barbers</h3>
+        </div>
+        <p data-i18n="f4_body">Walk-in logging, client history, revenue by service — the numbers a one-chair shop never had before.</p>
+        <div class="path-card__meta"><span data-i18n="f4_meta1">Analytics</span><span data-i18n="f4_meta2">Client CRM</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<footer>
-  <div class="wrap">
-    <div class="foot-top">
+<section id="reviews" class="has-photo section--dim">
+  <div class="section-photo" id="photo-testimonials"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/7447146/pexels-photo-7447146.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center 25%;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="testi_eyebrow"><span class="dot dot--sun"></span> From the chair</span>
+      <h2 class="reveal reveal--right" data-i18n="testi_h2">Two sides of the same mirror</h2>
+    </div>
+    <div class="testimonials">
+      <div class="tst-card reveal reveal--left">
+        <div class="tst-card__stars" aria-label="5 out of 5 stars">★★★★★</div>
+        <blockquote data-i18n="t1_quote">"I moved to Tashkent for work and spent two months getting random haircuts. Found my barber through Ustara in one evening — I've booked the same Friday slot with him nine times now."</blockquote>
+        <div class="tst-card__who">
+          <span class="tst-card__avatar" style="background:var(--sky);color:#fff;">JM</span>
+          <div><div class="tst-card__name" data-i18n="t1_name">Jasur M.</div><div class="tst-card__role" data-i18n="t1_role">Client · Tashkent</div></div>
+        </div>
+      </div>
+      <div class="tst-card reveal reveal--right" style="transition-delay:80ms">
+        <div class="tst-card__stars" aria-label="5 out of 5 stars">★★★★★</div>
+        <blockquote data-i18n="t2_quote">"Before Ustara half my day was guessing who would actually show up. Now the schedule fills itself, no-shows dropped, and I finally see which service earns me the most."</blockquote>
+        <div class="tst-card__who">
+          <span class="tst-card__avatar" style="background:var(--lime);color:var(--ink);">OR</span>
+          <div><div class="tst-card__name" data-i18n="t2_name">Otabek R.</div><div class="tst-card__role" data-i18n="t2_role">Barber · 6 years behind the chair</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="has-photo">
+  <div class="section-photo" id="photo-problem"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/7697231/pexels-photo-7697231.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center 40%;"></div></div>
+  <div class="container">
+    <div class="problem-grid">
       <div>
-        <div class="logo display">Ust<span class="accent">a</span>ra</div>
-        <div class="foot-copy" data-i18n="foot_copy">© 2026 Ustara. Tashkent, Uzbekistan.</div>
+        <span class="eyebrow reveal reveal--left" data-i18n="problem_eyebrow"><span class="dot dot--coral"></span> The problem</span>
+        <h2 class="reveal reveal--left" style="transition-delay:60ms" data-i18n="problem_h2">The best barbers are booked. The rest are a <span class="highlight">coin flip</span>.</h2>
       </div>
-      <div class="foot-links">
-        <a href="#loop" data-i18n="nav_how">How it works</a>
-        <a href="#barbers" data-i18n="nav_barbers">For barbers</a>
-        <a href="#clients" data-i18n="nav_clients">For clients</a>
-        <a href="auth.html" data-i18n="foot_client_login">Client login</a>
-        <a href="auth.html?role=barber" data-i18n="foot_barber_login">Barber login</a>
-        <a href="terms.html" data-i18n="foot_terms">Terms</a>
-        <a href="privacy.html" data-i18n="foot_privacy">Privacy</a>
-        <a href="admin.html" style="opacity:0.45;">Admin</a>
+      <div>
+        <p class="reveal reveal--right" data-i18n="problem_p1">Every neighbourhood has one great barber — and a waiting bench full of people who found him first. Everyone else cuts hair for strangers who came in because <strong>the door was open</strong>, not because anyone recommended the chair.</p>
+        <p class="reveal reveal--right" style="transition-delay:100ms" data-i18n="problem_p2">Ustara fixes both sides: clients stop gambling on unknown chairs, and skilled barbers stop depending on foot traffic. <strong>Good work becomes visible</strong> — and bookable.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="has-photo section--dim">
+  <div class="section-photo" id="photo-experience"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/6487888/pexels-photo-6487888.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="exp_eyebrow"><span class="dot dot--lime"></span> The experience</span>
+      <h2 class="reveal reveal--right" data-i18n="exp_h2">Booking that feels like it was always supposed to work this way</h2>
+    </div>
+    <div class="exp-grid">
+      <ul class="checklist">
+        <li class="reveal reveal--left"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="e1_title">Book in under a minute</strong><span data-i18n="e1_body">Pick a barber, a service and a slot — three taps, no phone call, no "are you free tomorrow?" texting.</span></div></li>
+        <li class="reveal reveal--left" style="transition-delay:80ms"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="e2_title">See real prices upfront</strong><span data-i18n="e2_body">Every service has its price on the profile. What you see on the card is what you pay in the chair.</span></div></li>
+        <li class="reveal reveal--left" style="transition-delay:160ms"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="e3_title">Cancel without awkwardness</strong><span data-i18n="e3_body">Plans change. Free the slot with one tap and the barber gets notified instantly — no ghosting anyone.</span></div></li>
+        <li class="reveal reveal--left" style="transition-delay:240ms"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="e4_title">Speak your language</strong><span data-i18n="e4_body">The whole app runs in Uzbek, Russian and English. Switch anytime, mid-scroll.</span></div></li>
+      </ul>
+      <div class="soon-panel reveal reveal--right" style="transition-delay:120ms">
+        <span class="soon-panel__tag" data-i18n="soon_tag">Coming soon</span>
+        <h3 data-i18n="soon_h3">What we're cutting next</h3>
+        <ul>
+          <li data-i18n="soon_li1">Loyalty perks for regulars — your 10th cut on the house</li>
+          <li data-i18n="soon_li2">Group bookings for weddings and events</li>
+          <li data-i18n="soon_li3">Online payment so you leave the chair wallet-free</li>
+          <li data-i18n="soon_li4">Beard-care product picks from your own barber</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="has-photo">
+  <div class="section-photo" id="photo-audience"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/18758859/pexels-photo-18758859.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center 30%;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="aud_eyebrow"><span class="dot dot--sun"></span> Who it's for</span>
+      <h2 class="reveal reveal--right" data-i18n="aud_h2">Whatever brings you to the chair</h2>
+    </div>
+    <div class="audience-grid">
+      <div class="aud-card reveal reveal--left">
+        <span class="icon-chip icon-chip--lime"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"></path><circle cx="12" cy="11" r="2.4"></circle></svg></span>
+        <div><h3 data-i18n="a1_title">"I just moved here"</h3><p data-i18n="a1_body">New district, no idea who to trust with your head. Sort by rating near your new place and skip two months of experiments.</p></div>
+      </div>
+      <div class="aud-card reveal reveal--right" style="transition-delay:80ms">
+        <span class="icon-chip icon-chip--coral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 12 12 7"></path><path d="M12 12 15.5 12"></path></svg></span>
+        <div><h3 data-i18n="a2_title">"My lunch break is 45 minutes"</h3><p data-i18n="a2_body">Book the 13:00 slot at the shop around the corner from the office. In the chair at 13:02, back at your desk by 13:40.</p></div>
+      </div>
+      <div class="aud-card reveal reveal--left" style="transition-delay:160ms">
+        <span class="icon-chip icon-chip--sky"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1L3.2 9.4l6.1-.8L12 3Z"></path></svg></span>
+        <div><h3 data-i18n="a3_title">"The wedding is on Saturday"</h3><p data-i18n="a3_body">Big day, zero room for a bad fade. Pick a 4.9-rated master, book the morning slot, look sharp in every photo.</p></div>
+      </div>
+      <div class="aud-card reveal reveal--right" style="transition-delay:240ms">
+        <span class="icon-chip icon-chip--sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.6"></circle><path d="M8 8 20 20"></path><circle cx="6" cy="18" r="2.6"></circle><path d="M8 16 20 4"></path></svg></span>
+        <div><h3 data-i18n="a4_title">"I take my son with me"</h3><p data-i18n="a4_body">Book two back-to-back slots with the same barber. One visit, two fresh cuts, and the kid thinks the cape is a superhero costume.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="barbers" class="on-ink">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="showcase_eyebrow"><span class="dot dot--lime"></span> For barbers</span>
+      <h2 class="reveal reveal--right" data-i18n="showcase_h2">Your chair becomes a <span class="highlight">business you can read</span></h2>
+      <p class="reveal reveal--left" style="transition-delay:80ms" data-i18n="showcase_p">The Ustara barber panel turns a day of cuts into numbers you can act on — and keeps tomorrow's schedule filling itself while you work.</p>
+    </div>
+    <div class="showcase-grid">
+      <div class="mock-card reveal reveal--left">
+        <div class="mock-card__label" data-i18n="mock1_label">Today · Bookings</div>
+        <div class="mock-row">
+          <div class="mock-row__left"><span class="mock-row__icon" style="background:var(--lime);">✂️</span><div><strong data-i18n="mock1_r1_title">Haircut + beard</strong><small data-i18n="mock1_r1_sub">Sardor A. · 10:00</small></div></div>
+          <span class="pill-status pill-status--lime" data-i18n="mock1_r1_status">Confirmed</span>
+        </div>
+        <div class="mock-row">
+          <div class="mock-row__left"><span class="mock-row__icon" style="background:var(--sky);">💈</span><div><strong data-i18n="mock1_r2_title">Classic haircut</strong><small data-i18n="mock1_r2_sub">Walk-in · 11:30</small></div></div>
+          <span class="pill-status pill-status--sky" data-i18n="mock1_r2_status">Walk-in</span>
+        </div>
+        <div class="mock-row">
+          <div class="mock-row__left"><span class="mock-row__icon" style="background:var(--sun);">🪒</span><div><strong data-i18n="mock1_r3_title">Royal shave</strong><small data-i18n="mock1_r3_sub">Bekzod T. · 13:00</small></div></div>
+          <span class="pill-status pill-status--sun" data-i18n="mock1_r3_status">Pending</span>
+        </div>
+      </div>
+      <div class="mock-card reveal reveal--right" style="transition-delay:100ms">
+        <div class="mock-card__label" data-i18n="mock2_label">This week · Revenue by day</div>
+        <div class="mock-row">
+          <div class="mock-row__left"><span class="mock-row__icon" style="background:var(--coral);">📈</span><div><strong>2.4M UZS</strong><small data-i18n="mock2_r1_sub">+18% vs last week</small></div></div>
+          <span class="pill-status pill-status--lime" data-i18n="mock2_r1_status">Best week yet</span>
+        </div>
+        <div class="mock-bars bars-anim" aria-hidden="true">
+          <div class="bar" style="height:45%"></div><div class="bar" style="height:62%"></div><div class="bar" style="height:38%"></div><div class="bar" style="height:70%"></div><div class="bar bar--lit" style="height:92%"></div><div class="bar" style="height:58%"></div><div class="bar" style="height:30%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="has-photo">
+  <div class="section-photo" id="photo-onthego"><div class="section-photo__img" style="background-image:url('https://images.pexels.com/photos/897263/pexels-photo-897263.jpeg?auto=compress&cs=tinysrgb&w=1600');background-position:center 35%;"></div></div>
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow reveal reveal--left" data-i18n="onthego_eyebrow"><span class="dot dot--sky"></span> On the go</span>
+      <h2 class="reveal reveal--right" data-i18n="onthego_h2">The whole barbershop, in your pocket</h2>
+    </div>
+    <div class="exp-grid">
+      <ul class="checklist">
+        <li class="reveal reveal--left"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="o1_title">Works from your pocket</strong><span data-i18n="o1_body">Book from the bus, the office, the plov queue. Ustara is a web app — nothing to install, nothing to update.</span></div></li>
+        <li class="reveal reveal--left" style="transition-delay:80ms"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="o2_title">Add it to your home screen</strong><span data-i18n="o2_body">One tap and it lives next to your other apps, opens instantly, remembers who you are.</span></div></li>
+        <li class="reveal reveal--left" style="transition-delay:160ms"><span class="checklist__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 5 5 10-11"></path></svg></span><div><strong data-i18n="o3_title">Telegram does the remembering</strong><span data-i18n="o3_body">Confirmations and reminders arrive where you already spend your day — no new inbox to check.</span></div></li>
+      </ul>
+      <div class="streak-card reveal reveal--right" style="transition-delay:120ms">
+        <div class="streak-card__flame">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21c4 0 6.5-2.6 6.5-6 0-4.5-4-6.5-4.5-10-2.5 2-3 4.5-3 4.5S9.5 8 8.5 6C6.6 8.2 5.5 11 5.5 15c0 3.4 2.5 6 6.5 6Z">
+              <animate attributeName="d" values="M12 21c4 0 6.5-2.6 6.5-6 0-4.5-4-6.5-4.5-10-2.5 2-3 4.5-3 4.5S9.5 8 8.5 6C6.6 8.2 5.5 11 5.5 15c0 3.4 2.5 6 6.5 6Z;M12 21c4 0 6.5-2.6 6.5-6 0-4-3.4-6.9-4.5-9.5-2 2.5-2.6 4-2.6 4S9.9 7.5 8.5 6.5C7 8.7 5.5 11 5.5 15c0 3.4 2.5 6 6.5 6Z;M12 21c4 0 6.5-2.6 6.5-6 0-4.5-4-6.5-4.5-10-2.5 2-3 4.5-3 4.5S9.5 8 8.5 6C6.6 8.2 5.5 11 5.5 15c0 3.4 2.5 6 6.5 6Z" dur="1.1s" repeatCount="indefinite"/>
+            </path>
+          </svg>
+        </div>
+        <div class="streak-card__big" data-i18n="streak_big"><em>12 cuts</em> with the same barber this year</div>
+        <p data-i18n="streak_p">Regulars get the best chairs. Keep your rhythm and your barber keeps your Friday slot sacred.</p>
+        <div class="streak-card__meta" aria-hidden="true"><span class="done">✓</span><span class="done">✓</span><span class="done">✓</span><span class="done">✓</span><span>·</span><span>·</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="get-started" class="on-ink cta-band">
+  <div class="container">
+    <span class="eyebrow reveal reveal--left" data-i18n="cta_eyebrow"><span class="dot dot--lime"></span> Get started</span>
+    <h2 class="reveal reveal--left" style="transition-delay:60ms" data-i18n="cta_h2">Your barber is three taps away. <span class="highlight">Stop waiting in line.</span></h2>
+    <div class="cta-band__ctas reveal reveal--left" style="transition-delay:140ms">
+      <a href="auth.html" class="btn btn--primary" data-i18n="cta_client">Create free account</a>
+      <a href="auth.html?role=barber" class="btn btn--ghost" data-i18n="cta_barber">I'm a barber</a>
+    </div>
+    <p class="cta-band__sub reveal reveal--left" style="transition-delay:200ms" data-i18n="cta_sub">Cutting hair for a living? <a href="auth.html?role=barber">Set up your barber profile</a> — free, five minutes.</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <a href="#" class="nav__logo"><span class="nav__logo-mark">✂</span>Ustara</a>
+        <p data-i18n="footer_tagline">Barbers worth booking, bookings worth keeping. Made for Uzbekistan.</p>
+      </div>
+      <div>
+        <h4 data-i18n="foot_h_product">Product</h4>
+        <ul>
+          <li><a href="#how" data-i18n="nav_how">How it works</a></li>
+          <li><a href="#features" data-i18n="nav_features">Features</a></li>
+          <li><a href="#reviews" data-i18n="nav_reviews">Reviews</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="foot_h_barbers">For barbers</h4>
+        <ul>
+          <li><a href="auth.html?role=barber" data-i18n="foot_panel">Barber panel</a></li>
+          <li><a href="auth.html?role=barber" data-i18n="foot_walkin">Walk-in bookings</a></li>
+          <li><a href="auth.html?role=barber" data-i18n="foot_analytics">Analytics</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="foot_h_company">Company</h4>
+        <ul>
+          <li><a href="terms.html" data-i18n="foot_terms">Terms of service</a></li>
+          <li><a href="privacy.html" data-i18n="foot_privacy">Privacy policy</a></li>
+          <li><a href="admin.html" style="opacity:0.45;">Admin</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span data-i18n="foot_copy">© 2026 Ustara. Tashkent, Uzbekistan.</span>
+      <span>O'zbekcha · Русский · English</span>
     </div>
   </div>
 </footer>
 
 <script>
-/* ============ i18n ============ */
-const STRIP_DISTRICTS = {
-  en: ["Chorsu","Yunusabad","Mirzo Ulugbek","Yakkasaray","Sergeli","Shayxontohur"],
-  uz: ["Chorsu","Yunusobod","Mirzo Ulug'bek","Yakkasaroy","Sergeli","Shayxontohur"],
-  ru: ["Чорсу","Юнусабад","Мирзо Улугбек","Яккасарай","Сергели","Шайхантахур"]
-};
-
 const I18N = {
   en:{
-    nav_how:"How it works", nav_barbers:"For barbers", nav_clients:"For clients", nav_cta:"Get started",
-    launch_pill:"Now live in Tashkent",
-    hero_title:'Find your <span class="accent">barber.</span><br>Not just a shop.',
-    hero_lede:"Ustara is where a barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them, wherever their chair is.",
-    hero_cta_client:"I'm a client", hero_cta_barber:"I'm a barber",
-    hero_video_caption:"Real cuts, real barbers",
-    card_eyebrow:"Get started in seconds",
-    loop_eyebrow:"The loop", loop_h2:"One relationship. Not one visit.",
-    loop_p:"Most booking apps end at checkout. Ustara is built around what happens after — the next cut, the next referral, the next five years.",
-    loop1_h:"Discover", loop1_p:"Browse barbers by portfolio and style — not a random list of nearby shops.",
-    loop2_h:"Book", loop2_p:"Pick a slot, confirm instantly. No calls, no back-and-forth on Instagram DMs.",
-    loop3_h:"Sit", loop3_p:"Check in, get the cut, pay in the app. Simple, on time, no surprises.",
-    loop4_h:"Return", loop4_p:"Your barber's profile stays with you — even if they move shops.",
-    mock_eyebrow:"The professional profile", mock_h2:"A portfolio that's actually theirs.",
-    mock_p1:"Every barber gets a real profile — before & afters, specialties, reviews, availability. It's built once and it travels with them for their entire career.",
-    mock_p2:"Salons get the tools to run a business. Barbers get an identity that outlasts any one shop.",
-    mock_meta:"Fade specialist · 6 yrs · Yunusabad",
-    mock_tag1:"Skin fade", mock_tag2:"Beard shaping", mock_tag3:"Classic cuts", mock_btn:"Book with Jasur",
-    stmt_eyebrow:"The philosophy",
-    stmt_h2:'Your chair. Your clients. <span class="accent">Your name.</span>',
-    cl_eyebrow:"For clients", cl_h3:"Find your barber.<br>Not just a shop.",
-    cl_li1:"Search by style, not by pin on a map", cl_li2:"See real before & after work before you book",
-    cl_li3:"Book in seconds, no phone calls", cl_li4:"Your barber's profile follows them if they move",
-    cl_btn:"Join as a client",
-    br_eyebrow:"For barbers", br_h3:"Build a reputation<br>that's yours to keep.",
-    br_li1:"A profile that belongs to you, not the salon", br_li2:"Fill your chair without chasing DMs",
-    br_li3:"Manage your own schedule and pricing", br_li4:"Get paid inside the app, no cash chasing",
-    br_btn:"Join as a barber",
-    gs_eyebrow:"Now live in Tashkent", gs_h2:'Ready for the <span class="accent">chair?</span>',
-    gs_p:"Create your account and get started today — no waitlist, no waiting.",
-    foot_client_login:"Client login", foot_barber_login:"Barber login",
-    foot_terms:"Terms", foot_privacy:"Privacy",
+    nav_how:"How it works", nav_features:"Features", nav_barbers:"For barbers", nav_reviews:"Reviews",
+    nav_login_client:"Client login", nav_login_barber:"Barber login", nav_cta:"Book a chair",
+    hero_kicker:"Barber booking · Uzbekistan",
+    hero_h1:'Your next haircut is already <span class="highlight">waiting for you</span>',
+    hero_p:"Ustara shows you the barbers near you, their real reviews, their live schedule — and books your seat in under a minute. Walk in at your time, not after three other heads.",
+    hero_cta_client:"Find your barber", hero_cta_barber:"I'm a barber", install_btn:"📲 Install app",
+    hero_pill1:"No waiting line", hero_pill2:"4.9★ rated masters", hero_pill3:"Open now near you", hero_pill4:"Free to book",
+    concepts_eyebrow:"Why Ustara exists", concepts_h2:"Three things every man knows about haircuts",
+    c1_term:"the wait", c1_title:"Nobody plans for it", c1_body:"You show up, the chair is taken, two more are ahead of you. Forty minutes of your day, gone before the first snip. Ustara replaces the queue with a reserved time.",
+    c2_term:"the regular", c2_title:"A barber who knows your cut", c2_body:"The best haircut is the second one from the same master. Ustara keeps your history so rebooking the barber who got it right takes one tap.",
+    c3_term:"the gamble", c3_title:"No more coin-flip haircuts", c3_body:"A new barbershop used to be a leap of faith. Real ratings from real completed bookings mean you know how the chair performs before you sit in it.",
+    how_eyebrow:"How it works", how_h2:'From "I need a cut" to the chair in <span class="highlight">four steps</span>',
+    s1_title:"See who's around you", s1_body:"Open the map and every barber near you appears with their rating, prices and today's free slots.",
+    s2_title:"Pick a service and time", s2_body:"Haircut, beard, full grooming — choose what you need and grab a slot that fits your day.",
+    s3_title:"Get reminded", s3_body:"A Telegram nudge before your visit means you never blank on an appointment again.",
+    s4_title:"Walk in, sit down", s4_body:"Your chair is ready at your time. No queue, no small talk with strangers ahead of you.",
+    features_eyebrow:"What you get", features_h2:'Built around the chair, <span class="highlight">both sides of it</span>',
+    f1_title:"Live map search", f1_body:"Filter by open-now, distance and rating. You leave the house already knowing which chair is yours.", f1_meta1:"Nearby radius", f1_meta2:"Open now",
+    f2_title:"Reviews you can trust", f2_body:"Only clients who actually sat in the chair can rate it. No planted five-stars, no anonymous revenge.", f2_meta1:"Verified visits", f2_meta2:"Photo portfolios",
+    f3_title:"Reminders that rebook you", f3_body:"Three weeks after your cut, right when it starts growing out, Ustara asks if you want the same slot again.", f3_meta1:"Telegram alerts", f3_meta2:"One-tap rebook",
+    f4_title:"A real business panel for barbers", f4_body:"Walk-in logging, client history, revenue by service — the numbers a one-chair shop never had before.", f4_meta1:"Analytics", f4_meta2:"Client CRM",
+    testi_eyebrow:"From the chair", testi_h2:"Two sides of the same mirror",
+    t1_quote:"“I moved to Tashkent for work and spent two months getting random haircuts. Found my barber through Ustara in one evening — I've booked the same Friday slot with him nine times now.”",
+    t1_name:"Jasur M.", t1_role:"Client · Tashkent",
+    t2_quote:"“Before Ustara half my day was guessing who would actually show up. Now the schedule fills itself, no-shows dropped, and I finally see which service earns me the most.”",
+    t2_name:"Otabek R.", t2_role:"Barber · 6 years behind the chair",
+    problem_eyebrow:"The problem", problem_h2:'The best barbers are booked. The rest are a <span class="highlight">coin flip</span>.',
+    problem_p1:'Every neighbourhood has one great barber — and a waiting bench full of people who found him first. Everyone else cuts hair for strangers who came in because <strong>the door was open</strong>, not because anyone recommended the chair.',
+    problem_p2:'Ustara fixes both sides: clients stop gambling on unknown chairs, and skilled barbers stop depending on foot traffic. <strong>Good work becomes visible</strong> — and bookable.',
+    exp_eyebrow:"The experience", exp_h2:"Booking that feels like it was always supposed to work this way",
+    e1_title:"Book in under a minute", e1_body:'Pick a barber, a service and a slot — three taps, no phone call, no "are you free tomorrow?" texting.',
+    e2_title:"See real prices upfront", e2_body:"Every service has its price on the profile. What you see on the card is what you pay in the chair.",
+    e3_title:"Cancel without awkwardness", e3_body:"Plans change. Free the slot with one tap and the barber gets notified instantly — no ghosting anyone.",
+    e4_title:"Speak your language", e4_body:"The whole app runs in Uzbek, Russian and English. Switch anytime, mid-scroll.",
+    soon_tag:"Coming soon", soon_h3:"What we're cutting next",
+    soon_li1:"Loyalty perks for regulars — your 10th cut on the house", soon_li2:"Group bookings for weddings and events",
+    soon_li3:"Online payment so you leave the chair wallet-free", soon_li4:"Beard-care product picks from your own barber",
+    aud_eyebrow:"Who it's for", aud_h2:"Whatever brings you to the chair",
+    a1_title:"“I just moved here”", a1_body:"New district, no idea who to trust with your head. Sort by rating near your new place and skip two months of experiments.",
+    a2_title:"“My lunch break is 45 minutes”", a2_body:"Book the 13:00 slot at the shop around the corner from the office. In the chair at 13:02, back at your desk by 13:40.",
+    a3_title:"“The wedding is on Saturday”", a3_body:"Big day, zero room for a bad fade. Pick a 4.9-rated master, book the morning slot, look sharp in every photo.",
+    a4_title:"“I take my son with me”", a4_body:"Book two back-to-back slots with the same barber. One visit, two fresh cuts, and the kid thinks the cape is a superhero costume.",
+    showcase_eyebrow:"For barbers", showcase_h2:'Your chair becomes a <span class="highlight">business you can read</span>',
+    showcase_p:"The Ustara barber panel turns a day of cuts into numbers you can act on — and keeps tomorrow's schedule filling itself while you work.",
+    mock1_label:"Today · Bookings", mock1_r1_title:"Haircut + beard", mock1_r1_sub:"Sardor A. · 10:00", mock1_r1_status:"Confirmed",
+    mock1_r2_title:"Classic haircut", mock1_r2_sub:"Walk-in · 11:30", mock1_r2_status:"Walk-in",
+    mock1_r3_title:"Royal shave", mock1_r3_sub:"Bekzod T. · 13:00", mock1_r3_status:"Pending",
+    mock2_label:"This week · Revenue by day", mock2_r1_sub:"+18% vs last week", mock2_r1_status:"Best week yet",
+    onthego_eyebrow:"On the go", onthego_h2:"The whole barbershop, in your pocket",
+    o1_title:"Works from your pocket", o1_body:"Book from the bus, the office, the plov queue. Ustara is a web app — nothing to install, nothing to update.",
+    o2_title:"Add it to your home screen", o2_body:"One tap and it lives next to your other apps, opens instantly, remembers who you are.",
+    o3_title:"Telegram does the remembering", o3_body:"Confirmations and reminders arrive where you already spend your day — no new inbox to check.",
+    streak_big:"<em>12 cuts</em> with the same barber this year", streak_p:"Regulars get the best chairs. Keep your rhythm and your barber keeps your Friday slot sacred.",
+    cta_eyebrow:"Get started", cta_h2:'Your barber is three taps away. <span class="highlight">Stop waiting in line.</span>',
+    cta_client:"Create free account", cta_barber:"I'm a barber",
+    cta_sub:'Cutting hair for a living? <a href="auth.html?role=barber">Set up your barber profile</a> — free, five minutes.',
+    footer_tagline:"Barbers worth booking, bookings worth keeping. Made for Uzbekistan.",
+    foot_h_product:"Product", foot_h_barbers:"For barbers", foot_h_company:"Company",
+    foot_panel:"Barber panel", foot_walkin:"Walk-in bookings", foot_analytics:"Analytics",
+    foot_terms:"Terms of service", foot_privacy:"Privacy policy",
     foot_copy:"© 2026 Ustara. Tashkent, Uzbekistan."
   },
   uz:{
-    nav_how:"Qanday ishlaydi", nav_barbers:"Sartaroshlar uchun", nav_clients:"Mijozlar uchun", nav_cta:"Boshlash",
-    launch_pill:"Toshkentda hozir faol",
-    hero_title:'O\'z sartaroshingizni toping.<br>Do\'kon emas, <span class="accent">usta.</span>',
-    hero_lede:"Ustara — sartaroshning obro'si unga tegishli bo'lgan platforma: portfolio, mijozlar va bandlar u qayerda bo'lsa ham u bilan boradi.",
-    hero_cta_client:"Men mijozman", hero_cta_barber:"Men sartaroshman",
-    hero_video_caption:"Haqiqiy soch olish, haqiqiy sartaroshlar",
-    card_eyebrow:"Soniyalarda boshlang",
-    loop_eyebrow:"Halqa", loop_h2:"Bitta munosabat. Bitta tashrif emas.",
-    loop_p:"Ko'p bron qilish ilovalari to'lovda tugaydi. Ustara esa undan keyingi voqealar uchun qurilgan — keyingi soch olish, keyingi tavsiya, keyingi besh yil.",
-    loop1_h:"Toping", loop1_p:"Sartaroshlarni portfolio va uslubi bo'yicha ko'ring — yaqin do'konlarning tasodifiy ro'yxati emas.",
-    loop2_h:"Band qiling", loop2_p:"Vaqtni tanlang, darhol tasdiqlang. Qo'ng'iroqlar yo'q, Instagram DM'da tortishuvlar yo'q.",
-    loop3_h:"O'tiring", loop3_p:"Ro'yxatdan o'ting, soch oldiring, ilovada to'lang. Oddiy, vaqtida, hech qanday sarson-sargardonlik yo'q.",
-    loop4_h:"Qayting", loop4_p:"Sartaroshingizning profili siz bilan qoladi — u do'kon almashtirsa ham.",
-    mock_eyebrow:"Professional profil", mock_h2:"Chinakam o'ziga tegishli portfolio.",
-    mock_p1:"Har bir sartarosh haqiqiy profilga ega bo'ladi — oldin va keyin, mutaxassisliklar, sharhlar, bandlik. Bir marta yaratiladi va butun karyerasi davomida u bilan boradi.",
-    mock_p2:"Salonlar biznes yuritish uchun vositalarga ega bo'ladi. Sartaroshlar esa har qanday do'kondan uzoqroq yashaydigan shaxsiyatga ega bo'ladi.",
-    mock_meta:"Feyd mutaxassisi · 6 yil · Yunusobod",
-    mock_tag1:"Skin feyd", mock_tag2:"Soqol shakllantirish", mock_tag3:"Klassik soch olish", mock_btn:"Jasur bilan band qiling",
-    stmt_eyebrow:"Falsafa",
-    stmt_h2:'O\'z stulingiz. O\'z mijozlaringiz. <span class="accent">O\'z ismingiz.</span>',
-    cl_eyebrow:"Mijozlar uchun", cl_h3:"O'z sartaroshingizni toping.<br>Do'kon emas, usta.",
-    cl_li1:"Xaritadagi nuqta emas, uslub bo'yicha qidiring", cl_li2:"Band qilishdan oldin haqiqiy oldin/keyin ishlarni ko'ring",
-    cl_li3:"Soniyalarda band qiling, qo'ng'iroqsiz", cl_li4:"Sartaroshingiz do'kon almashtirsa ham profili siz bilan qoladi",
-    cl_btn:"Mijoz sifatida qo'shiling",
-    br_eyebrow:"Sartaroshlar uchun", br_h3:"O'zingizga tegishli obro'<br>quring.",
-    br_li1:"Salonga emas, sizga tegishli profil", br_li2:"DM'larni ta'qib qilmasdan stulingizni to'ldiring",
-    br_li3:"O'z jadvalingiz va narxlaringizni boshqaring", br_li4:"Ilova ichida to'lov oling, naqd pul yig'ishsiz",
-    br_btn:"Sartarosh sifatida qo'shiling",
-    gs_eyebrow:"Toshkentda hozir faol", gs_h2:'<span class="accent">Stulga</span> tayyormisiz?',
-    gs_p:"Hisobingizni yarating va bugun boshlang — navbat yo'q, kutish yo'q.",
-    foot_client_login:"Mijoz sifatida kirish", foot_barber_login:"Sartarosh sifatida kirish",
-    foot_terms:"Shartlar", foot_privacy:"Maxfiylik",
+    nav_how:"Qanday ishlaydi", nav_features:"Imkoniyatlar", nav_barbers:"Sartaroshlar uchun", nav_reviews:"Sharhlar",
+    nav_login_client:"Mijoz kirishi", nav_login_barber:"Sartarosh kirishi", nav_cta:"Joy band qiling",
+    hero_kicker:"Sartarosh bron qilish · O'zbekiston",
+    hero_h1:'Keyingi soch olishingiz allaqachon <span class="highlight">sizni kutmoqda</span>',
+    hero_p:"Ustara sizga yaqin atrofdagi sartaroshlarni, ularning haqiqiy sharhlarini va bo'sh vaqtlarini ko'rsatadi — va joyingizni bir daqiqadan kamroq vaqtda bron qiladi. O'z vaqtingizda keling, uch kishidan keyin emas.",
+    hero_cta_client:"Sartaroshingizni toping", hero_cta_barber:"Men sartaroshman", install_btn:"📲 Ilovani o'rnatish",
+    hero_pill1:"Navbatsiz", hero_pill2:"4.9★ baholangan ustalar", hero_pill3:"Hozir ochiq", hero_pill4:"Bepul bron qilish",
+    concepts_eyebrow:"Ustara nima uchun kerak", concepts_h2:"Har bir erkak soch olish haqida biladigan uch narsa",
+    c1_term:"kutish", c1_title:"Buni hech kim rejalashtirmaydi", c1_body:"Kelasiz, stul band, yana ikki kishi navbatda. Kunning qirq daqiqasi birinchi qaychi tegmasdan ketadi. Ustara navbatni bron qilingan vaqt bilan almashtiradi.",
+    c2_term:"doimiy mijoz", c2_title:"Sochingizni biladigan sartarosh", c2_body:"Eng yaxshi soch olish — bir xil ustadan ikkinchisi. Ustara tarixingizni saqlaydi, shuning uchun to'g'ri sartaroshni qayta band qilish bir teginish bilan bo'ladi.",
+    c3_term:"tavakkal", c3_title:"Endi tasodifiy soch olish yo'q", c3_body:"Yangi sartaroshxona avval ko'r-ko'rona tanlov edi. Haqiqiy tashriflardan olingan haqiqiy baholar stul qanday ishlashini oldindan bildiradi.",
+    how_eyebrow:"Qanday ishlaydi", how_h2:'"Soch oldirishim kerak"dan stulgacha <span class="highlight">to\'rt qadam</span>da',
+    s1_title:"Atrofingizni ko'ring", s1_body:"Xaritani oching — yaqin atrofdagi har bir sartarosh bahosi, narxlari va bugungi bo'sh vaqtlari bilan ko'rinadi.",
+    s2_title:"Xizmat va vaqtni tanlang", s2_body:"Soch olish, soqol, to'liq parvarish — kerakli narsani tanlang va kuningizga mos vaqtni oling.",
+    s3_title:"Eslatma oling", s3_body:"Tashrifingizdan oldin Telegram orqali eslatma — endi uchrashuvni hech qachon unutmaysiz.",
+    s4_title:"Keling, o'tiring", s4_body:"Stulingiz o'z vaqtida tayyor. Navbat yo'q, oldingizdagi begonalar bilan suhbat yo'q.",
+    features_eyebrow:"Sizga nima beradi", features_h2:'Stul atrofida qurilgan — <span class="highlight">ikkala tomon uchun ham</span>',
+    f1_title:"Jonli xarita qidiruvi", f1_body:"Hozir ochiq, masofa va baho bo'yicha filtrlang. Uydan chiqishdan oldin qaysi stul sizniki ekanini bilasiz.", f1_meta1:"Yaqin atrof", f1_meta2:"Hozir ochiq",
+    f2_title:"Ishonsa bo'ladigan sharhlar", f2_body:"Faqat stulda haqiqatan o'tirgan mijozlar baho qo'ya oladi. Soxta besh yulduzlar yo'q, anonim qasoslar yo'q.", f2_meta1:"Tasdiqlangan tashriflar", f2_meta2:"Foto portfoliolar",
+    f3_title:"Qayta band qiladigan eslatmalar", f3_body:"Soch olishingizdan uch hafta o'tib, u o'sib chiqa boshlaganda, Ustara sizga o'sha joyni yana bron qilishni so'raydi.", f3_meta1:"Telegram xabarlari", f3_meta2:"Bir teginish bilan qayta bron",
+    f4_title:"Sartaroshlar uchun haqiqiy biznes paneli", f4_body:"Navbatsiz mijozlarni qayd etish, mijozlar tarixi, xizmat bo'yicha daromad — bitta stulli do'kon hech qachon ega bo'lmagan raqamlar.", f4_meta1:"Tahlillar", f4_meta2:"Mijozlar bazasi",
+    testi_eyebrow:"Stuldan", testi_h2:"Bir oynaning ikki tomoni",
+    t1_quote:"“Ish uchun Toshkentga ko'chib o'tdim va ikki oy tasodifiy joylarda soch oldirdim. Ustara orqali bir kechada o'z sartaroshimni topdim — endi u bilan har juma o'sha vaqtga to'qqiz marta bron qildim.”",
+    t1_name:"Jasur M.", t1_role:"Mijoz · Toshkent",
+    t2_quote:"“Ustaradan oldin kunimning yarmi kim kelishini taxmin qilishga ketardi. Endi jadval o'zi to'ladi, kelmasliklar kamaydi va qaysi xizmat ko'proq daromad berayotganini bilaman.”",
+    t2_name:"Otabek R.", t2_role:"Sartarosh · 6 yillik tajriba",
+    problem_eyebrow:"Muammo", problem_h2:'Eng yaxshi sartaroshlar band. Qolganlari esa <span class="highlight">tanga otish</span>.',
+    problem_p1:'Har bir mahallada bitta zo\'r sartarosh bor — va uni birinchi topganlarning navbati. Qolganlar esa <strong>eshik ochiq bo\'lgani uchun</strong> kirgan notanish odamlarga soch oladi, hech kim tavsiya qilmagani uchun emas.',
+    problem_p2:'Ustara ikkala tomonni ham tuzatadi: mijozlar noma\'lum stullarga tavakkal qilishni to\'xtatadi, mohir sartaroshlar esa tasodifiy mijozlarga bog\'liq bo\'lmay qoladi. <strong>Yaxshi ish ko\'rinadigan</strong> — va bron qilinadigan bo\'ladi.',
+    exp_eyebrow:"Tajriba", exp_h2:"Har doim shunday ishlashi kerak bo'lgan bron qilish",
+    e1_title:"Bir daqiqadan kamroqda bron qiling", e1_body:'Sartarosh, xizmat va vaqtni tanlang — uch teginish, qo\'ng\'iroqsiz, "ertaga bo\'shmisiz?" deb yozishmasdan.',
+    e2_title:"Haqiqiy narxlarni oldindan ko'ring", e2_body:"Har bir xizmat profilida narxi bilan ko'rsatilgan. Kartochkada ko'rgan narxingiz — stulda to'laydigan narxingiz.",
+    e3_title:"Noqulaysiz bekor qiling", e3_body:"Rejalar o'zgaradi. Bir teginish bilan joyni bo'shating, sartarosh darhol xabardor bo'ladi — hech kimni kutdirmaysiz.",
+    e4_title:"O'z tilingizda gaplashing", e4_body:"Ilova to'liq o'zbek, rus va ingliz tillarida ishlaydi. Istalgan vaqtda, hatto skroll qilayotganda ham almashtiring.",
+    soon_tag:"Tez orada", soon_h3:"Navbatdagi yangiliklarimiz",
+    soon_li1:"Doimiy mijozlar uchun sovg'alar — 10-chi soch olish bepul", soon_li2:"To'y va tadbirlar uchun guruh bandlari",
+    soon_li3:"Onlayn to'lov — stuldan hamyonsiz chiqing", soon_li4:"O'z sartaroshingizdan soqol parvarishi mahsulotlari tavsiyasi",
+    aud_eyebrow:"Kimlar uchun", aud_h2:"Stulga nima olib kelsa ham",
+    a1_title:"“Endigina ko'chib keldim”", a1_body:"Yangi tuman, boshingizga kimga ishonishni bilmaysiz. Yangi joyingizga yaqin baho bo'yicha saralang va ikki oylik tajribalarni o'tkazib yuboring.",
+    a2_title:"“Tushlik tanaffusim 45 daqiqa”", a2_body:"Ofis burchagidagi do'konda soat 13:00 ga bron qiling. Soat 13:02 da stulda, 13:40 da yana ish stolida.",
+    a3_title:"“To'y shanba kuni”", a3_body:"Katta kun, yomon feydga o'rin yo'q. 4.9 baholi ustani tanlang, ertalabki vaqtni bron qiling, har bir fotosuratda chiroyli ko'rining.",
+    a4_title:"“O'g'limni ham olib boraman”", a4_body:"Bir xil sartaroshda ketma-ket ikkita joy bron qiling. Bitta tashrif, ikkita yangi soch, va bola plash supermen kostyumi deb o'ylaydi.",
+    showcase_eyebrow:"Sartaroshlar uchun", showcase_h2:'Stulingiz <span class="highlight">o\'qiy oladigan biznesga</span> aylanadi',
+    showcase_p:"Ustara sartarosh paneli kunlik ishni harakatga o'tkaza oladigan raqamlarga aylantiradi — va siz ishlayotganingizda ertangi jadval o'zi to'ladi.",
+    mock1_label:"Bugun · Bandlar", mock1_r1_title:"Soch olish + soqol", mock1_r1_sub:"Sardor A. · 10:00", mock1_r1_status:"Tasdiqlangan",
+    mock1_r2_title:"Klassik soch olish", mock1_r2_sub:"Navbatsiz · 11:30", mock1_r2_status:"Navbatsiz",
+    mock1_r3_title:"Qirollik olib tashlash", mock1_r3_sub:"Bekzod T. · 13:00", mock1_r3_status:"Kutilmoqda",
+    mock2_label:"Shu hafta · Kunlik daromad", mock2_r1_sub:"O'tgan haftaga nisbatan +18%", mock2_r1_status:"Eng yaxshi hafta",
+    onthego_eyebrow:"Yo'lda ham", onthego_h2:"Butun sartaroshxona cho'ntagingizda",
+    o1_title:"Cho'ntagingizdan ishlaydi", o1_body:"Avtobusdan, ofisdan, osh navbatidan bron qiling. Ustara — veb-ilova, o'rnatish shart emas, yangilash shart emas.",
+    o2_title:"Bosh ekranga qo'shing", o2_body:"Bir teginish — u boshqa ilovalaringiz yonida turadi, darhol ochiladi, sizni eslab qoladi.",
+    o3_title:"Telegram eslatib turadi", o3_body:"Tasdiqlashlar va eslatmalar siz allaqachon vaqt o'tkazayotgan joyga keladi — yangi pochta qutisi kerak emas.",
+    streak_big:"Shu yil bir xil sartarosh bilan <em>12 marta</em> soch oldirdingiz", streak_p:"Doimiy mijozlar eng yaxshi stullarga ega bo'ladi. Ritmingizni saqlang, sartaroshingiz juma kuningizni muqaddas saqlaydi.",
+    cta_eyebrow:"Boshlash", cta_h2:'Sartaroshingiz uch teginish uzoqlikda. <span class="highlight">Navbatda kutishni bas qiling.</span>',
+    cta_client:"Bepul hisob yaratish", cta_barber:"Men sartaroshman",
+    cta_sub:'Soch olish bilan kun ko\'rasizmi? <a href="auth.html?role=barber">Sartarosh profilingizni yarating</a> — bepul, besh daqiqa.',
+    footer_tagline:"Bron qilishga arziydigan sartaroshlar, saqlashga arziydigan bandlar. O'zbekiston uchun yaratilgan.",
+    foot_h_product:"Mahsulot", foot_h_barbers:"Sartaroshlar uchun", foot_h_company:"Kompaniya",
+    foot_panel:"Sartarosh paneli", foot_walkin:"Navbatsiz bandlar", foot_analytics:"Tahlillar",
+    foot_terms:"Foydalanish shartlari", foot_privacy:"Maxfiylik siyosati",
     foot_copy:"© 2026 Ustara. Toshkent, O'zbekiston."
   },
   ru:{
-    nav_how:"Как это работает", nav_barbers:"Барберам", nav_clients:"Клиентам", nav_cta:"Начать",
-    launch_pill:"Уже работает в Ташкенте",
-    hero_title:'Найдите своего барбера.<br>Не просто <span class="accent">салон.</span>',
-    hero_lede:"Ustara — платформа, где репутация барбера принадлежит ему самому: портфолио, клиенты и записи следуют за ним, где бы ни было его кресло.",
-    hero_cta_client:"Я клиент", hero_cta_barber:"Я барбер",
-    hero_video_caption:"Настоящие стрижки, настоящие барберы",
-    card_eyebrow:"Начните за секунды",
-    loop_eyebrow:"Цикл", loop_h2:"Отношения, а не разовый визит.",
-    loop_p:"Большинство приложений для записи заканчиваются на оплате. Ustara создана для того, что происходит после — следующая стрижка, следующая рекомендация, следующие пять лет.",
-    loop1_h:"Найти", loop1_p:"Смотрите барберов по портфолио и стилю — а не случайный список ближайших салонов.",
-    loop2_h:"Записаться", loop2_p:"Выберите время, подтвердите мгновенно. Без звонков и переписок в Instagram.",
-    loop3_h:"Постричься", loop3_p:"Отметьтесь, получите стрижку, оплатите в приложении. Просто, вовремя, без сюрпризов.",
-    loop4_h:"Вернуться", loop4_p:"Профиль вашего барбера остаётся с вами — даже если он сменит салон.",
-    mock_eyebrow:"Профессиональный профиль", mock_h2:"Портфолио, которое действительно принадлежит ему.",
-    mock_p1:"У каждого барбера есть настоящий профиль — фото до/после, специализации, отзывы, расписание. Создаётся один раз и остаётся с ним всю карьеру.",
-    mock_p2:"Салоны получают инструменты для бизнеса. Барберы получают репутацию, которая переживёт любой салон.",
-    mock_meta:"Специалист по фейдам · 6 лет · Юнусабад",
-    mock_tag1:"Skin fade", mock_tag2:"Оформление бороды", mock_tag3:"Классические стрижки", mock_btn:"Записаться к Джасуру",
-    stmt_eyebrow:"Философия",
-    stmt_h2:'Ваше кресло. Ваши клиенты. <span class="accent">Ваше имя.</span>',
-    cl_eyebrow:"Клиентам", cl_h3:"Найдите своего барбера.<br>Не просто салон.",
-    cl_li1:"Ищите по стилю, а не по точке на карте", cl_li2:"Смотрите реальные работы до/после перед записью",
-    cl_li3:"Записывайтесь за секунды, без звонков", cl_li4:"Профиль барбера следует за ним при смене салона",
-    cl_btn:"Присоединиться как клиент",
-    br_eyebrow:"Барберам", br_h3:"Постройте репутацию,<br>которая останется с вами.",
-    br_li1:"Профиль принадлежит вам, а не салону", br_li2:"Заполняйте кресло без переписок в директе",
-    br_li3:"Управляйте своим расписанием и ценами", br_li4:"Получайте оплату в приложении, без наличных",
-    br_btn:"Присоединиться как барбер",
-    gs_eyebrow:"Уже работает в Ташкенте", gs_h2:'Готовы к <span class="accent">креслу?</span>',
-    gs_p:"Создайте аккаунт и начните уже сегодня — без листа ожидания.",
-    foot_client_login:"Вход для клиентов", foot_barber_login:"Вход для барберов",
-    foot_terms:"Условия", foot_privacy:"Конфиденциальность",
+    nav_how:"Как это работает", nav_features:"Возможности", nav_barbers:"Барберам", nav_reviews:"Отзывы",
+    nav_login_client:"Вход для клиентов", nav_login_barber:"Вход для барберов", nav_cta:"Забронировать место",
+    hero_kicker:"Запись к барберу · Узбекистан",
+    hero_h1:'Ваша следующая стрижка уже <span class="highlight">ждёт вас</span>',
+    hero_p:"Ustara показывает барберов рядом с вами, их настоящие отзывы, живое расписание — и бронирует место меньше чем за минуту. Приходите в своё время, а не после троих других.",
+    hero_cta_client:"Найти барбера", hero_cta_barber:"Я барбер", install_btn:"📲 Установить приложение",
+    hero_pill1:"Без очереди", hero_pill2:"4.9★ у лучших мастеров", hero_pill3:"Открыто прямо сейчас", hero_pill4:"Бесплатная запись",
+    concepts_eyebrow:"Зачем нужна Ustara", concepts_h2:"Три вещи, которые знает каждый о стрижках",
+    c1_term:"ожидание", c1_title:"К этому невозможно подготовиться", c1_body:"Вы приходите, кресло занято, впереди ещё двое. Сорок минут дня уходят до первого щелчка ножниц. Ustara меняет очередь на забронированное время.",
+    c2_term:"постоянный мастер", c2_title:"Барбер, который знает вашу стрижку", c2_body:"Лучшая стрижка — вторая у того же мастера. Ustara хранит вашу историю, чтобы повторная запись к нужному барберу занимала одно нажатие.",
+    c3_term:"лотерея", c3_title:"Больше никаких стрижек наугад", c3_body:"Новая барбершоп раньше была прыжком в неизвестность. Реальные оценки от реальных завершённых записей показывают, как работает кресло, ещё до визита.",
+    how_eyebrow:"Как это работает", how_h2:'От «нужна стрижка» до кресла за <span class="highlight">четыре шага</span>',
+    s1_title:"Смотрите, кто рядом", s1_body:"Откройте карту — каждый барбер поблизости появится с рейтингом, ценами и свободными окнами на сегодня.",
+    s2_title:"Выберите услугу и время", s2_body:"Стрижка, борода, полный уход — выберите нужное и займите время, которое вам подходит.",
+    s3_title:"Получите напоминание", s3_body:"Напоминание в Telegram перед визитом — вы больше никогда не забудете о записи.",
+    s4_title:"Приходите и садитесь", s4_body:"Ваше кресло готово в назначенное время. Без очереди, без разговоров с незнакомцами впереди.",
+    features_eyebrow:"Что вы получаете", features_h2:'Всё построено вокруг кресла — <span class="highlight">с обеих сторон</span>',
+    f1_title:"Живой поиск на карте", f1_body:"Фильтруйте по расстоянию, рейтингу и «открыто сейчас». Вы выходите из дома, уже зная своё кресло.", f1_meta1:"Рядом", f1_meta2:"Открыто сейчас",
+    f2_title:"Отзывы, которым можно верить", f2_body:"Оценить может только клиент, который реально сидел в кресле. Никаких накрученных пятёрок и анонимной мести.", f2_meta1:"Подтверждённые визиты", f2_meta2:"Фотопортфолио",
+    f3_title:"Напоминания, которые возвращают вас", f3_body:"Через три недели после стрижки, когда она начинает отрастать, Ustara спрашивает, хотите ли вы то же время снова.", f3_meta1:"Уведомления в Telegram", f3_meta2:"Повтор в одно касание",
+    f4_title:"Настоящая бизнес-панель для барберов", f4_body:"Учёт визитов без записи, история клиентов, доход по услугам — цифры, которых раньше не было у мастера с одним креслом.", f4_meta1:"Аналитика", f4_meta2:"CRM клиентов",
+    testi_eyebrow:"Из кресла", testi_h2:"Два взгляда на одно зеркало",
+    t1_quote:"«Переехал в Ташкент по работе и два месяца стригся наугад. Нашёл своего барбера через Ustara за один вечер — уже девятый раз записываюсь к нему на пятницу в то же время.»",
+    t1_name:"Джасур М.", t1_role:"Клиент · Ташкент",
+    t2_quote:"«До Ustara половину дня я гадал, кто вообще придёт. Теперь расписание заполняется само, неявок стало меньше, и я наконец вижу, какая услуга приносит больше всего.»",
+    t2_name:"Отабек Р.", t2_role:"Барбер · 6 лет за креслом",
+    problem_eyebrow:"Проблема", problem_h2:'Лучшие барберы уже заняты. Остальные — как <span class="highlight">лотерея</span>.',
+    problem_p1:'В каждом районе есть один отличный барбер — и скамейка, полная тех, кто нашёл его первым. Остальные стригут случайных людей, которые зашли просто потому что <strong>дверь была открыта</strong>, а не потому что кресло кто-то посоветовал.',
+    problem_p2:'Ustara решает обе стороны: клиенты перестают рисковать с незнакомыми креслами, а мастера перестают зависеть от случайных прохожих. <strong>Хорошая работа становится видимой</strong> — и доступной для записи.',
+    exp_eyebrow:"Опыт", exp_h2:"Запись, которая работает так, как и должна была всегда",
+    e1_title:"Запись меньше чем за минуту", e1_body:'Выберите барбера, услугу и время — три касания, без звонков и переписки «ты завтра свободен?».',
+    e2_title:"Реальные цены заранее", e2_body:"У каждой услуги есть цена прямо в профиле. Что видите в карточке — то и платите в кресле.",
+    e3_title:"Отмена без неловкости", e3_body:"Планы меняются. Освободите время одним касанием — барбер узнает мгновенно, никого не приходится игнорировать.",
+    e4_title:"Говорите на своём языке", e4_body:"Всё приложение работает на узбекском, русском и английском. Переключайтесь в любой момент, хоть на середине скролла.",
+    soon_tag:"Скоро", soon_h3:"Что мы готовим дальше",
+    soon_li1:"Бонусы для постоянных клиентов — 10-я стрижка бесплатно", soon_li2:"Групповые записи для свадеб и мероприятий",
+    soon_li3:"Онлайн-оплата — уходите из кресла без наличных", soon_li4:"Подбор средств по уходу за бородой от вашего барбера",
+    aud_eyebrow:"Для кого это", aud_h2:"Что бы ни привело вас в кресло",
+    a1_title:"«Я только переехал»", a1_body:"Новый район, непонятно кому доверить голову. Отсортируйте по рейтингу рядом с новым домом и пропустите два месяца экспериментов.",
+    a2_title:"«У меня обед 45 минут»", a2_body:"Забронируйте 13:00 в салоне за углом от офиса. В кресле в 13:02, за столом снова в 13:40.",
+    a3_title:"«Свадьба в субботу»", a3_body:"Важный день, права на плохой фейд нет. Выберите мастера с рейтингом 4.9, запишитесь на утро, выглядите безупречно на всех фото.",
+    a4_title:"«Беру с собой сына»", a4_body:"Забронируйте два времени подряд у одного барбера. Один визит, две свежие стрижки, а ребёнок думает, что накидка — костюм супергероя.",
+    showcase_eyebrow:"Барберам", showcase_h2:'Ваше кресло становится <span class="highlight">бизнесом, который можно прочитать</span>',
+    showcase_p:"Панель барбера Ustara превращает день стрижек в цифры, на которые можно опираться — а завтрашнее расписание заполняется само, пока вы работаете.",
+    mock1_label:"Сегодня · Записи", mock1_r1_title:"Стрижка + борода", mock1_r1_sub:"Сардор А. · 10:00", mock1_r1_status:"Подтверждено",
+    mock1_r2_title:"Классическая стрижка", mock1_r2_sub:"Без записи · 11:30", mock1_r2_status:"Без записи",
+    mock1_r3_title:"Королевское бритьё", mock1_r3_sub:"Бекзод Т. · 13:00", mock1_r3_status:"Ожидание",
+    mock2_label:"На этой неделе · Доход по дням", mock2_r1_sub:"+18% к прошлой неделе", mock2_r1_status:"Лучшая неделя",
+    onthego_eyebrow:"В движении", onthego_h2:"Вся барбершоп у вас в кармане",
+    o1_title:"Работает прямо из кармана", o1_body:"Бронируйте из автобуса, офиса, очереди за пловом. Ustara — веб-приложение: ничего устанавливать, ничего обновлять.",
+    o2_title:"Добавьте на главный экран", o2_body:"Одно касание — и оно живёт рядом с другими приложениями, открывается мгновенно, помнит, кто вы.",
+    o3_title:"Telegram всё помнит за вас", o3_body:"Подтверждения и напоминания приходят туда, где вы уже проводите день — новый почтовый ящик не нужен.",
+    streak_big:"<em>12 стрижек</em> у одного барбера за этот год", streak_p:"Постоянные клиенты получают лучшие кресла. Держите ритм — и барбер будет свято хранить ваше время по пятницам.",
+    cta_eyebrow:"Начать", cta_h2:'Ваш барбер в трёх касаниях. <span class="highlight">Хватит стоять в очереди.</span>',
+    cta_client:"Создать аккаунт бесплатно", cta_barber:"Я барбер",
+    cta_sub:'Стрижёте на жизнь? <a href="auth.html?role=barber">Создайте профиль барбера</a> — бесплатно, пять минут.',
+    footer_tagline:"Барберы, к которым стоит записаться, записи, которые стоит сохранить. Сделано для Узбекистана.",
+    foot_h_product:"Продукт", foot_h_barbers:"Барберам", foot_h_company:"Компания",
+    foot_panel:"Панель барбера", foot_walkin:"Запись без очереди", foot_analytics:"Аналитика",
+    foot_terms:"Условия использования", foot_privacy:"Политика конфиденциальности",
     foot_copy:"© 2026 Ustara. Ташкент, Узбекистан."
   }
 };
 
-/* ============ Supabase ============ */
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 (async function checkExistingSession(){
   const { data } = await supabaseClient.auth.getSession();
-  if(!data.session) return; // not logged in — show the landing page normally
-
+  if(!data.session) return;
   const userId = data.session.user.id;
   const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
   if(client){ window.location.replace('client-dashboard.html'); return; }
-
   const { data: barber } = await supabaseClient.from('barbers').select('id').eq('id', userId).single();
   if(barber){ window.location.replace('barber-dashboard.html'); return; }
-  // if neither matches (edge case: auth user with no profile row), fall
-  // through and just show the landing page normally
 })();
 
 let currentLang = 'en';
-
 function applyLang(lang){
   currentLang = lang;
   const dict = I18N[lang];
@@ -607,57 +855,52 @@ function applyLang(lang){
     const key = el.dataset.i18n;
     if(dict[key] !== undefined) el.innerHTML = dict[key];
   });
-  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
-    const key = el.dataset.i18nPh;
-    if(dict[key] !== undefined) el.placeholder = dict[key];
-  });
   document.querySelectorAll('#langSwitch button').forEach(b=>{
     b.classList.toggle('active', b.dataset.lang === lang);
   });
   document.getElementById('htmlRoot').lang = lang;
-
-  const track = document.getElementById('stripTrack');
-  const districts = STRIP_DISTRICTS[lang];
-  const doubled = districts.concat(districts);
-  track.innerHTML = doubled.map(d=>`<span>${d}</span>`).join('');
 }
-
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
   const btn = e.target.closest('button[data-lang]');
   if(btn) applyLang(btn.dataset.lang);
 });
-
 applyLang('en');
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(prefersReducedMotion){
+  document.querySelectorAll('animate, animateTransform').forEach(el => el.remove());
+}
 
 const revealEls = document.querySelectorAll('.reveal');
 const io = new IntersectionObserver((entries)=>{
   entries.forEach(entry=>{
-    if(entry.isIntersecting){ entry.target.classList.add('in'); io.unobserve(entry.target); }
+    if(entry.isIntersecting){ entry.target.classList.add('is-in'); io.unobserve(entry.target); }
   });
-}, { threshold:0.15 });
+}, { threshold:0.2, rootMargin:'0px 0px -8% 0px' });
 revealEls.forEach(el=>io.observe(el));
 
-(function(){
-  const video = document.getElementById('heroVideo');
-  const frame = document.getElementById('heroVideoFrame');
-  if(!video || !frame) return;
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduced) return;
-
-  let ticking = false;
-  function updateParallax(){
-    ticking = false;
-    const rect = frame.getBoundingClientRect();
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    const center = rect.top + rect.height/2 - vh/2;
-    const shift = Math.max(-30, Math.min(30, center * 0.06));
-    video.style.transform = `translate(-50%, calc(-50% + ${shift}px))`;
-  }
-  window.addEventListener('scroll', ()=>{
-    if(!ticking){ requestAnimationFrame(updateParallax); ticking = true; }
-  }, { passive:true });
-  updateParallax();
-})();
+if(!prefersReducedMotion){
+  document.querySelectorAll('.section-photo').forEach(el=>{
+    const img = el.querySelector('.section-photo__img');
+    const section = el.closest('section');
+    if(!img || !section) return;
+    let ticking = false;
+    function update(){
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const progress = (vh - rect.top) / (vh + rect.height);
+      const offset = (progress - 0.5) * 70;
+      img.style.transform = `translateY(${offset}px)`;
+      ticking = false;
+    }
+    function onScroll(){
+      if(!ticking){ requestAnimationFrame(update); ticking = true; }
+    }
+    update();
+    window.addEventListener('scroll', onScroll, { passive:true });
+    window.addEventListener('resize', onScroll);
+  });
+}
 </script>
 
 <script>
