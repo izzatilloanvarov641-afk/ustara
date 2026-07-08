@@ -504,6 +504,46 @@
   .ref-photo-row{ grid-column:1/-1; margin-top:8px; }
   .ref-photo-label{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-dim); cursor:pointer; padding:9px 12px; border:1px dashed var(--line); border-radius:14px; justify-content:center; }
   .ref-photo-label:hover{ border-color:var(--gold); color:var(--gold); }
+
+  /* ================= MOTION UTILITIES (same language as barber-dashboard) ================= */
+  .letter{ display:inline-block; opacity:0; filter:blur(6px); transform:scale(1.12); }
+  .letter.in{ animation:letterFocus .5s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes letterFocus{ to{ opacity:1; filter:blur(0); transform:scale(1); } }
+
+  .reveal{ opacity:0; transform:translateY(12px); transition:opacity .5s cubic-bezier(.2,.7,.3,1), transform .5s cubic-bezier(.2,.7,.3,1); }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .letter{ opacity:1 !important; filter:none !important; transform:none !important; }
+    .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+  }
+
+  /* ================= COLORED EMOJI ICON CHIPS ================= */
+  .title-chip{
+    display:inline-flex; width:32px; height:32px; border-radius:11px; align-items:center;
+    justify-content:center; font-size:15px; flex-shrink:0;
+  }
+  .st-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .tile-emoji{
+    width:30px; height:30px; border-radius:9px; display:flex; align-items:center;
+    justify-content:center; font-size:14px; margin-bottom:8px;
+  }
+  .info-emoji{
+    display:inline-flex; width:28px; height:28px; border-radius:9px; align-items:center;
+    justify-content:center; font-size:13px; margin-right:10px; flex-shrink:0; vertical-align:middle;
+  }
+  /* light-surface chip colors (match barber-dashboard palette) */
+  .chip-gold{ background:#FBF0DC; color:#96701A; }
+  .chip-blue{ background:#E7EEF7; color:#3B6EA8; }
+  .chip-green{ background:#E7F2E9; color:#3F7D52; }
+  .chip-terracotta{ background:#F7EAE3; color:#B0602F; }
+  .chip-teal{ background:#DFF1EF; color:#2F7A72; }
+  /* dark-surface chip colors (home hero tiles) */
+  .chipD-gold{ background:rgba(212,169,74,0.16); }
+  .chipD-blue{ background:rgba(110,160,220,0.16); }
+  .chipD-green{ background:rgba(100,190,130,0.16); }
+  .chipD-teal{ background:rgba(80,190,180,0.16); }
+  .chipD-terracotta{ background:rgba(224,130,80,0.16); }
 </style>
 </head>
 <body>
@@ -538,7 +578,7 @@
 
   <div class="wrap home-section">
     <div class="home-section-head">
-      <h3 data-i18n="nearby_h">Nearby barbers</h3>
+      <div class="st-left"><span class="title-chip chip-terracotta">📍</span><h3 data-i18n="nearby_h">Nearby barbers</h3></div>
       <a href="javascript:void(0)" data-nav="map" data-i18n="see_all">See all</a>
     </div>
     <div class="home-barber-scroll" id="homeNearbyRow"></div>
@@ -546,7 +586,7 @@
 
   <div class="wrap home-section">
     <div class="home-section-head">
-      <h3 data-i18n="top_h">Top rated</h3>
+      <div class="st-left"><span class="title-chip chip-gold">⭐</span><h3 data-i18n="top_h">Top rated</h3></div>
       <a href="javascript:void(0)" data-nav="map" data-i18n="see_all">See all</a>
     </div>
     <div class="home-barber-grid" id="homeTopGrid"></div>
@@ -556,12 +596,12 @@
 <!-- ============ BOOKINGS ============ -->
 <div class="view" data-view="bookings">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span data-i18n="bookings_title">Your bookings</span></div>
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">🗓️</span><span data-i18n="bookings_title">Your bookings</span></span></div>
     <div class="filter-pills" id="bookingFilterTabs">
-      <div class="filter-pill active" data-status="all" data-i18n="filter_all">All</div>
-      <div class="filter-pill" data-status="pending" data-i18n="filter_pending">Pending</div>
-      <div class="filter-pill" data-status="confirmed" data-i18n="filter_confirmed">Confirmed</div>
-      <div class="filter-pill" data-status="cancelled" data-i18n="filter_cancelled">Cancelled</div>
+      <div class="filter-pill active" data-status="all">📋 <span data-i18n="filter_all">All</span></div>
+      <div class="filter-pill" data-status="pending">⏳ <span data-i18n="filter_pending">Pending</span></div>
+      <div class="filter-pill" data-status="confirmed">✅ <span data-i18n="filter_confirmed">Confirmed</span></div>
+      <div class="filter-pill" data-status="cancelled">❌ <span data-i18n="filter_cancelled">Cancelled</span></div>
     </div>
     <div id="allBookingsArea"></div>
   </div>
@@ -570,7 +610,7 @@
 <!-- ============ MAP ============ -->
 <div class="view" data-view="map">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span data-i18n="map_title">Find a barber</span></div>
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-terracotta">💈</span><span data-i18n="map_title">Find a barber</span></span></div>
 
     <div class="map-toolbar">
       <div class="search-box">
@@ -619,7 +659,7 @@
 <div class="view" data-view="notifications">
   <div class="wrap" style="padding-top:24px;">
     <div class="section-title">
-      <span data-i18n="notifications_title">Notifications</span>
+      <span class="st-left"><span class="title-chip chip-blue">🔔</span><span data-i18n="notifications_title">Notifications</span></span>
       <span class="see-all" data-nav="home" data-i18n="close_label">Close</span>
     </div>
     <div id="notificationsArea"></div>
@@ -629,15 +669,15 @@
 <!-- ============ ACCOUNT ============ -->
 <div class="view" data-view="account">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span data-i18n="account_title">Account</span></div>
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">👤</span><span data-i18n="account_title">Account</span></span></div>
     <div class="info-card" id="infoCard"></div>
 
-    <div class="section-title" style="margin-top:30px;"><span data-i18n="style_title">My style</span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-terracotta">✂️</span><span data-i18n="style_title">My style</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="style_sub">Set your usual cut once — it'll auto-attach to future bookings so you don't have to explain it every time.</p>
       <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
         <div id="stylePhotoPreview" style="width:64px; height:64px; border-radius:14px; overflow:hidden; background:var(--surface-alt); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--ink-dim); font-size:11px; border:1px solid var(--line);"></div>
-        <label for="stylePhotoInput" style="font-size:12.5px; color:var(--gold); font-weight:700; cursor:pointer; border:1px dashed var(--line); padding:9px 14px; border-radius:14px;" data-i18n="style_upload">Upload photo</label>
+        <label for="stylePhotoInput" style="font-size:12.5px; color:var(--gold); font-weight:700; cursor:pointer; border:1px dashed var(--line); padding:9px 14px; border-radius:14px;">📸 <span data-i18n="style_upload">Upload photo</span></label>
         <input type="file" id="stylePhotoInput" accept="image/*" style="display:none;">
       </div>
       <textarea id="styleNotesInput" placeholder="e.g. Skin fade, #2 on sides, keep length on top" style="width:100%; min-height:70px; border:1px solid var(--line); border-radius:var(--r-input); padding:12px; font-family:'Inter', sans-serif; font-size:13.5px; resize:vertical; margin-bottom:12px; color:var(--ink);"></textarea>
@@ -645,19 +685,19 @@
       <div id="styleSaveMsg" style="font-size:12px; color:var(--success); margin-top:8px; display:none;"></div>
     </div>
 
-    <div class="section-title" style="margin-top:30px;"><span data-i18n="telegram_title">Telegram alerts</span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-blue">✈️</span><span data-i18n="telegram_title">Telegram alerts</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="telegram_sub">Get booking confirmations and reminders straight to Telegram.</p>
       <div id="telegramStatus"></div>
     </div>
 
-    <div class="section-title" style="margin-top:30px;"><span data-i18n="referral_title">Invite friends</span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-green">🎁</span><span data-i18n="referral_title">Invite friends</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="referral_sub">Share your code — when a friend completes their first booking, you both get 200 points.</p>
       <div id="referralCard"></div>
     </div>
 
-    <div class="section-title" style="margin-top:30px;"><span data-i18n="language_title">Language</span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-teal">🌐</span><span data-i18n="language_title">Language</span></span></div>
     <div class="lang-row" id="langSwitch">
       <button class="lang-btn active" data-lang="en">EN</button>
       <button class="lang-btn" data-lang="uz">UZ</button>
@@ -880,6 +920,50 @@ function distKm(a, b){
   return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1-s));
 }
 
+/* ---------- motion helpers (same language as barber-dashboard) ---------- */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function letterReveal(el, text, startDelay){
+  if(!el) return;
+  startDelay = startDelay || 0;
+  if(prefersReducedMotion){ el.textContent = text; return; }
+  const step = text.length > 40 ? 9 : 22; // long explanation texts sweep faster so they stay readable
+  el.innerHTML = '';
+  [...text].forEach((ch, i)=>{
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = ch === ' ' ? ' ' : ch;
+    span.style.animationDelay = (startDelay + i * step) + 'ms';
+    el.appendChild(span);
+  });
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    el.querySelectorAll('.letter').forEach(s => s.classList.add('in'));
+  }));
+}
+
+function revealNow(container){
+  (container ? container.querySelectorAll('.reveal') : document.querySelectorAll('.reveal')).forEach((el, i)=>{
+    setTimeout(()=> el.classList.add('in'), i * 60);
+  });
+}
+
+function animateView(name){
+  const view = document.querySelector(`.view[data-view="${name}"]`);
+  if(!view) return;
+  view.querySelectorAll('.reveal').forEach(el => el.classList.remove('in'));
+  if(name === 'home'){
+    letterReveal(document.querySelector('.eyebrow-gold[data-i18n]'), t('hero_eyebrow'));
+    letterReveal(document.querySelector('[data-i18n="hero_greeting_text"]'), t('hero_greeting_text'), 120);
+    if(clientData) letterReveal(document.getElementById('nameInsert'), clientData.full_name.split(' ')[0], 320);
+  }
+  let delay = 0;
+  view.querySelectorAll('.st-left [data-i18n]:not(.title-chip), .home-section-head h3[data-i18n], p[data-i18n]').forEach(el=>{
+    letterReveal(el, t(el.dataset.i18n), delay);
+    delay += 130;
+  });
+  requestAnimationFrame(()=> requestAnimationFrame(()=> revealNow(view)));
+}
+
 function applyLang(lang){
   currentLang = lang;
   const dict = I18N[lang];
@@ -899,6 +983,8 @@ function applyLang(lang){
   renderAllBookings();
   if(mapDataLoaded){ renderSpecialtyChips(); renderMapResults(); }
   if(clientData){ renderInfoCard(); renderReferralCard(); setupTelegramConnect(); }
+  const activeView = document.querySelector('.view.active');
+  if(activeView) animateView(activeView.dataset.view);
 }
 
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
@@ -911,6 +997,7 @@ function goToView(name){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.dataset.view === name));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   window.scrollTo({ top:0, behavior:'smooth' });
+  animateView(name);
 }
 document.getElementById('bottomNav').addEventListener('click', (e)=>{
   const btn = e.target.closest('.nav-btn');
@@ -974,20 +1061,25 @@ async function init(){
 }
 
 /* ---------- home: nearby / top barbers ---------- */
+function portfolioPublicUrl(imagePath){
+  const { data } = supabaseClient.storage.from('barber-media').getPublicUrl(imagePath);
+  return data.publicUrl;
+}
+
 function hbCardHtml(b, opts){
   const photo = (b._photos || [])[0];
   const cover = photo
-    ? `<img src="${escapeHtml(photo.photo_url)}" alt="" loading="lazy">`
+    ? `<img src="${escapeHtml(portfolioPublicUrl(photo.image_path))}" alt="" loading="lazy">`
     : (b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : (b.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase());
   const sub = escapeHtml(b.shop_name || b.district || '');
   const rating = b._avgRating ? `★ ${b._avgRating.toFixed(1)}` : '';
   const dist = (opts && opts.showDist && b._distKm != null) ? b._distKm.toFixed(1) + ' ' + t('dist_km') : '';
   return `
-    <div class="hb-card" data-barber-id="${b.id}">
+    <div class="hb-card reveal" data-barber-id="${b.id}">
       <div class="hb-photo">${cover}</div>
       <div class="hb-body">
-        <div class="hb-name">${escapeHtml(b.full_name)}</div>
-        <div class="hb-sub">${sub}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
+        <div class="hb-name">💈 ${escapeHtml(b.full_name)}</div>
+        <div class="hb-sub">${sub ? '📍 ' + sub : ''}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
         <div class="hb-meta">
           <span class="hb-rating">${rating}</span>
           <span class="hb-dist">${dist}</span>
@@ -1035,6 +1127,7 @@ async function loadHomeBarbers(){
     const topSorted = [...barbers].sort((a,b) => (b._avgRating || 0) - (a._avgRating || 0));
     topEl.innerHTML = topSorted.slice(0, 4).map(b => hbCardHtml(b, { showDist:false })).join('');
     wireHbCards(topEl);
+    revealNow(topEl);
 
     // Nearby: sort by distance if we can get the client's location, else just show recent barbers
     const renderNearby = (originLoc)=>{
@@ -1049,6 +1142,7 @@ async function loadHomeBarbers(){
       }
       nearbyEl.innerHTML = list.slice(0, 8).map(b => hbCardHtml(b, { showDist: !!originLoc })).join('');
       wireHbCards(nearbyEl);
+      revealNow(nearbyEl);
     };
     renderNearby(null);
     if(navigator.geolocation){
@@ -1074,13 +1168,13 @@ function bigTileHtml(b){
   const qrData = encodeURIComponent(`USTARA-BOOKING-${b.id}`);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
   return `
-    <div class="appt-card" data-booking-id="${b.id}">
+    <div class="appt-card reveal" data-booking-id="${b.id}">
       <div class="appt-top">
         <div class="appt-avatar">${avatarFor(barber)}</div>
         <div class="appt-info">
           <div class="appt-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-          <div class="appt-meta">${new Date(b.start_time).toLocaleString()}${barber.district ? ' · ' + escapeHtml(barber.district) : ''}</div>
-          ${svcName ? `<div class="appt-svc">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
+          <div class="appt-meta">🗓️ ${new Date(b.start_time).toLocaleString()}${barber.district ? ' · 📍 ' + escapeHtml(barber.district) : ''}</div>
+          ${svcName ? `<div class="appt-svc">✂️ ${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
         </div>
         <div class="appt-qr"><img src="${qrUrl}" alt="QR" loading="lazy"></div>
       </div>
@@ -1093,18 +1187,20 @@ function bigTileHtml(b){
   `;
 }
 
+const STATUS_EMOJI = { confirmed:'✅', pending:'⏳', cancelled:'❌', completed:'✔️' };
+
 function bookingCardHtml(b){
   const barber = b.barbers || {};
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   return `
-    <div class="wallet-card" data-booking-id="${b.id}">
+    <div class="wallet-card reveal" data-booking-id="${b.id}">
       <div class="wallet-avatar">${avatarFor(barber)}</div>
       <div class="wallet-info">
         <div class="wallet-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-        <div class="wallet-meta">${new Date(b.start_time).toLocaleString()}</div>
+        <div class="wallet-meta">🗓️ ${new Date(b.start_time).toLocaleString()}</div>
       </div>
       <div class="wallet-right">
-        <span class="status-badge ${b.status}">${t(b.status) || b.status}</span>
+        <span class="status-badge ${b.status}">${STATUS_EMOJI[b.status] || ''} ${t(b.status) || b.status}</span>
         ${canCancel ? `<button class="wallet-cancel" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
       </div>
     </div>
@@ -1123,15 +1219,15 @@ function bookingListRowHtml(b){
         : `<button class="wallet-share" data-add-photo-id="${b.id}">${t('add_after_photo')}</button>`)
     : '';
   return `
-    <div class="wallet-card" data-booking-id="${b.id}">
+    <div class="wallet-card reveal" data-booking-id="${b.id}">
       <div class="wallet-avatar">${avatarFor(barber)}</div>
       <div class="wallet-info">
         <div class="wallet-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-        <div class="wallet-meta">${new Date(b.start_time).toLocaleString()}</div>
-        ${svcName ? `<div class="wallet-svc">${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
+        <div class="wallet-meta">🗓️ ${new Date(b.start_time).toLocaleString()}</div>
+        ${svcName ? `<div class="wallet-svc">✂️ ${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
       </div>
       <div class="wallet-right">
-        <span class="status-badge ${b.status}">${t(b.status) || b.status}</span>
+        <span class="status-badge ${b.status}">${STATUS_EMOJI[b.status] || ''} ${t(b.status) || b.status}</span>
         ${canCancel ? `<button class="wallet-cancel" data-cancel-id="${b.id}">${t('cancel_booking')}</button>` : ''}
         ${canRemove ? `<button class="wallet-remove" data-remove-id="${b.id}">${t('remove_booking')}</button>` : ''}
         ${shareAction}
@@ -1258,18 +1354,20 @@ function renderHomeBookings(){
   const area = document.getElementById('homeBookings');
   if(upcoming.length === 0){
     area.innerHTML = `
-      <div class="empty-dark">
+      <div class="empty-dark reveal">
         <div class="icon">✂️</div>
         <strong>${t('empty_h')}</strong>
         <span style="font-size:12px;">${t('empty_p')}</span><br>
         <a href="javascript:void(0)" onclick="goToView('map')" class="btn">${t('empty_btn')}</a>
       </div>`;
+    revealNow(area);
     return;
   }
   area.innerHTML = upcoming.map(bigTileHtml).join('');
   attachCancelHandlers(area);
   attachCalendarHandlers(area);
   attachViewDetailsHandlers(area);
+  revealNow(area);
 }
 
 /* ---------- home: loyalty / streak / favorite tiles (derived from real data, no new schema) ---------- */
@@ -1314,19 +1412,21 @@ function renderDashboardTiles(){
   }
 
   let html = `
-    <div class="dark-tile loyalty-tile">
+    <div class="dark-tile loyalty-tile reveal">
       <div class="loyalty-head">
         <span class="loyalty-tier">👑 ${tierNames[tierIndex]} ${t('loyalty_member')}</span>
-        <span class="loyalty-pts">${pointsThisTier} / 1000 pts</span>
+        <span class="loyalty-pts">💎 ${pointsThisTier} / 1000 pts</span>
       </div>
       <div class="loyalty-bar-track"><div class="loyalty-bar-fill" style="width:${pointsThisTier/10}%;"></div></div>
       ${clientData.checkin_streak > 0 ? `<div class="checkin-streak-line">🔥 ${t('checkin_streak_label').replace('{n}', clientData.checkin_streak)}</div>` : ''}
     </div>
-    <div class="dark-tile">
-      <div class="stat-dark-num">🔥 ${streak}</div>
+    <div class="dark-tile reveal">
+      <div class="tile-emoji chipD-terracotta">🔥</div>
+      <div class="stat-dark-num">${streak}</div>
       <div class="stat-dark-label">${t('visit_streak')}${streak ? ' · ' + streak + ' ' + t('weeks') : ''}</div>
     </div>
-    <div class="dark-tile">
+    <div class="dark-tile reveal">
+      <div class="tile-emoji chipD-blue">💈</div>
       <div class="stat-dark-num">${completedCount}</div>
       <div class="stat-dark-label">${t('stat_total')}</div>
     </div>
@@ -1335,18 +1435,18 @@ function renderDashboardTiles(){
   if(favBarbers.length === 1){
     const fb = favBarbers[0];
     html += `
-      <a href="profile.html?id=${fb.id}" class="dark-tile fav-dark-card" style="grid-column:span 2;">
+      <a href="profile.html?id=${fb.id}" class="dark-tile fav-dark-card reveal" style="grid-column:span 2;">
         <div class="fav-dark-avatar">${avatarFor(fb)}</div>
         <div class="fav-dark-info">
           <div class="fav-dark-name">${escapeHtml(fb.full_name)}</div>
-          <div class="fav-dark-label">${t('your_barber')}</div>
+          <div class="fav-dark-label">⭐ ${t('your_barber')}</div>
         </div>
         <span class="fav-dark-arrow">→</span>
       </a>`;
   } else if(favBarbers.length > 1){
     html += `
-      <div class="dark-tile" style="grid-column:span 2;">
-        <div class="fav-dark-label" style="margin-bottom:8px; font-weight:700;">${t('favorites_title')}</div>
+      <div class="dark-tile reveal" style="grid-column:span 2;">
+        <div class="fav-dark-label" style="margin-bottom:8px; font-weight:700;">❤️ ${t('favorites_title')}</div>
         <div class="fav-row-dark">
           ${favBarbers.map(fb => `
             <a href="profile.html?id=${fb.id}" class="fav-chip-dark">
@@ -1359,6 +1459,7 @@ function renderDashboardTiles(){
   }
 
   container.innerHTML = html;
+  revealNow(container);
 }
 
 /* ---------- bookings tab ---------- */
@@ -1368,18 +1469,20 @@ function renderAllBookings(){
   const filtered = currentFilter === 'all' ? visible : visible.filter(b => b.status === currentFilter);
   if(filtered.length === 0){
     area.innerHTML = `
-      <div class="empty-state">
+      <div class="empty-state reveal">
         <div class="icon">✂️</div>
         <strong>${t('empty_h')}</strong><br>
         <span style="font-size:12.5px;">${t('empty_p')}</span><br>
         <a href="javascript:void(0)" onclick="goToView('map')" class="btn">${t('empty_btn')}</a>
       </div>`;
+    revealNow(area);
     return;
   }
   area.innerHTML = filtered.map(bookingListRowHtml).join('');
   attachCancelHandlers(area);
   attachRemoveHandlers(area);
   attachShareHandlers(area);
+  revealNow(area);
 }
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
   const tab = e.target.closest('[data-status]');
@@ -1393,10 +1496,11 @@ document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{
 /* ---------- account ---------- */
 function renderInfoCard(){
   document.getElementById('infoCard').innerHTML = `
-    <div class="info-row"><span class="k">${t('rv_name')}</span><span class="v">${escapeHtml(clientData.full_name)}</span></div>
-    <div class="info-row"><span class="k">${t('rv_phone')}</span><span class="v">${escapeHtml(clientData.phone || '—')}</span></div>
-    <div class="info-row"><span class="k">${t('rv_email')}</span><span class="v">${escapeHtml(userEmail)}</span></div>
+    <div class="info-row reveal"><span class="k"><span class="info-emoji chip-gold">👤</span>${t('rv_name')}</span><span class="v">${escapeHtml(clientData.full_name)}</span></div>
+    <div class="info-row reveal"><span class="k"><span class="info-emoji chip-green">📞</span>${t('rv_phone')}</span><span class="v">${escapeHtml(clientData.phone || '—')}</span></div>
+    <div class="info-row reveal"><span class="k"><span class="info-emoji chip-blue">✉️</span>${t('rv_email')}</span><span class="v">${escapeHtml(userEmail)}</span></div>
   `;
+  revealNow(document.getElementById('infoCard'));
 }
 
 /* ---------- telegram connect ---------- */
@@ -1405,10 +1509,10 @@ async function setupTelegramConnect(){
   box.innerHTML = `<span style="font-size:12.5px; color:var(--ink-dim);">${t('telegram_checking')}</span>`;
   const { data: connected } = await supabaseClient.rpc('get_telegram_status');
   if(connected){
-    box.innerHTML = `<div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--success);">✓ ${t('telegram_connected')}</div>`;
+    box.innerHTML = `<div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--success);">✅ ${t('telegram_connected')}</div>`;
     return;
   }
-  box.innerHTML = `<button id="connectTelegramBtn" style="width:100%; background:#229ED9; color:#fff; border:none; padding:13px; border-radius:var(--r-btn); font-size:13px; font-weight:700; cursor:pointer;">${t('telegram_connect_btn')}</button>
+  box.innerHTML = `<button id="connectTelegramBtn" style="width:100%; background:#229ED9; color:#fff; border:none; padding:13px; border-radius:var(--r-btn); font-size:13px; font-weight:700; cursor:pointer;">✈️ ${t('telegram_connect_btn')}</button>
     <div id="telegramLinkMsg" style="font-size:12px; color:var(--ink-dim); margin-top:10px; display:none;"></div>`;
   document.getElementById('connectTelegramBtn').addEventListener('click', async (e)=>{
     const btn = e.target;
@@ -1440,10 +1544,10 @@ function renderReferralCard(){
   const link = `${window.location.origin}/auth.html?ref=${code}`;
   box.innerHTML = `
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--surface-alt); border:1px solid var(--line); border-radius:14px; padding:12px 16px; margin-bottom:12px;">
-      <span style="font-family:'Instrument Serif',serif; font-style:italic; font-size:19px; letter-spacing:0.5px;">${escapeHtml(code || '—')}</span>
+      <span style="font-family:'Instrument Serif',serif; font-style:italic; font-size:19px; letter-spacing:0.5px;">🎟️ ${escapeHtml(code || '—')}</span>
       <button id="copyRefBtn" style="background:none; border:1px solid var(--line); border-radius:10px; padding:7px 12px; font-size:12px; font-weight:700; color:var(--gold); cursor:pointer;">${t('referral_copy')}</button>
     </div>
-    <button id="shareRefBtn" style="width:100%; background:#141414; color:var(--gold-soft); border:none; padding:13px; border-radius:var(--r-btn); font-size:13px; font-weight:700; cursor:pointer;">${t('referral_share')}</button>
+    <button id="shareRefBtn" style="width:100%; background:#141414; color:var(--gold-soft); border:none; padding:13px; border-radius:var(--r-btn); font-size:13px; font-weight:700; cursor:pointer;">🎁 ${t('referral_share')}</button>
   `;
   document.getElementById('copyRefBtn').addEventListener('click', ()=>{
     navigator.clipboard.writeText(link).then(()=>{
@@ -1748,7 +1852,8 @@ function renderMapResults(){
   banner.innerHTML = '';
 
   if(mapAllBarbers.length === 0){
-    area.innerHTML = `<div class="empty-state"><div class="icon">✂️</div><strong>${t('search_empty_h')}</strong><p>${t('no_barbers_yet')}</p></div>`;
+    area.innerHTML = `<div class="empty-state reveal"><div class="icon">✂️</div><strong>${t('search_empty_h')}</strong><p>${t('no_barbers_yet')}</p></div>`;
+    revealNow(area);
     if(clientMap) renderMapPins([]);
     return;
   }
@@ -1759,7 +1864,8 @@ function renderMapResults(){
     return;
   }
   if(count === 0){
-    area.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><strong>${t('search_noresults_h')}</strong><p>${t('search_noresults_p')}</p></div>`;
+    area.innerHTML = `<div class="empty-state reveal"><div class="icon">🔍</div><strong>${t('search_noresults_h')}</strong><p>${t('search_noresults_p')}</p></div>`;
+    revealNow(area);
     if(clientMap) renderMapPins([]);
     return;
   }
@@ -1768,7 +1874,7 @@ function renderMapResults(){
     const photos = (mapPhotosByBarber[b.id] || []).slice(0,3);
     const photoCells = [0,1,2].map(i =>
       photos[i]
-        ? `<div class="ph"><img src="${escapeHtml(photos[i].photo_url)}" alt="" loading="lazy"></div>`
+        ? `<div class="ph"><img src="${escapeHtml(portfolioPublicUrl(photos[i].image_path))}" alt="" loading="lazy"></div>`
         : `<div class="ph">${i === 1 ? '✂' : (b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()[i % 2] || '·'}</div>`
     ).join('');
     const price = mapLowestPrice(b.id);
@@ -1777,17 +1883,17 @@ function renderMapResults(){
       ? distKm((mapMetaFilters.nearby && mapNearbyLoc) || mapUserLoc, {lat:b.latitude, lng:b.longitude}).toFixed(1) + ' ' + t('dist_km') : '';
     const rating = mapAvgRatingByBarber[b.id] ? ` <span class="card-rating">★ ${mapAvgRatingByBarber[b.id].toFixed(1)}</span>` : '';
     return `
-      <div class="bcard" data-id="${b.id}">
+      <div class="bcard reveal" data-id="${b.id}">
         <button class="fav-btn ${mapFavoriteIds.has(b.id) ? 'favorited' : ''}" data-fav="${b.id}">${mapFavoriteIds.has(b.id) ? '♥' : '♡'}</button>
         ${photos.length ? `<div class="card-photos">${photoCells}</div>` : ''}
         <div class="card-id-row">
           <div class="card-avatar">${avatar}</div>
           <div class="card-who">
-            <div class="card-name">${escapeHtml(b.full_name)}${rating}</div>
-            <div class="card-sub">${escapeHtml(b.shop_name || b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
+            <div class="card-name">💈 ${escapeHtml(b.full_name)}${rating}</div>
+            <div class="card-sub">${(b.shop_name || b.district) ? '📍 ' + escapeHtml(b.shop_name || b.district) : ''}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
           </div>
           <div class="card-right">
-            ${price !== null ? `<div class="card-price">${t('price_from')} ${formatPrice(price)}</div>` : ''}
+            ${price !== null ? `<div class="card-price">💰 ${t('price_from')} ${formatPrice(price)}</div>` : ''}
             ${dist ? `<div class="card-dist">${dist}</div>` : ''}
           </div>
         </div>
@@ -1796,6 +1902,7 @@ function renderMapResults(){
       </div>`;
   }).join('');
 
+  revealNow(area);
   area.querySelectorAll('.bcard').forEach(card=>{
     card.addEventListener('click', (e)=>{
       if(e.target.closest('[data-book]') || e.target.closest('[data-fav]')) return;
@@ -1856,7 +1963,7 @@ function openMapProfilePop(b, jumpToBooking = false){
 
   pop.innerHTML = `
     <div class="pop-gallery" id="mapPopGallery">
-      ${mapPopPhotos.length ? `<img id="mapPopGalleryImg" src="${escapeHtml(mapPopPhotos[0].photo_url)}" alt="">` : `<div class="no-photo">${(b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>`}
+      ${mapPopPhotos.length ? `<img id="mapPopGalleryImg" src="${escapeHtml(portfolioPublicUrl(mapPopPhotos[0].image_path))}" alt="">` : `<div class="no-photo">${(b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>`}
       <button class="pop-close" id="mapPopClose">&times;</button>
       ${mapPopPhotos.length > 1 ? `
         <button class="gal-arrow gal-prev" id="mapGalPrev">‹</button>
@@ -1868,7 +1975,7 @@ function openMapProfilePop(b, jumpToBooking = false){
         <div class="pop-avatar">${avatar}</div>
         <div>
           <div class="pop-name">${escapeHtml(b.full_name)}</div>
-          <div class="pop-sub">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
+          <div class="pop-sub">📍 ${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
         </div>
       </div>
       ${b.bio ? `<div class="pop-bio">${escapeHtml(b.bio)}</div>` : ''}
@@ -1885,7 +1992,7 @@ function openMapProfilePop(b, jumpToBooking = false){
     const nav = document.getElementById('mapGalNav');
     const show = (i)=>{
       mapPopGalleryIndex = (i + mapPopPhotos.length) % mapPopPhotos.length;
-      img.src = mapPopPhotos[mapPopGalleryIndex].photo_url;
+      img.src = portfolioPublicUrl(mapPopPhotos[mapPopGalleryIndex].image_path);
       nav.textContent = (mapPopGalleryIndex+1) + '/' + mapPopPhotos.length;
     };
     document.getElementById('mapGalPrev').addEventListener('click', ()=> show(mapPopGalleryIndex-1));
@@ -1902,7 +2009,7 @@ function renderMapPopServices(b){
   if(!active.length){ listEl.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
   listEl.innerHTML = active.map(s=>`
     <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
-      <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+      <span>✂️ ${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
       <span class="svc-price">${formatPrice(s.price)}</span>
     </div>`).join('');
   listEl.querySelectorAll('.service-option').forEach(opt=>{
@@ -1921,7 +2028,7 @@ function showMapAddonPicker(b, mainKey, mainDuration, mainPrice, allActiveServic
     <div class="pop-section-t">${t('addon_title')}</div>
     ${addonOptions.map(s => `
       <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
-        <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span>➕ ${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
         <span class="svc-price">+${formatPrice(s.price)}</span>
       </div>`).join('')}
     <button class="confirm-booking-btn" id="mapContinueWithAddonsBtn">${t('continue_btn')}</button>
@@ -2164,15 +2271,17 @@ function renderNotifBadge(){
 function renderNotificationsPanel(){
   const area = document.getElementById('notificationsArea');
   if(notificationsData.length === 0){
-    area.innerHTML = `<div class="empty-state"><div class="icon">🔔</div><strong>${t('no_notifications')}</strong></div>`;
+    area.innerHTML = `<div class="empty-state reveal"><div class="icon">🔔</div><strong>${t('no_notifications')}</strong></div>`;
+    revealNow(area);
     return;
   }
   area.innerHTML = notificationsData.map(n => `
-    <div class="notification-row ${n.is_read ? '' : 'unread'}">
-      <div>${escapeHtml(n.message)}</div>
-      <div class="n-time">${new Date(n.created_at).toLocaleString()}</div>
+    <div class="notification-row reveal ${n.is_read ? '' : 'unread'}">
+      <div>${n.is_read ? '🔔' : '🔥'} ${escapeHtml(n.message)}</div>
+      <div class="n-time">🕐 ${new Date(n.created_at).toLocaleString()}</div>
     </div>
   `).join('');
+  revealNow(area);
 }
 
 document.getElementById('notifBellBtn').addEventListener('click', async ()=>{
