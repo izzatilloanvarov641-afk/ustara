@@ -207,9 +207,54 @@
   .portfolio-add{
     aspect-ratio:1; border-radius:8px; border:2px dashed var(--line); display:flex;
     flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer;
-    color:var(--ink-dim); font-size:12px; text-align:center;
+    color:var(--ink-dim); font-size:12px; text-align:center; transition:border-color .15s, color .15s;
   }
   .portfolio-add:hover{ border-color:var(--brass); color:var(--brass); }
+  .portfolio-item{ transition:transform .18s cubic-bezier(.2,.7,.3,1), box-shadow .18s ease; }
+  .portfolio-item:hover{ transform:translateY(-3px); box-shadow:0 10px 22px rgba(28,26,23,0.14); }
+
+  .title-chip{
+    display:inline-flex; width:30px; height:30px; border-radius:10px; align-items:center;
+    justify-content:center; font-size:14px; flex-shrink:0;
+  }
+  .st-left{ display:flex; align-items:center; gap:10px; }
+  .photo-count-pill{ font-size:12px; color:var(--ink-dim); font-weight:600; }
+
+  .avatar-wrap{ position:relative; flex-shrink:0; }
+  .avatar-preview{ transition:border-color .25s ease, box-shadow .25s ease; }
+  .avatar-preview.has-photo{ border-color:var(--brass); box-shadow:0 0 0 4px rgba(166,124,26,0.12); }
+  .avatar-check{
+    position:absolute; bottom:-2px; right:-2px; width:24px; height:24px; border-radius:50%;
+    background:var(--ok); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; border:2px solid var(--surface); opacity:0; transform:scale(0.4);
+    transition:opacity .3s ease, transform .3s cubic-bezier(.3,1.6,.5,1);
+  }
+  .avatar-check.show{ opacity:1; transform:scale(1); }
+
+  .portfolio-tip{
+    display:flex; align-items:center; gap:10px; background:#FBF3E3; border:1px solid #E8D5A8;
+    border-radius:10px; padding:12px 14px; font-size:12.5px; color:var(--ink-dim); margin-bottom:16px;
+  }
+  .portfolio-tip .emoji{ font-size:17px; flex-shrink:0; }
+
+  /* custom service cards */
+  .svc-card.custom-svc{ border-style:dashed; }
+  .svc-card-name-input{
+    font-weight:700; font-size:14.5px; padding:6px 8px; border:1px solid transparent;
+    background:transparent; border-radius:6px;
+  }
+  .svc-card-name-input:focus{ border-color:var(--line); background:var(--bg); }
+  .svc-remove-btn{
+    background:none; border:none; color:var(--ink-dim); font-size:16px; cursor:pointer;
+    width:22px; height:22px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .svc-remove-btn:hover{ color:var(--err); }
+  .add-service-tile{
+    border:2px dashed var(--line); border-radius:12px; padding:18px 20px; display:flex;
+    align-items:center; justify-content:center; gap:8px; cursor:pointer; color:var(--ink-dim);
+    font-size:13.5px; font-weight:600; min-height:96px; transition:border-color .15s, color .15s;
+  }
+  .add-service-tile:hover{ border-color:var(--brass); color:var(--brass); }
 
   /* bookings */
   .booking-row{
@@ -700,6 +745,7 @@
       <h1 data-i18n="nav_services">Services</h1>
       <p class="page-sub" data-i18n="services_sub">Turn on what you offer, set your own duration and price for each.</p>
       <div class="svc-grid" id="servicesCard"></div>
+      <div class="add-service-tile" id="addServiceTile" style="margin-top:14px;">➕ <span data-i18n="add_service">Add your own service</span></div>
       <div class="btn-row">
         <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
       </div>
@@ -708,22 +754,35 @@
 
     <!-- ============ PHOTOS ============ -->
     <div class="view" data-view="photos">
-      <h1 data-i18n="nav_photos">Photos</h1>
+      <div style="position:relative;">
+        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">📸</span>
+        <h1 data-i18n="nav_photos">Photos</h1>
+      </div>
       <p class="page-sub" data-i18n="photos_sub">A clear photo of you, plus examples of your work (optional).</p>
 
-      <div class="section-title"><span data-i18n="photo_profile_title">Your photo</span></div>
+      <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">📷</span><span data-i18n="photo_profile_title">Your photo</span></span></div>
       <div class="card">
         <div class="profile-photo-row">
-          <div class="avatar-preview" id="avatarPreview"></div>
+          <div class="avatar-wrap">
+            <div class="avatar-preview" id="avatarPreview"></div>
+            <span class="avatar-check" id="avatarCheck">✓</span>
+          </div>
           <div>
-            <label class="file-btn" for="avatarInput" data-i18n="upload_photo">Upload photo</label>
+            <label class="file-btn" for="avatarInput">📷 <span data-i18n="upload_photo">Upload photo</span></label>
             <input type="file" id="avatarInput" accept="image/*">
+            <div style="font-size:11.5px; color:var(--ink-dim); margin-top:9px;" data-i18n="avatar_tip">✨ A friendly, well-lit face builds trust fast.</div>
           </div>
         </div>
       </div>
 
-      <div class="section-title"><span data-i18n="photo_portfolio_title">Your work (optional)</span></div>
+      <div class="section-title">
+        <span class="st-left"><span class="title-chip chip-terracotta">🖼️</span><span data-i18n="photo_portfolio_title">Your work (optional)</span></span>
+        <span class="photo-count-pill" id="portfolioCount"></span>
+      </div>
       <div class="card">
+        <div class="portfolio-tip" id="portfolioTip" style="display:none;">
+          <span class="emoji">💈</span><span data-i18n="portfolio_tip">Add a few of your best cuts — clients pick faster when they can see your work.</span>
+        </div>
         <div class="portfolio-grid" id="portfolioGrid">
           <label class="portfolio-add" for="portfolioInput">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -857,8 +916,12 @@ const I18N = {
     location_placed:"Pin placed. Save to confirm — your location will need a quick check before it shows to clients.",
     profile_link_title:"Your public profile", copy_link:"Copy my profile link", link_copied:"Link copied!",
     services_sub:"Turn on what you offer, set your own duration and price for each.",
+    add_service:"Add your own service", svc_name_placeholder:"Service name", new_svc_default:"New service",
     photos_sub:"A clear photo of you, plus examples of your work (optional).",
     photo_profile_title:"Your photo", photo_portfolio_title:"Your work (optional)",
+    avatar_tip:"✨ A friendly, well-lit face builds trust fast.",
+    portfolio_tip:"Add a few of your best cuts — clients pick faster when they can see your work.",
+    photo_count_one:"photo", photo_count_many:"photos",
     upload_photo:"Upload photo", add_photo:"Add photo",
     bookings_sub:"Everyone who's booked with you.",
     filter_all:"All", filter_pending:"Pending", filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
@@ -925,8 +988,12 @@ const I18N = {
     location_placed:"Pin qo'yildi. Tasdiqlash uchun saqlang — joylashuvingiz mijozlarga ko'rsatilishidan oldin tekshiriladi.",
     profile_link_title:"Sizning ochiq profilingiz", copy_link:"Profil havolamni nusxalash", link_copied:"Havola nusxalandi!",
     services_sub:"Nima taklif qilishingizni yoqing, har biriga davomiylik va narx belgilang.",
+    add_service:"O'z xizmatingizni qo'shing", svc_name_placeholder:"Xizmat nomi", new_svc_default:"Yangi xizmat",
     photos_sub:"Sizning aniq suratingiz va ishlaringiz namunalari (ixtiyoriy).",
     photo_profile_title:"Sizning suratingiz", photo_portfolio_title:"Ishlaringiz (ixtiyoriy)",
+    avatar_tip:"✨ Yorug', do'stona surat ishonchni tezroq uyg'otadi.",
+    portfolio_tip:"Eng yaxshi ishlaringizdan bir nechtasini qo'shing — mijozlar ko'rib tezroq tanlaydi.",
+    photo_count_one:"surat", photo_count_many:"surat",
     upload_photo:"Surat yuklash", add_photo:"Surat qo'shish",
     bookings_sub:"Siz bilan band qilganlarning barchasi.",
     filter_all:"Barchasi", filter_pending:"Kutilmoqda", filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
@@ -993,8 +1060,12 @@ const I18N = {
     location_placed:"Метка поставлена. Сохраните для подтверждения — локация будет проверена перед показом клиентам.",
     profile_link_title:"Ваш публичный профиль", copy_link:"Скопировать ссылку на профиль", link_copied:"Ссылка скопирована!",
     services_sub:"Включите то, что предлагаете, задайте длительность и цену для каждой.",
+    add_service:"Добавить свою услугу", svc_name_placeholder:"Название услуги", new_svc_default:"Новая услуга",
     photos_sub:"Ваше чёткое фото и примеры работ (необязательно).",
     photo_profile_title:"Ваше фото", photo_portfolio_title:"Ваши работы (необязательно)",
+    avatar_tip:"✨ Дружелюбное, хорошо освещённое фото быстрее вызывает доверие.",
+    portfolio_tip:"Добавьте несколько лучших работ — клиентам проще выбрать, когда они видят результат.",
+    photo_count_one:"фото", photo_count_many:"фото",
     upload_photo:"Загрузить фото", add_photo:"Добавить фото",
     bookings_sub:"Все, кто записался к вам.",
     filter_all:"Все", filter_pending:"Ожидают", filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
@@ -1073,8 +1144,15 @@ function letterReveal(el, text, startDelay){
 
 function revealViewTitle(viewEl){
   if(!viewEl) return;
+  let delay = 0;
   const h1 = viewEl.querySelector('h1[data-i18n]');
-  if(h1) letterReveal(h1, t(h1.dataset.i18n));
+  if(h1){ letterReveal(h1, t(h1.dataset.i18n)); delay += 160; }
+  const sub = viewEl.querySelector('p.page-sub[data-i18n]');
+  if(sub){ letterReveal(sub, t(sub.dataset.i18n), delay); delay += 220; }
+  viewEl.querySelectorAll('.section-title .st-left [data-i18n]').forEach(el=>{
+    letterReveal(el, t(el.dataset.i18n), delay);
+    delay += 120;
+  });
 }
 
 function revealNow(container){
@@ -1444,7 +1522,7 @@ function renderAnalytics(){
   const breakdownEl = document.getElementById('anServiceBreakdown');
   breakdownEl.innerHTML = svcEntries.length
     ? svcEntries.map(([key, amt])=>{
-        const name = SERVICES_LOCAL[currentLang][key] || key;
+        const name = serviceLabel(key);
         const pct = svcMax ? Math.round(amt/svcMax*100) : 0;
         return `<div class="an-svc-row"><span>${escapeHtml(name)}</span><span class="an-svc-bar" style="--pct:${pct}%;"></span><span>${formatPrice(amt)}</span></div>`;
       }).join('')
@@ -1707,41 +1785,94 @@ document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
 /* ---------- services ---------- */
 const SERVICE_ICONS = { haircut:'✂️', beard_trim:'🧔', haircut_beard:'💇', kids_haircut:'🧒', lineup:'📏', coloring:'🎨' };
 const SERVICE_CHIP_CLASSES = ['chip-gold','chip-blue','chip-green','chip-terracotta','chip-teal'];
+const CUSTOM_SVC_ICONS = ['✨','💫','🌟','🪒','🧴','🧼'];
+let customSvcAddCount = 0; // used only to vary the icon of freshly-added, not-yet-saved custom cards
 
-function renderServices(){
-  const card = document.getElementById('servicesCard');
-  card.innerHTML = SERVICE_KEYS.map((key, i) => {
-    const existing = servicesData.find(s => s.service_key === key) || {};
-    const chipClass = SERVICE_CHIP_CLASSES[i % SERVICE_CHIP_CLASSES.length];
-    return `
-      <div class="svc-card ${existing.is_active ? 'active-svc' : ''}" data-key="${key}">
-        <div class="svc-card-head">
-          <div class="svc-card-id">
-            <div class="an-tile-icon ${chipClass}" style="margin-bottom:0;">${SERVICE_ICONS[key] || '✂️'}</div>
-            <div class="svc-card-name">${SERVICES_LOCAL[currentLang][key]}</div>
-          </div>
+function svcCardHtml(key, i, existing, opts){
+  const isCustom = opts && opts.isCustom;
+  const chipClass = SERVICE_CHIP_CLASSES[i % SERVICE_CHIP_CLASSES.length];
+  const icon = isCustom ? (CUSTOM_SVC_ICONS[i % CUSTOM_SVC_ICONS.length]) : (SERVICE_ICONS[key] || '✂️');
+  const nameHtml = isCustom
+    ? `<input type="text" class="svc-card-name-input" value="${escapeHtml(existing.custom_label || t('new_svc_default'))}" placeholder="${t('svc_name_placeholder')}">`
+    : `<div class="svc-card-name">${SERVICES_LOCAL[currentLang][key]}</div>`;
+  return `
+    <div class="svc-card ${existing.is_active ? 'active-svc' : ''}${isCustom ? ' custom-svc' : ''}" data-key="${key}" data-custom="${isCustom ? '1' : '0'}">
+      <div class="svc-card-head">
+        <div class="svc-card-id">
+          <div class="an-tile-icon ${chipClass}" style="margin-bottom:0;">${icon}</div>
+          ${nameHtml}
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
           <label class="toggle-switch">
             <input type="checkbox" class="svc-active" ${existing.is_active ? 'checked' : ''}>
             <span class="toggle-slider"></span>
           </label>
-        </div>
-        <div class="svc-inputs-row">
-          <div class="field-group">
-            <label>${t('min')}</label>
-            <input type="number" class="svc-duration" min="5" step="5" value="${existing.duration_minutes || ''}">
-          </div>
-          <div class="field-group">
-            <label>UZS</label>
-            <input type="number" class="svc-price" min="0" step="1000" value="${existing.price || ''}">
-          </div>
+          ${isCustom ? `<button type="button" class="svc-remove-btn" title="Remove">&times;</button>` : ''}
         </div>
       </div>
-    `;
+      <div class="svc-inputs-row">
+        <div class="field-group">
+          <label>${t('min')}</label>
+          <input type="number" class="svc-duration" min="5" step="5" value="${existing.duration_minutes || ''}">
+        </div>
+        <div class="field-group">
+          <label>UZS</label>
+          <input type="number" class="svc-price" min="0" step="1000" value="${existing.price || ''}">
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderServices(){
+  const card = document.getElementById('servicesCard');
+  const customRows = servicesData.filter(s => !SERVICE_KEYS.includes(s.service_key));
+  let html = SERVICE_KEYS.map((key, i) => {
+    const existing = servicesData.find(s => s.service_key === key) || {};
+    return svcCardHtml(key, i, existing, { isCustom:false });
   }).join('');
-  card.querySelectorAll('.svc-active').forEach(cb=>{
+  html += customRows.map((s, i) => svcCardHtml(s.service_key, SERVICE_KEYS.length + i, s, { isCustom:true })).join('');
+  card.innerHTML = html;
+  wireServiceCard();
+}
+
+function wireServiceCard(root){
+  const scope = root || document.getElementById('servicesCard');
+  scope.querySelectorAll('.svc-active').forEach(cb=>{
     cb.addEventListener('change', ()=> cb.closest('.svc-card').classList.toggle('active-svc', cb.checked));
   });
+  scope.querySelectorAll('.svc-remove-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const cardEl = btn.closest('.svc-card');
+      const key = cardEl.dataset.key;
+      const existing = servicesData.find(s => s.service_key === key);
+      if(existing){
+        btn.disabled = true;
+        const { error } = await supabaseClient.from('services').delete().eq('id', existing.id);
+        if(error){ console.error('Remove custom service failed:', error); btn.disabled = false; return; }
+        servicesData = servicesData.filter(s => s.id !== existing.id);
+        renderOverviewStats();
+      }
+      cardEl.remove();
+    });
+  });
 }
+
+document.getElementById('addServiceTile').addEventListener('click', ()=>{
+  customSvcAddCount++;
+  const key = `custom_${crypto.randomUUID()}`;
+  const card = document.getElementById('servicesCard');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = svcCardHtml(key, customSvcAddCount, {}, { isCustom:true });
+  const newCard = wrap.firstElementChild;
+  card.appendChild(newCard);
+  wireServiceCard(newCard);
+  newCard.scrollIntoView({ behavior:'smooth', block:'center' });
+  const nameInput = newCard.querySelector('.svc-card-name-input');
+  nameInput.focus();
+  nameInput.select();
+});
+
 document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('saveServicesBtn');
   btn.disabled = true;
@@ -1749,10 +1880,16 @@ document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
   const upserts = [];
   rows.forEach(row => {
     const key = row.dataset.key;
+    const isCustom = row.dataset.custom === '1';
     const isActive = row.querySelector('.svc-active').checked;
     const duration = parseInt(row.querySelector('.svc-duration').value) || 30;
     const price = parseInt(row.querySelector('.svc-price').value) || 0;
-    upserts.push({ barber_id: barberData.id, service_key: key, duration_minutes: duration, price: price, is_active: isActive });
+    let customLabel = null;
+    if(isCustom){
+      customLabel = (row.querySelector('.svc-card-name-input').value || '').trim();
+      if(!customLabel) return; // skip unnamed custom services — nothing to save yet
+    }
+    upserts.push({ barber_id: barberData.id, service_key: key, duration_minutes: duration, price: price, is_active: isActive, custom_label: customLabel });
   });
   const { error } = await supabaseClient.from('services').upsert(upserts, { onConflict: 'barber_id,service_key' });
   btn.disabled = false;
@@ -1760,6 +1897,7 @@ document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
   if(!error){
     const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', barberData.id);
     servicesData = services || [];
+    renderServices();
     renderOverviewStats();
     renderOnboardingChecklist();
     msg.style.color = 'var(--ok)';
@@ -1775,12 +1913,22 @@ document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
 });
 
 /* ---------- photos ---------- */
-function renderAvatar(){
+function renderAvatar(justUploaded){
   const el = document.getElementById('avatarPreview');
-  if(barberData.avatar_url){
+  const check = document.getElementById('avatarCheck');
+  const hasPhoto = !!barberData.avatar_url;
+  el.classList.toggle('has-photo', hasPhoto);
+  if(hasPhoto){
     el.innerHTML = `<img src="${escapeHtml(barberData.avatar_url)}" alt="">`;
   } else {
     el.textContent = (barberData.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  }
+  if(check){
+    check.classList.toggle('show', hasPhoto);
+    if(justUploaded){
+      check.classList.remove('show');
+      requestAnimationFrame(()=> requestAnimationFrame(()=> check.classList.add('show')));
+    }
   }
 }
 document.getElementById('avatarInput').addEventListener('change', async (e)=>{
@@ -1795,7 +1943,7 @@ document.getElementById('avatarInput').addEventListener('change', async (e)=>{
   const { error: dbError } = await supabaseClient.from('barbers').update({ avatar_url: publicUrl }).eq('id', barberData.id);
   if(!dbError){
     barberData.avatar_url = publicUrl;
-    renderAvatar();
+    renderAvatar(true);
     renderOnboardingChecklist();
   }
 });
@@ -1805,13 +1953,21 @@ function portfolioPublicUrl(imagePath){
   return data.publicUrl;
 }
 
+function updatePortfolioMeta(){
+  const count = document.querySelectorAll('#portfolioGrid .portfolio-item').length;
+  const countEl = document.getElementById('portfolioCount');
+  if(countEl) countEl.textContent = count ? `🖼️ ${count} ${count === 1 ? t('photo_count_one') : t('photo_count_many')}` : '';
+  const tip = document.getElementById('portfolioTip');
+  if(tip) tip.style.display = count === 0 ? 'flex' : 'none';
+}
+
 function renderPortfolio(photos){
   const grid = document.getElementById('portfolioGrid');
   const addBtn = grid.querySelector('.portfolio-add');
   grid.querySelectorAll('.portfolio-item').forEach(el => el.remove());
   photos.forEach(p => {
     const item = document.createElement('div');
-    item.className = 'portfolio-item';
+    item.className = 'portfolio-item reveal';
     item.innerHTML = `<img src="${escapeHtml(portfolioPublicUrl(p.image_path))}" alt=""><button class="remove-btn" data-id="${p.id}" data-path="${escapeHtml(p.image_path)}">&times;</button>`;
     grid.insertBefore(item, addBtn);
   });
@@ -1820,8 +1976,11 @@ function renderPortfolio(photos){
       await supabaseClient.from('portfolio_photos').delete().eq('id', btn.dataset.id);
       await supabaseClient.storage.from('barber-media').remove([btn.dataset.path]);
       btn.closest('.portfolio-item').remove();
+      updatePortfolioMeta();
     });
   });
+  updatePortfolioMeta();
+  revealNow(grid);
 }
 document.getElementById('portfolioInput').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
@@ -1838,14 +1997,17 @@ document.getElementById('portfolioInput').addEventListener('change', async (e)=>
     const grid = document.getElementById('portfolioGrid');
     const addBtn = grid.querySelector('.portfolio-add');
     const item = document.createElement('div');
-    item.className = 'portfolio-item';
+    item.className = 'portfolio-item reveal';
     item.innerHTML = `<img src="${escapeHtml(portfolioPublicUrl(inserted.image_path))}" alt=""><button class="remove-btn" data-id="${inserted.id}" data-path="${escapeHtml(inserted.image_path)}">&times;</button>`;
     grid.insertBefore(item, addBtn);
     item.querySelector('.remove-btn').addEventListener('click', async ()=>{
       await supabaseClient.from('portfolio_photos').delete().eq('id', inserted.id);
       await supabaseClient.storage.from('barber-media').remove([inserted.image_path]);
       item.remove();
+      updatePortfolioMeta();
     });
+    updatePortfolioMeta();
+    requestAnimationFrame(()=> requestAnimationFrame(()=> item.classList.add('in')));
   } else {
     console.error('portfolio_photos insert error:', dbError);
   }
@@ -1866,8 +2028,14 @@ const BOOKING_STATUS_META = {
   completed: { icon:'🏁', chip:'status-completed' }
 };
 
+function serviceLabel(key){
+  if(!key) return '';
+  const existing = servicesData.find(s => s.service_key === key);
+  return (existing && existing.custom_label) || SERVICES_LOCAL[currentLang][key] || key;
+}
+
 function bookingRowHtml(b, withActions = true){
-  const svcName = b.service_key ? (SERVICES_LOCAL[currentLang][b.service_key] || b.service_key) : '';
+  const svcName = b.service_key ? serviceLabel(b.service_key) : '';
   const statusLabel = t(b.status) || b.status;
   const meta = BOOKING_STATUS_META[b.status] || BOOKING_STATUS_META.pending;
   const refPhoto = b.reference_photo_url
@@ -1877,7 +2045,7 @@ function bookingRowHtml(b, withActions = true){
     ? `<div style="font-size:12px; color:var(--brass); margin-top:4px; font-style:italic;">"${escapeHtml(b.style_notes)}"</div>`
     : '';
   const addonNames = (b.addon_keys && b.addon_keys.length > 0)
-    ? b.addon_keys.map(k => SERVICES_LOCAL[currentLang][k] || k).join(', ')
+    ? b.addon_keys.map(k => serviceLabel(k)).join(', ')
     : '';
   return `
     <div class="booking-row">
@@ -2098,7 +2266,7 @@ function openWalkinModal(){
       <div id="walkinServiceList">
         ${activeServices.length ? activeServices.map(s => `
           <div class="walkin-svc-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
-            <span>${SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+            <span>${serviceLabel(s.service_key)} · ${s.duration_minutes} ${t('min')}</span>
             <span style="font-weight:800; color:var(--brass);">${formatPrice(s.price)}</span>
           </div>`).join('') : `<div class="empty-state" style="padding:20px;">${t('walkin_no_services')}</div>`}
       </div>

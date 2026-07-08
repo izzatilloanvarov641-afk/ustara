@@ -360,7 +360,7 @@ function renderServiceChoices(){
   }
   area.innerHTML = servicesData.map(s => `
     <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
-      <span>${SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+      <span>${s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
       <span class="svc-price">${formatPrice(s.price)}</span>
     </div>
   `).join('');
@@ -384,7 +384,7 @@ function showAddonPicker(mainKey, mainDuration, mainPrice){
     <div class="pop-section-t">${t('addon_title')}</div>
     ${addonOptions.map(s => `
       <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
-        <span>${SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span>${s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
         <span class="svc-price">+${formatPrice(s.price)}</span>
       </div>`).join('')}
     <button class="confirm-booking-btn" id="continueWithAddonsBtn">${t('continue_btn')}</button>
