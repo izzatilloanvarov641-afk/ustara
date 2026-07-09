@@ -13,34 +13,91 @@
 <style>
   :root{
     --bg:#F6F1E4; --surface:#ECE5D2; --line:#D8CFB8; --ink:#1C1A14; --ink-dim:#6B6455;
-    --brass:#A9DB3A; --brass-soft:#CDFF5E;
+    --brass:#A9DB3A; --brass-soft:#CDFF5E; --dark-bg:#12151C; --on-dark:#F3EFE2; --on-dark-dim:#9AA0AD;
   }
-  *{ margin:0; padding:0; box-sizing:border-box; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body{ height:100%; }
   body{
     background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif;
-    min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:32px 28px calc(32px + env(safe-area-inset-bottom)); -webkit-font-smoothing:antialiased; line-height:1.5;
+    min-height:100vh; min-height:100dvh; -webkit-font-smoothing:antialiased; line-height:1.5;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; gap:14px;
+    max-width:480px; margin:0 auto;
   }
   a{ color:inherit; text-decoration:none; }
-  .logo{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:30px; margin-bottom:6px; }
+
+  .top-row{ display:flex; align-items:center; justify-content:space-between; padding:4px 6px 2px; }
+  .logo{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:19px; }
   .logo em{ font-style:italic; color:var(--brass); }
-  .tagline{ color:var(--ink-dim); font-size:14px; margin-bottom:56px; text-align:center; }
-  .choices{ width:100%; max-width:340px; display:flex; flex-direction:column; gap:14px; }
+  .launch-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+    color:var(--ink-dim); background:var(--surface); border:1px solid var(--line);
+    padding:6px 12px 6px 10px; border-radius:999px;
+  }
+  .launch-pill .dot{ width:6px; height:6px; border-radius:50%; background:var(--brass); flex-shrink:0; }
+
+  /* ---- oval hero card: big radius, never touches the screen edges ---- */
+  .hero-card{
+    position:relative; border-radius:44px; overflow:hidden; flex:1;
+    min-height:340px; background:var(--dark-bg); display:flex; flex-direction:column; justify-content:flex-end;
+    padding:26px 26px 28px;
+  }
+  .hero-card__img{
+    position:absolute; inset:0; background-image:url('https://images.pexels.com/photos/6487888/pexels-photo-6487888.jpeg?auto=compress&cs=tinysrgb&w=900');
+    background-size:cover; background-position:center 30%; filter:grayscale(0.25) brightness(0.65);
+  }
+  .hero-card::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(18,21,28,0.05) 0%, rgba(18,21,28,0.15) 40%, rgba(18,21,28,0.92) 100%);
+  }
+  .hero-card__content{ position:relative; z-index:1; color:var(--on-dark); }
+  .hero-card__title{ font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:clamp(26px,7vw,32px); line-height:1.12; margin-bottom:10px; }
+  .hero-card__title em{ font-style:italic; color:var(--brass-soft); }
+  .hero-card__lede{ font-size:13px; color:var(--on-dark-dim); line-height:1.55; max-width:34ch; }
+
+  /* ---- short value-prop row: pill-shaped, oval mini-cards ---- */
+  .props-row{ display:flex; gap:10px; }
+  .prop-pill{
+    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:22px;
+    padding:14px 10px; text-align:center;
+  }
+  .prop-pill .emoji{ font-size:20px; display:block; margin-bottom:6px; }
+  .prop-pill .label{ font-size:11px; font-weight:600; color:var(--ink-dim); line-height:1.3; }
+
+  /* ---- CTAs ---- */
+  .choices{ display:flex; flex-direction:column; gap:10px; }
   .choice-btn{
-    width:100%; padding:18px; border-radius:999px; font-size:15px; font-weight:700; cursor:pointer;
+    width:100%; padding:17px; border-radius:999px; font-size:14.5px; font-weight:700; cursor:pointer;
     border:none; text-align:center; transition:transform .12s cubic-bezier(.3,1.5,.5,1);
   }
   .choice-btn:active{ transform:scale(0.96); }
   .choice-btn.primary{ background:var(--brass); color:var(--ink); }
   .choice-btn.secondary{ background:var(--surface); color:var(--ink); border:1px solid var(--line); }
-  .foot-link{ text-align:center; font-size:12px; color:var(--ink-dim); margin-top:40px; }
+
+  .foot-link{ text-align:center; font-size:11px; color:var(--ink-dim); padding:2px 6px; }
   .foot-link a{ color:var(--ink); font-weight:600; text-decoration:underline; }
 </style>
 </head>
 <body>
 
-<div class="logo">ust<em>a</em>ra</div>
-<p class="tagline" id="tagline">Find your barber. Not just a shop.</p>
+<div class="top-row">
+  <div class="logo">ust<em>a</em>ra</div>
+  <span class="launch-pill"><span class="dot"></span><span id="launchPillText">Now live in Tashkent</span></span>
+</div>
+
+<div class="hero-card">
+  <div class="hero-card__img"></div>
+  <div class="hero-card__content">
+    <div class="hero-card__title" id="heroTitle">Find your <em>barber.</em><br>Not just a shop.</div>
+    <p class="hero-card__lede" id="heroLede">A barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them.</p>
+  </div>
+</div>
+
+<div class="props-row">
+  <div class="prop-pill"><span class="emoji">🔍</span><span class="label" id="prop1">Browse real portfolios</span></div>
+  <div class="prop-pill"><span class="emoji">📅</span><span class="label" id="prop2">Book in seconds</span></div>
+  <div class="prop-pill"><span class="emoji">🔁</span><span class="label" id="prop3">Rebook your favorite</span></div>
+</div>
 
 <div class="choices">
   <a class="choice-btn primary" id="signupLink" href="auth.html?tab=signup">Create account</a>
@@ -48,7 +105,7 @@
 </div>
 
 <div class="foot-link">
-  <a href="terms.html">Terms</a> &amp; <a href="privacy.html">Privacy</a>
+  <a href="terms.html" id="termsLink">Terms</a> &amp; <a href="privacy.html" id="privacyLink">Privacy</a>
 </div>
 
 <script>
@@ -57,16 +114,37 @@ const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const I18N = {
-  en:{ tagline:"Find your barber. Not just a shop.", signup:"Create account", login:"Sign in", terms:"Terms", privacy:"Privacy" },
-  uz:{ tagline:"Sartaroshingizni toping. Shunchaki do'kon emas.", signup:"Hisob yaratish", login:"Kirish", terms:"Shartlar", privacy:"Maxfiylik" },
-  ru:{ tagline:"Найдите своего барбера. Не просто салон.", signup:"Создать аккаунт", login:"Войти", terms:"Условия", privacy:"Конфиденциальность" }
+  en:{ launch:"Now live in Tashkent",
+    heroTitle:'Find your <em>barber.</em><br>Not just a shop.',
+    heroLede:"A barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them.",
+    prop1:"Browse real portfolios", prop2:"Book in seconds", prop3:"Rebook your favorite",
+    signup:"Create account", login:"Sign in", terms:"Terms", privacy:"Privacy" },
+  uz:{ launch:"Toshkentda ishga tushdi",
+    heroTitle:'<em>Sartaroshingizni</em> toping.<br>Shunchaki do\'kon emas.',
+    heroLede:"Sartaroshning obro'si sartaroshning o'ziga tegishli — portfolio, mijozlar va bandlovlar u bilan boradi.",
+    prop1:"Haqiqiy portfoliolarni ko'ring", prop2:"Soniyalarda band qiling", prop3:"Sevimlingizni qayta band qiling",
+    signup:"Hisob yaratish", login:"Kirish", terms:"Shartlar", privacy:"Maxfiylik" },
+  ru:{ launch:"Уже работает в Ташкенте",
+    heroTitle:'Найдите своего <em>барбера.</em><br>Не просто салон.',
+    heroLede:"Репутация барбера принадлежит барберу — портфолио, клиенты и записи следуют за ним.",
+    prop1:"Смотрите реальные портфолио", prop2:"Бронируйте за секунды", prop3:"Повторяйте у любимого барбера",
+    signup:"Создать аккаунт", login:"Войти", terms:"Условия", privacy:"Конфиденциальность" }
 };
+
 const storedLang = localStorage.getItem('ustara_lang');
 const browserLang = (navigator.language || 'en').slice(0,2);
 const lang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
-document.getElementById('tagline').textContent = I18N[lang].tagline;
-document.getElementById('signupLink').textContent = I18N[lang].signup;
-document.getElementById('loginLink').textContent = I18N[lang].login;
+const dict = I18N[lang];
+document.getElementById('launchPillText').textContent = dict.launch;
+document.getElementById('heroTitle').innerHTML = dict.heroTitle;
+document.getElementById('heroLede').textContent = dict.heroLede;
+document.getElementById('prop1').textContent = dict.prop1;
+document.getElementById('prop2').textContent = dict.prop2;
+document.getElementById('prop3').textContent = dict.prop3;
+document.getElementById('signupLink').textContent = dict.signup;
+document.getElementById('loginLink').textContent = dict.login;
+document.getElementById('termsLink').textContent = dict.terms;
+document.getElementById('privacyLink').textContent = dict.privacy;
 document.getElementById('htmlRoot').lang = lang;
 
 // "auto sign" lives here (the phone/app entry point) — if already logged
