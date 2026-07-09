@@ -503,6 +503,12 @@
         <span data-i18n="nav_clients">Clients</span>
         <span style="position:absolute; top:2px; left:34px; width:8px; height:8px; border-radius:50%; background:var(--brass); z-index:2;"></span>
       </button>
+      <button class="nav-item" data-view="payments" style="position:relative;">
+        <span class="nav-emoji">💳</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        <span data-i18n="nav_payments">Payments</span>
+        <span id="paymentsNavBadge" style="display:none; position:absolute; top:2px; left:34px; width:8px; height:8px; border-radius:50%; background:var(--err); z-index:2;"></span>
+      </button>
     </nav>
     <div class="sidebar-foot">
       <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
@@ -872,6 +878,30 @@
       <p class="page-sub" data-i18n="clients_sub">Everyone who's booked with you, at a glance.</p>
       <div id="clientsArea"></div>
     </div>
+
+    <!-- ============ PAYMENTS ============ -->
+    <div class="view" data-view="payments">
+      <div style="position:relative;">
+        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💳</span>
+        <h1 data-i18n="nav_payments">Payments</h1>
+      </div>
+      <p class="page-sub" data-i18n="payments_sub">Pay your commission and keep proof of every payment.</p>
+
+      <div class="card" style="margin-bottom:24px;" id="paymentsOwedCard"></div>
+
+      <div class="section-title"><span data-i18n="payout_account_title">Pay to</span></div>
+      <div class="card" id="payoutAccountCard" style="margin-bottom:24px;"></div>
+
+      <div class="section-title"><span data-i18n="upload_proof_title">Upload proof of payment</span></div>
+      <div class="card" style="margin-bottom:24px;">
+        <label class="file-btn" for="proofPhotoInput">📎 <span data-i18n="upload_screenshot">Upload screenshot</span></label>
+        <input type="file" id="proofPhotoInput" accept="image/*">
+        <div id="proofUploadMsg" style="font-size:12.5px; margin-top:10px; display:none;"></div>
+      </div>
+
+      <div class="section-title"><span data-i18n="proof_history_title">Your submissions</span></div>
+      <div id="paymentProofsArea"></div>
+    </div>
   </main>
 </div>
 
@@ -939,6 +969,15 @@ const I18N = {
     walkin_no_services:"Turn on at least one service (with a price) in Services first.",
     nav_clients:"Clients", clients_sub:"Everyone who's booked with you, at a glance.",
     empty_clients:"No clients yet.", cr_visits:"visits", cr_visit:"visit", cr_last_visit:"Last visit",
+    nav_payments:"Payments", payments_sub:"Pay your commission and keep proof of every payment.",
+    owed_amount_label:"Commission owed", owed_zero_msg:"You're all settled up — nothing owed right now.",
+    payout_account_title:"Pay to", pay_to_card_label:"Card number", pay_to_name_label:"Card holder",
+    no_payout_set:"The admin hasn't set a payout card yet.",
+    upload_proof_title:"Upload proof of payment", upload_screenshot:"Upload screenshot",
+    proof_uploading:"Uploading…", proof_uploaded_msg:"Sent for review.", proof_upload_failed:"Upload failed — please try again.",
+    proof_history_title:"Your submissions", no_proofs_yet:"No payment proofs submitted yet.",
+    proof_status_pending:"Pending review", proof_status_approved:"Approved", proof_status_rejected:"Rejected",
+    proof_amount_label:"Amount at submission",
     auto_reminders_title:"Client reminders", auto_reminders_sub:"Automatically nudge past clients to rebook after they've gone quiet.",
     auto_reminders_enable:"Enable automatic reminders", auto_reminders_days:"Remind after this many days of inactivity",
     account_section_title:"Account", badge_new:"New",
@@ -1011,6 +1050,15 @@ const I18N = {
     walkin_no_services:"Avval Xizmatlar bo'limida kamida bitta xizmatni narx bilan yoqing.",
     nav_clients:"Mijozlar", clients_sub:"Siz bilan band qilganlarning barchasi, bir qarashda.",
     empty_clients:"Hozircha mijozlar yo'q.", cr_visits:"tashrif", cr_visit:"tashrif", cr_last_visit:"Oxirgi tashrif",
+    nav_payments:"To'lovlar", payments_sub:"Komissiyangizni to'lang va har bir to'lov isbotini saqlang.",
+    owed_amount_label:"To'lanishi kerak bo'lgan komissiya", owed_zero_msg:"Hammasi hisob-kitob qilingan — hozircha qarzingiz yo'q.",
+    payout_account_title:"Quyidagi kartaga to'lang", pay_to_card_label:"Karta raqami", pay_to_name_label:"Karta egasi",
+    no_payout_set:"Admin hali to'lov kartasini belgilamagan.",
+    upload_proof_title:"To'lov isbotini yuklash", upload_screenshot:"Skrinshot yuklash",
+    proof_uploading:"Yuklanmoqda…", proof_uploaded_msg:"Ko'rib chiqish uchun yuborildi.", proof_upload_failed:"Yuklash muvaffaqiyatsiz — qaytadan urinib ko'ring.",
+    proof_history_title:"Sizning yuborganlaringiz", no_proofs_yet:"Hali to'lov isboti yuborilmagan.",
+    proof_status_pending:"Ko'rib chiqilmoqda", proof_status_approved:"Tasdiqlandi", proof_status_rejected:"Rad etildi",
+    proof_amount_label:"Yuborilgan paytdagi summa",
     auto_reminders_title:"Mijozlarga eslatmalar", auto_reminders_sub:"Uzoq vaqt kelmagan mijozlarga avtomatik ravishda qayta band qilishni eslatadi.",
     auto_reminders_enable:"Avtomatik eslatmalarni yoqish", auto_reminders_days:"Necha kun faolsizlikdan so'ng eslatish",
     account_section_title:"Hisob", badge_new:"Yangi",
@@ -1083,6 +1131,15 @@ const I18N = {
     walkin_no_services:"Сначала включите хотя бы одну услугу с ценой в разделе Услуги.",
     nav_clients:"Клиенты", clients_sub:"Все, кто записывался к вам, в одном месте.",
     empty_clients:"Клиентов пока нет.", cr_visits:"визитов", cr_visit:"визит", cr_last_visit:"Последний визит",
+    nav_payments:"Платежи", payments_sub:"Оплатите комиссию и сохраняйте доказательство каждого платежа.",
+    owed_amount_label:"Комиссия к оплате", owed_zero_msg:"Всё оплачено — сейчас долга нет.",
+    payout_account_title:"Платите на карту", pay_to_card_label:"Номер карты", pay_to_name_label:"Владелец карты",
+    no_payout_set:"Админ ещё не указал карту для оплаты.",
+    upload_proof_title:"Загрузить доказательство оплаты", upload_screenshot:"Загрузить скриншот",
+    proof_uploading:"Загрузка…", proof_uploaded_msg:"Отправлено на проверку.", proof_upload_failed:"Не удалось загрузить — попробуйте снова.",
+    proof_history_title:"Ваши отправки", no_proofs_yet:"Доказательства оплаты пока не отправлены.",
+    proof_status_pending:"На проверке", proof_status_approved:"Одобрено", proof_status_rejected:"Отклонено",
+    proof_amount_label:"Сумма на момент отправки",
     auto_reminders_title:"Напоминания клиентам", auto_reminders_sub:"Автоматически напоминать давним клиентам записаться снова, когда они пропадают.",
     auto_reminders_enable:"Включить автоматические напоминания", auto_reminders_days:"Напоминать после стольких дней бездействия",
     account_section_title:"Аккаунт", badge_new:"Новое",
@@ -1155,6 +1212,7 @@ function applyLang(lang){
     renderOverviewBookings();
     renderBookingsList();
     renderCancellationAlert();
+    updatePaymentsNavBadge();
     renderClientsList();
     if(document.querySelector('.view[data-view="analytics"]').classList.contains('active')) renderAnalytics();
     revealViewTitle(document.querySelector('.view.active'));
@@ -1225,6 +1283,7 @@ document.getElementById('sidebarNav').addEventListener('click', (e)=>{
   btn.classList.add('active');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.dataset.view === btn.dataset.view));
   if(btn.dataset.view === 'analytics') renderAnalytics();
+  if(btn.dataset.view === 'payments') renderPayments();
   revealNow(document.querySelector(`.view[data-view="${btn.dataset.view}"]`));
   revealViewTitle(document.querySelector(`.view[data-view="${btn.dataset.view}"]`));
 });
@@ -2236,6 +2295,105 @@ function renderClientsList(){
   `).join('');
 }
 
+/* ---------- payments (commission owed, payout account, proof of payment) ---------- */
+function computeOwedAmount(){
+  const lastSettled = new Date(barberData.last_settled_at || 0);
+  return bookingsData
+    .filter(b => b.status === 'completed' && b.completed_at && new Date(b.completed_at) > lastSettled)
+    .reduce((sum, b) => sum + (b.commission_amount || 0), 0);
+}
+
+function updatePaymentsNavBadge(){
+  const badge = document.getElementById('paymentsNavBadge');
+  if(!badge) return;
+  badge.style.display = computeOwedAmount() > 0 ? 'block' : 'none';
+}
+
+async function renderPayments(){
+  const owed = computeOwedAmount();
+  const owedCard = document.getElementById('paymentsOwedCard');
+  owedCard.innerHTML = owed > 0
+    ? `<div style="font-size:12.5px; color:var(--ink-dim); margin-bottom:6px;">${t('owed_amount_label')}</div>
+       <div class="mono" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:32px; color:var(--brass);">${formatPrice(owed)}</div>`
+    : `<div style="color:var(--ink-dim); font-size:13.5px;">✅ ${t('owed_zero_msg')}</div>`;
+
+  const { data: settings } = await supabaseClient.from('platform_settings').select('*').eq('id', 1).single();
+  const payoutCard = document.getElementById('payoutAccountCard');
+  if(settings && (settings.payout_card_number || settings.payout_card_name)){
+    payoutCard.innerHTML = `
+      <div class="info-row"><span class="k">${t('pay_to_card_label')}</span><span class="v mono">${escapeHtml(settings.payout_card_number || '—')}</span></div>
+      <div class="info-row"><span class="k">${t('pay_to_name_label')}</span><span class="v">${escapeHtml(settings.payout_card_name || '—')}</span></div>
+    `;
+  } else {
+    payoutCard.innerHTML = `<div style="color:var(--ink-dim); font-size:13px;">${t('no_payout_set')}</div>`;
+  }
+
+  renderPaymentProofs();
+}
+
+async function renderPaymentProofs(){
+  const area = document.getElementById('paymentProofsArea');
+  const { data: proofs, error } = await supabaseClient
+    .from('payment_proofs')
+    .select('*')
+    .eq('barber_id', barberData.id)
+    .order('created_at', { ascending:false });
+  if(error || !proofs || proofs.length === 0){
+    area.innerHTML = `<div class="empty-state">${t('no_proofs_yet')}</div>`;
+    return;
+  }
+  const statusColor = { pending:'var(--sun)', approved:'var(--ok)', rejected:'var(--err)' };
+  const items = await Promise.all(proofs.map(async p => {
+    const { data: signed } = await supabaseClient.storage.from('payment-proofs').createSignedUrl(p.screenshot_path, 3600);
+    const imgUrl = signed ? signed.signedUrl : '';
+    return `
+      <div class="client-row" style="align-items:center;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          ${imgUrl ? `<a href="${imgUrl}" target="_blank" rel="noopener"><img src="${imgUrl}" alt="" style="width:50px; height:50px; object-fit:cover; border-radius:8px; border:1px solid var(--line);"></a>` : ''}
+          <div>
+            <div class="cr-name mono">${formatPrice(p.amount_owed)}</div>
+            <div style="font-size:11.5px; color:var(--ink-dim);">${new Date(p.created_at).toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="font-size:11.5px; font-weight:700; color:${statusColor[p.status] || 'var(--ink-dim)'};">${t('proof_status_' + p.status)}</div>
+      </div>
+    `;
+  }));
+  area.innerHTML = items.join('');
+}
+
+document.getElementById('proofPhotoInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const msg = document.getElementById('proofUploadMsg');
+  msg.style.display = 'block';
+  msg.style.color = 'var(--ink-dim)';
+  msg.textContent = t('proof_uploading');
+
+  const ext = file.name.split('.').pop();
+  const path = `${barberData.id}/${crypto.randomUUID()}.${ext}`;
+  const { error: uploadError } = await supabaseClient.storage.from('payment-proofs').upload(path, file);
+  if(uploadError){
+    console.error('Payment proof upload error:', uploadError);
+    msg.style.color = 'var(--err)';
+    msg.textContent = t('proof_upload_failed');
+    return;
+  }
+  const { error: dbError } = await supabaseClient.from('payment_proofs').insert([{
+    barber_id: barberData.id, screenshot_path: path, amount_owed: computeOwedAmount()
+  }]);
+  if(dbError){
+    console.error('Payment proof insert error:', dbError);
+    msg.style.color = 'var(--err)';
+    msg.textContent = t('proof_upload_failed');
+    return;
+  }
+  msg.style.color = 'var(--ok)';
+  msg.textContent = t('proof_uploaded_msg');
+  e.target.value = '';
+  renderPaymentProofs();
+});
+
 /* ---------- walk-in booking ---------- */
 function blocksForWalkinDay(dayKey){
   return availabilityData.filter(b => b.day === dayKey);
@@ -2467,6 +2625,7 @@ function renderCancellationAlert(){
     await supabaseClient.from('bookings').update({ barber_seen_cancellation: true }).in('id', ids);
     unseen.forEach(b => b.barber_seen_cancellation = true);
     renderCancellationAlert();
+    updatePaymentsNavBadge();
   };
 }
 

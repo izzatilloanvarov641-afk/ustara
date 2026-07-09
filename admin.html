@@ -79,6 +79,22 @@
   .empty-state{ text-align:center; padding:56px 20px; border:1px dashed var(--line); border-radius:8px; color:var(--bone-dim); font-size:14px; }
   .btn-secondary{ background:none; border:1px solid var(--line); color:var(--bone); }
   .btn-secondary:hover{ border-color:var(--bone-dim); }
+  .save-msg{ font-size:13px; color:var(--ok); margin-top:12px; display:none; }
+
+  .admin-section-label{
+    font-size:11.5px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--brass); border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:20px;
+  }
+
+  .proof-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin-bottom:14px; display:flex; gap:18px; flex-wrap:wrap; }
+  .proof-thumb{ width:120px; height:120px; border-radius:6px; overflow:hidden; flex-shrink:0; background:var(--bg-alt); border:1px solid var(--line); }
+  .proof-thumb img{ width:100%; height:100%; object-fit:cover; cursor:pointer; }
+  .proof-body{ flex:1; min-width:180px; }
+  .proof-amounts{ display:flex; gap:24px; margin:10px 0 16px; }
+  .proof-amount-label{ font-size:11px; color:var(--bone-dim); text-transform:uppercase; letter-spacing:0.04em; }
+  .proof-amount-value{ font-family:'Fraunces', serif; font-size:20px; color:var(--brass); margin-top:2px; }
+  .proof-mismatch{ color:var(--err) !important; }
+  .proof-actions{ display:flex; gap:10px; }
 </style>
 </head>
 <body>
@@ -117,6 +133,7 @@
 
 <main id="adminMain" style="display:none;">
   <div class="wrap">
+    <div class="admin-section-label" data-i18n="section_approval">Barber approval</div>
     <h1 data-i18n="title">Pending barbers</h1>
     <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
     <div id="pendingArea"></div>
@@ -125,7 +142,27 @@
     <p class="sub" data-i18n="loc_sub">Confirm a barber's pin is a real, findable shop before it appears on the public map.</p>
     <div id="pendingLocationArea"></div>
 
-    <div class="section-title">Revenue</div>
+    <div class="admin-section-label" style="margin-top:64px;" data-i18n="section_payments">Payments</div>
+    <h1 data-i18n="payout_title">Payout account</h1>
+    <p class="sub" data-i18n="payout_sub">Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.</p>
+    <div class="card" style="margin-bottom:52px;">
+      <div class="field-group">
+        <label data-i18n="l_card_number">Card number</label>
+        <input type="text" id="payoutCardNumber" placeholder="8600 0000 0000 0000">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <label data-i18n="l_card_name">Card holder name</label>
+        <input type="text" id="payoutCardName" placeholder="ISLOMOVA D">
+      </div>
+      <button class="btn btn-primary" id="savePayoutBtn" style="width:auto; margin-top:16px;" data-i18n="save_payout">Save payout account</button>
+      <div class="save-msg" id="payoutSaveMsg"></div>
+    </div>
+
+    <h1 data-i18n="proofs_title">Proof of payment</h1>
+    <p class="sub" data-i18n="proofs_sub">Compare the screenshot against the owed amount below it, then mark as paid or reject.</p>
+    <div id="proofsArea"></div>
+
+    <div class="section-title" data-i18n="revenue_title">Revenue overview</div>
     <div class="stat-row" id="revenueStats"></div>
     <div class="card" id="revenueByBarberCard"></div>
   </div>
@@ -155,7 +192,13 @@ const I18N = {
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"yrs",
     approve:"Approve", reject:"Reject", not_set:"—",
     loc_title:"Pending location verification", loc_sub:"Confirm a barber's pin is a real, findable shop before it appears on the public map.",
-    empty_location:"No locations waiting for verification.", view_map:"View on map ↗", verify_location:"Verify location" },
+    empty_location:"No locations waiting for verification.", view_map:"View on map ↗", verify_location:"Verify location",
+    section_approval:"Barber approval", section_payments:"Payments",
+    payout_title:"Payout account", payout_sub:"Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.",
+    l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
+    proofs_title:"Proof of payment", proofs_sub:"Compare the screenshot against the owed amount below it, then mark as paid or reject.",
+    empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
+    mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview" },
   uz:{ logout:"Chiqish", login_title:"Admin kirish", l_email:"Email", l_password:"Parol",
     err_generic:"Email yoki parol noto'g'ri.", login_btn:"Kirish", signup_btn:"Hisob yaratish",
     toggle_signup:'Birinchi marta? <span>Admin hisobini yarating</span>', toggle_login:'Hisobingiz bormi? <span>Kirish</span>',
@@ -165,7 +208,13 @@ const I18N = {
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
     approve:"Tasdiqlash", reject:"Rad etish", not_set:"—",
     loc_title:"Joylashuvni tekshirish kutilmoqda", loc_sub:"Ochiq xaritada ko'rsatishdan oldin sartaroshning belgisi haqiqiy do'kon ekanini tasdiqlang.",
-    empty_location:"Hozircha tekshirish uchun joylashuvlar yo'q.", view_map:"Xaritada ko'rish ↗", verify_location:"Joylashuvni tasdiqlash" },
+    empty_location:"Hozircha tekshirish uchun joylashuvlar yo'q.", view_map:"Xaritada ko'rish ↗", verify_location:"Joylashuvni tasdiqlash",
+    section_approval:"Sartaroshni tasdiqlash", section_payments:"To'lovlar",
+    payout_title:"To'lov kartasi", payout_sub:"Sartaroshlar buni o'zlarining To'lovlar bo'limida ko'rishadi. Istalgan vaqtda o'zgartiring — har bir sartarosh yangisini darhol ko'radi.",
+    l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
+    proofs_title:"To'lov isboti", proofs_sub:"Skrinshotni pastdagi qarz summasi bilan solishtiring, so'ng to'landi deb belgilang yoki rad eting.",
+    empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
+    mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi" },
   ru:{ logout:"Выйти", login_title:"Вход для админа", l_email:"Email", l_password:"Пароль",
     err_generic:"Неверный email или пароль.", login_btn:"Войти", signup_btn:"Создать аккаунт",
     toggle_signup:'Первый раз? <span>Создать аккаунт админа</span>', toggle_login:'Уже есть аккаунт? <span>Войти</span>',
@@ -175,7 +224,13 @@ const I18N = {
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
     approve:"Одобрить", reject:"Отклонить", not_set:"—",
     loc_title:"Локации на проверке", loc_sub:"Подтвердите, что метка барбера — реальный, находимый салон, прежде чем она появится на публичной карте.",
-    empty_location:"Пока нет локаций, ожидающих проверки.", view_map:"Посмотреть на карте ↗", verify_location:"Подтвердить локацию" }
+    empty_location:"Пока нет локаций, ожидающих проверки.", view_map:"Посмотреть на карте ↗", verify_location:"Подтвердить локацию",
+    section_approval:"Подтверждение барберов", section_payments:"Платежи",
+    payout_title:"Карта для выплат", payout_sub:"Барберы видят эту карту на вкладке Платежи. Меняйте в любой момент — каждый барбер сразу увидит новую.",
+    l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
+    proofs_title:"Доказательство оплаты", proofs_sub:"Сравните скриншот с суммой долга под ним, затем отметьте оплаченным или отклоните.",
+    empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
+    mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода" }
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
@@ -247,7 +302,121 @@ async function checkAuthorizedAndEnter(user){
   document.getElementById('adminMain').style.display = 'block';
   loadPending();
   loadPendingLocations();
+  loadPayoutSettings();
+  loadProofs();
   loadRevenue();
+}
+
+/* ---------- payout account ---------- */
+async function loadPayoutSettings(){
+  const { data, error } = await supabaseClient.from('platform_settings').select('*').eq('id', 1).single();
+  if(error){ console.error('Failed to load payout settings:', error); return; }
+  document.getElementById('payoutCardNumber').value = data?.payout_card_number || '';
+  document.getElementById('payoutCardName').value = data?.payout_card_name || '';
+}
+
+document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('savePayoutBtn');
+  const msg = document.getElementById('payoutSaveMsg');
+  btn.disabled = true;
+  const { error } = await supabaseClient.from('platform_settings').update({
+    payout_card_number: document.getElementById('payoutCardNumber').value.trim(),
+    payout_card_name: document.getElementById('payoutCardName').value.trim()
+  }).eq('id', 1);
+  btn.disabled = false;
+  if(error){
+    console.error('Failed to save payout settings:', error);
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
+    msg.style.display = 'block';
+    return;
+  }
+  msg.style.color = 'var(--ok)';
+  msg.textContent = t('saved');
+  msg.style.display = 'block';
+  setTimeout(()=> msg.style.display = 'none', 1800);
+});
+
+/* ---------- proof-of-payment review ---------- */
+function computeOwedForBarber(barberId, bookings, lastSettledAt){
+  const lastSettled = new Date(lastSettledAt || 0);
+  return bookings
+    .filter(b => b.barber_id === barberId && b.status === 'completed' && b.completed_at && new Date(b.completed_at) > lastSettled)
+    .reduce((sum, b) => sum + (b.commission_amount || 0), 0);
+}
+
+async function loadProofs(){
+  const area = document.getElementById('proofsArea');
+  const { data: proofs, error } = await supabaseClient
+    .from('payment_proofs')
+    .select('*, barbers(full_name, last_settled_at)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending:true });
+
+  if(error){ console.error('Failed to load payment proofs:', error); area.innerHTML = ''; return; }
+  if(!proofs || proofs.length === 0){
+    area.innerHTML = `<div class="empty-state" style="margin-bottom:52px;">${t('empty_proofs')}</div>`;
+    return;
+  }
+
+  const { data: completedBookings } = await supabaseClient
+    .from('bookings').select('barber_id, status, completed_at, commission_amount').eq('status', 'completed');
+
+  const rows = await Promise.all(proofs.map(async p => {
+    const { data: signed } = await supabaseClient.storage.from('payment-proofs').createSignedUrl(p.screenshot_path, 3600);
+    const owedNow = computeOwedForBarber(p.barber_id, completedBookings || [], p.barbers?.last_settled_at);
+    const mismatch = owedNow !== Number(p.amount_owed);
+    return `
+      <div class="proof-card">
+        <div class="proof-thumb">
+          ${signed ? `<a href="${signed.signedUrl}" target="_blank" rel="noopener"><img src="${signed.signedUrl}" alt=""></a>` : ''}
+        </div>
+        <div class="proof-body">
+          <h3 style="margin-bottom:2px;">${escapeHtml(p.barbers?.full_name || '—')}</h3>
+          <div class="review-meta">${new Date(p.created_at).toLocaleString()}</div>
+          <div class="proof-amounts">
+            <div>
+              <div class="proof-amount-label">${t('proof_submitted_amount')}</div>
+              <div class="proof-amount-value">${formatPrice(p.amount_owed)}</div>
+            </div>
+            <div>
+              <div class="proof-amount-label">${t('proof_owed_now')}</div>
+              <div class="proof-amount-value${mismatch ? ' proof-mismatch' : ''}">${formatPrice(owedNow)}</div>
+            </div>
+          </div>
+          <div class="proof-actions">
+            <button class="btn btn-approve" data-mark-paid="${p.id}" data-barber="${p.barber_id}">${t('mark_paid')}</button>
+            <button class="btn btn-reject" data-reject-proof="${p.id}">${t('proof_reject')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }));
+  area.innerHTML = rows.join('');
+
+  area.querySelectorAll('[data-mark-paid]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Confirm the screenshot shows this exact amount paid to your card? This resets the barber\'s owed total to zero.')) return;
+      btn.disabled = true;
+      const now = new Date().toISOString();
+      const { error: proofErr } = await supabaseClient.from('payment_proofs')
+        .update({ status: 'approved', reviewed_at: now }).eq('id', btn.dataset.markPaid);
+      const { error: barberErr } = await supabaseClient.from('barbers')
+        .update({ last_settled_at: now }).eq('id', btn.dataset.barber);
+      if(!proofErr && !barberErr){ await loadProofs(); await loadRevenue(); }
+      else { btn.disabled = false; console.error('Mark as paid failed:', proofErr || barberErr); }
+    });
+  });
+  area.querySelectorAll('[data-reject-proof]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Reject this proof? The barber will still owe this commission.')) return;
+      btn.disabled = true;
+      const { error } = await supabaseClient.from('payment_proofs')
+        .update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', btn.dataset.rejectProof);
+      if(!error) await loadProofs();
+      else { btn.disabled = false; console.error('Reject proof failed:', error); }
+    });
+  });
 }
 
 async function loadRevenue(){
