@@ -76,6 +76,14 @@
 
   .foot-link{ text-align:center; font-size:11px; color:var(--ink-dim); padding:2px 6px; }
   .foot-link a{ color:var(--ink); font-weight:600; text-decoration:underline; }
+
+  .install-btn{
+    display:none; width:100%; padding:14px; border-radius:999px; font-size:13px; font-weight:700;
+    cursor:pointer; background:none; border:1.5px dashed var(--line); color:var(--ink-dim);
+    align-items:center; justify-content:center; gap:8px; transition:transform .12s cubic-bezier(.3,1.5,.5,1), border-color .15s ease, color .15s ease;
+  }
+  .install-btn:active{ transform:scale(0.96); }
+  .install-btn:hover{ border-color:var(--brass); color:var(--ink); }
 </style>
 </head>
 <body>
@@ -104,6 +112,8 @@
   <a class="choice-btn secondary" id="loginLink" href="auth.html?tab=login">Sign in</a>
 </div>
 
+<button type="button" class="install-btn" id="installAppBtn">📲 <span id="installBtnText">Install app</span></button>
+
 <div class="foot-link">
   <a href="terms.html" id="termsLink">Terms</a> &amp; <a href="privacy.html" id="privacyLink">Privacy</a>
 </div>
@@ -118,17 +128,17 @@ const I18N = {
     heroTitle:'Find your <em>barber.</em><br>Not just a shop.',
     heroLede:"A barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them.",
     prop1:"Browse real portfolios", prop2:"Book in seconds", prop3:"Rebook your favorite",
-    signup:"Create account", login:"Sign in", terms:"Terms", privacy:"Privacy" },
+    signup:"Create account", login:"Sign in", terms:"Terms", privacy:"Privacy", install:"Install app" },
   uz:{ launch:"Toshkentda ishga tushdi",
     heroTitle:'<em>Sartaroshingizni</em> toping.<br>Shunchaki do\'kon emas.',
     heroLede:"Sartaroshning obro'si sartaroshning o'ziga tegishli — portfolio, mijozlar va bandlovlar u bilan boradi.",
     prop1:"Haqiqiy portfoliolarni ko'ring", prop2:"Soniyalarda band qiling", prop3:"Sevimlingizni qayta band qiling",
-    signup:"Hisob yaratish", login:"Kirish", terms:"Shartlar", privacy:"Maxfiylik" },
+    signup:"Hisob yaratish", login:"Kirish", terms:"Shartlar", privacy:"Maxfiylik", install:"Ilovani o'rnatish" },
   ru:{ launch:"Уже работает в Ташкенте",
     heroTitle:'Найдите своего <em>барбера.</em><br>Не просто салон.',
     heroLede:"Репутация барбера принадлежит барберу — портфолио, клиенты и записи следуют за ним.",
     prop1:"Смотрите реальные портфолио", prop2:"Бронируйте за секунды", prop3:"Повторяйте у любимого барбера",
-    signup:"Создать аккаунт", login:"Войти", terms:"Условия", privacy:"Конфиденциальность" }
+    signup:"Создать аккаунт", login:"Войти", terms:"Условия", privacy:"Конфиденциальность", install:"Установить приложение" }
 };
 
 const storedLang = localStorage.getItem('ustara_lang');
@@ -145,7 +155,32 @@ document.getElementById('signupLink').textContent = dict.signup;
 document.getElementById('loginLink').textContent = dict.login;
 document.getElementById('termsLink').textContent = dict.terms;
 document.getElementById('privacyLink').textContent = dict.privacy;
+document.getElementById('installBtnText').textContent = dict.install;
 document.getElementById('htmlRoot').lang = lang;
+
+// "Install app" — same beforeinstallprompt pattern as the desktop landing
+// page, just shown here since this is the phone/app entry point.
+let deferredInstallPrompt = null;
+const installBtn = document.getElementById('installAppBtn');
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (installBtn && !isStandalone) installBtn.style.display = 'flex';
+});
+
+installBtn.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBtn.style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+});
 
 // "auto sign" lives here (the phone/app entry point) — if already logged
 // in, skip straight to the right dashboard instead of showing the chooser
