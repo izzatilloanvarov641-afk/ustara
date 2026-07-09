@@ -5,64 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ustara — Log in or sign up</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#141414">
+<meta name="theme-color" content="#12151C">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#F7F4EF; --bg-alt:#F1ECE2; --surface:#FFFFFF; --line:#E4DBCB;
-    --ink:#1C1A17; --ink-dim:#6E6656; --brass:#A67C1A; --brass-soft:#C9A227; --err:#c0392b;
+    --bg:#F6F1E4; --bg-alt:#ECE5D2; --surface:#FFFFFF; --line:#D8CFB8;
+    --ink:#1C1A14; --ink-dim:#6B6455; --brass:#A9DB3A; --brass-soft:#CDFF5E; --err:#FF6A4D;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
   body{
-    background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif;
+    background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif;
     min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
     -webkit-font-smoothing:antialiased; line-height:1.5;
   }
   a{ color:inherit; text-decoration:none; }
   .card{
     width:100%; max-width:420px; background:var(--surface); border:1px solid var(--line);
-    border-radius:12px; padding:40px 36px; box-shadow:0 30px 60px -28px rgba(28,26,23,0.18);
+    border-radius:16px; padding:40px 36px; box-shadow:0 30px 60px -28px rgba(28,26,20,0.18);
   }
-  .logo{ font-family:'Fraunces', serif; font-size:22px; text-align:center; margin-bottom:30px; display:block; }
+  .logo{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:22px; text-align:center; margin-bottom:30px; display:block; }
   .logo em{ font-style:italic; color:var(--brass); }
 
-  .tabs{ display:flex; border:1px solid var(--line); border-radius:24px; padding:3px; margin-bottom:28px; }
-  .tabs button{ flex:1; background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:13px; font-weight:600; padding:10px; border-radius:20px; cursor:pointer; transition:all .15s ease; }
-  .tabs button.active{ background:var(--brass); color:var(--bg); }
+  .tabs{ display:flex; border:1px solid var(--line); border-radius:999px; padding:3px; margin-bottom:28px; }
+  .tabs button{ flex:1; background:none; border:none; color:var(--ink-dim); font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:600; padding:10px; border-radius:999px; cursor:pointer; transition:all .15s ease; }
+  .tabs button.active{ background:var(--brass); color:var(--ink); }
 
-  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:24px; text-align:center; margin-bottom:22px; }
+  h1{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:24px; text-align:center; margin-bottom:22px; }
 
-  .role-toggle{ display:flex; border:1px solid var(--line); border-radius:24px; padding:3px; margin-bottom:22px; background:var(--bg-alt); }
-  .role-toggle button{ flex:1; background:none; border:none; color:var(--ink-dim); font-family:'Inter', sans-serif; font-size:13px; font-weight:600; padding:10px; border-radius:20px; cursor:pointer; transition:all .15s ease; }
-  .role-toggle button.active{ background:var(--brass); color:var(--bg); }
+  .role-toggle{ display:flex; border:1px solid var(--line); border-radius:999px; padding:3px; margin-bottom:22px; background:var(--bg-alt); }
+  .role-toggle button{ flex:1; background:none; border:none; color:var(--ink-dim); font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:600; padding:10px; border-radius:999px; cursor:pointer; transition:all .15s ease; }
+  .role-toggle button.active{ background:var(--brass); color:var(--ink); }
   .barber-note{ font-size:12px; color:var(--ink-dim); text-align:center; margin:-10px 0 20px; display:none; }
   .barber-note.active{ display:block; }
 
   .field-group{ margin-bottom:16px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   label{ display:block; font-size:13px; color:var(--ink-dim); margin-bottom:7px; }
-  input{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:13px 15px; border-radius:6px; font-size:14.5px; font-family:'Inter', sans-serif; }
+  label .optional{ font-weight:400; opacity:0.7; }
+  input{ width:100%; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:13px 15px; border-radius:12px; font-size:14.5px; font-family:'IBM Plex Sans', sans-serif; }
   input:focus{ outline:none; border-color:var(--brass); }
   .error-text{ font-size:12.5px; color:var(--err); margin-top:14px; display:none; text-align:center; }
-  .info-text{ font-size:12.5px; color:var(--brass); margin-top:14px; display:none; text-align:center; line-height:1.6; }
-  .info-text a{ color:var(--brass); font-weight:600; text-decoration:underline; }
-  .btn{ width:100%; background:var(--brass); color:var(--bg); border:none; padding:14px; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; transition:background .15s ease; }
+  .info-text{ font-size:12.5px; color:var(--brass-soft); background:var(--bg-alt); border-radius:12px; padding:14px; margin-top:14px; display:none; text-align:center; line-height:1.6; }
+  .info-text a{ color:var(--ink); font-weight:600; text-decoration:underline; }
+  .btn{ width:100%; background:var(--brass); color:var(--ink); border:none; padding:14px; border-radius:999px; font-size:14px; font-weight:700; cursor:pointer; margin-top:6px; transition:background .15s ease, transform .12s cubic-bezier(.3,1.5,.5,1); }
   .btn:hover{ background:var(--brass-soft); }
+  .btn:active{ transform:scale(0.98); }
   .btn:disabled{ opacity:0.5; cursor:not-allowed; }
   .form-panel{ display:none; }
   .form-panel.active{ display:block; }
   .foot-link{ text-align:center; font-size:13px; color:var(--ink-dim); margin-top:22px; }
-  .foot-link a{ color:var(--brass); font-weight:600; }
+  .foot-link a{ color:var(--ink); font-weight:600; text-decoration:underline; }
+
+  /* language step, shown right after signup succeeds */
+  .lang-step{ display:none; }
+  .lang-step.active{ display:block; }
+  .lang-step p{ text-align:center; color:var(--ink-dim); font-size:13.5px; margin-bottom:24px; }
+  .lang-options{ display:flex; flex-direction:column; gap:10px; }
+  .lang-option{
+    display:flex; align-items:center; justify-content:space-between; width:100%; padding:16px 20px;
+    border-radius:14px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif; font-size:15px; font-weight:600; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .lang-option:hover{ border-color:var(--brass); background:var(--bg-alt); }
+  .lang-option span.native{ color:var(--ink-dim); font-weight:400; font-size:13px; }
 </style>
 </head>
 <body>
 <div class="card">
   <a href="index.html" class="logo">ust<em>a</em>ra</a>
 
-  <div class="tabs">
+  <div class="tabs" id="authTabs">
     <button type="button" class="active" data-tab="login" data-i18n="tab_login">Log in</button>
     <button type="button" data-tab="signup" data-i18n="tab_signup">Sign up</button>
   </div>
@@ -86,17 +103,34 @@
     </div>
     <p class="barber-note" id="barberNote" data-i18n="barber_note">Barber profiles are reviewed before going live — usually within a day.</p>
     <form id="signupForm">
-      <div class="field-group"><label data-i18n="l_name">Full name</label><input type="text" id="signupName" required></div>
+      <div class="field-row">
+        <div class="field-group"><label data-i18n="l_first_name">Legal first name</label><input type="text" id="signupFirstName" required></div>
+        <div class="field-group"><label data-i18n="l_last_name">Legal surname</label><input type="text" id="signupLastName" required></div>
+      </div>
       <div class="field-group"><label data-i18n="l_phone">Phone number</label><input type="tel" id="signupPhone" placeholder="+998 90 123 45 67" required></div>
+      <div class="field-group"><label data-i18n="l_telegram"><span data-i18n="l_telegram_label">Telegram profile</span> <span class="optional" data-i18n="l_optional">(optional)</span></label><input type="text" id="signupTelegram" placeholder="@username"></div>
       <div class="field-group"><label data-i18n="l_email">Email</label><input type="email" id="signupEmail" required></div>
       <div class="field-group"><label data-i18n="l_password">Password</label><input type="password" id="signupPassword" minlength="6" required></div>
       <div class="error-text" id="signupError" data-i18n="err_signup">Something went wrong. Try again.</div>
       <button type="submit" class="btn" id="signupBtn" data-i18n="submit_signup">Create account</button>
     </form>
-    <div class="info-text" id="signupInfo"></div>
   </div>
 
-  <div class="foot-link">
+  <div class="form-panel lang-step" data-panel="lang">
+    <h1 data-i18n="lang_title">Choose your language</h1>
+    <p data-i18n="lang_sub">You can always change this later in Account settings.</p>
+    <div class="lang-options">
+      <button type="button" class="lang-option" data-lang="en">English <span class="native">EN</span></button>
+      <button type="button" class="lang-option" data-lang="uz">O'zbekcha <span class="native">UZ</span></button>
+      <button type="button" class="lang-option" data-lang="ru">Русский <span class="native">RU</span></button>
+    </div>
+  </div>
+
+  <div class="form-panel" data-panel="postlang">
+    <div class="info-text" id="signupInfo" style="display:block;"></div>
+  </div>
+
+  <div class="foot-link" id="footLinks">
     <span data-i18n="legal_prefix">By continuing, you agree to our</span>
     <a href="terms.html" data-i18n="foot_terms">Terms</a> &amp;
     <a href="privacy.html" data-i18n="foot_privacy">Privacy</a>
@@ -110,7 +144,8 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 const I18N = {
   en:{ tab_login:"Log in", tab_signup:"Sign up",
     login_title:"Welcome back", signup_title:"Create your account",
-    l_email:"Email", l_password:"Password", l_name:"Full name", l_phone:"Phone number",
+    l_email:"Email", l_password:"Password", l_first_name:"Legal first name", l_last_name:"Legal surname",
+    l_phone:"Phone number", l_telegram_label:"Telegram profile", l_optional:"(optional)",
     role_client:"I'm a client", role_barber:"I'm a barber",
     barber_note:"Barber profiles are reviewed before going live — usually within a day.",
     err_login:"Incorrect email or password.", err_signup:"Something went wrong. Try again.",
@@ -119,10 +154,12 @@ const I18N = {
     check_email_barber:'Account created — check your email to activate it. Your profile will also need a quick review before you can log in; we\'ll email you once it\'s approved.',
     pending_after_signup:"Account created — your barber profile is now pending review. We'll email you once it's approved.",
     submit_login:"Log in", submit_signup:"Create account",
+    lang_title:"Choose your language", lang_sub:"You can always change this later in Account settings.",
     legal_prefix:"By continuing, you agree to our", foot_terms:"Terms", foot_privacy:"Privacy" },
   uz:{ tab_login:"Kirish", tab_signup:"Ro'yxatdan o'tish",
     login_title:"Xush kelibsiz", signup_title:"Hisob yarating",
-    l_email:"Email", l_password:"Parol", l_name:"To'liq ism", l_phone:"Telefon raqami",
+    l_email:"Email", l_password:"Parol", l_first_name:"Ismingiz (hujjatdagidek)", l_last_name:"Familiyangiz (hujjatdagidek)",
+    l_phone:"Telefon raqami", l_telegram_label:"Telegram profili", l_optional:"(ixtiyoriy)",
     role_client:"Men mijozman", role_barber:"Men sartaroshman",
     barber_note:"Sartarosh profillari faollashtirishdan oldin ko'rib chiqiladi — odatda bir kun ichida.",
     err_login:"Email yoki parol noto'g'ri.", err_signup:"Xatolik yuz berdi. Qayta urinib ko'ring.",
@@ -131,10 +168,12 @@ const I18N = {
     check_email_barber:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring. Profilingiz kirishdan oldin qisqacha ko\'rib chiqiladi — tasdiqlangach xabar beramiz.',
     pending_after_signup:"Hisob yaratildi — sartarosh profilingiz endi ko'rib chiqilmoqda. Tasdiqlangach sizga email orqali xabar beramiz.",
     submit_login:"Kirish", submit_signup:"Hisob yaratish",
+    lang_title:"Tilni tanlang", lang_sub:"Buni keyinroq Hisob sozlamalarida o'zgartirishingiz mumkin.",
     legal_prefix:"Davom etish orqali siz quyidagilarga rozilik bildirasiz:", foot_terms:"Shartlar", foot_privacy:"Maxfiylik" },
   ru:{ tab_login:"Войти", tab_signup:"Регистрация",
     login_title:"С возвращением", signup_title:"Создайте аккаунт",
-    l_email:"Email", l_password:"Пароль", l_name:"Полное имя", l_phone:"Номер телефона",
+    l_email:"Email", l_password:"Пароль", l_first_name:"Имя (как в документе)", l_last_name:"Фамилия (как в документе)",
+    l_phone:"Номер телефона", l_telegram_label:"Профиль Telegram", l_optional:"(необязательно)",
     role_client:"Я клиент", role_barber:"Я барбер",
     barber_note:"Профили барберов проверяются перед публикацией — обычно в течение дня.",
     err_login:"Неверный email или пароль.", err_signup:"Что-то пошло не так. Попробуйте снова.",
@@ -143,12 +182,14 @@ const I18N = {
     check_email_barber:'Аккаунт создан — проверьте почту, чтобы активировать его. Профиль также пройдёт короткую проверку перед входом — сообщим по email, когда он будет одобрен.',
     pending_after_signup:"Аккаунт создан — ваш профиль барбера сейчас на проверке. Сообщим по email, когда он будет одобрен.",
     submit_login:"Войти", submit_signup:"Создать аккаунт",
+    lang_title:"Выберите язык", lang_sub:"Вы всегда можете изменить это позже в настройках аккаунта.",
     legal_prefix:"Продолжая, вы соглашаетесь с нашими", foot_terms:"Условия", foot_privacy:"Конфиденциальность" }
 };
 
 const params = new URLSearchParams(window.location.search);
+const storedLang = localStorage.getItem('ustara_lang');
 const browserLang = (navigator.language || 'en').slice(0,2);
-const currentLang = I18N[browserLang] ? browserLang : 'en';
+const currentLang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
 let signupRole = params.get('role') === 'barber' ? 'barber' : 'client';
 const refCode = params.get('ref');
 if(refCode) localStorage.setItem('ustara_pending_ref', refCode);
@@ -160,12 +201,18 @@ function applyI18n(){
   });
 }
 applyI18n();
+document.getElementById('htmlRoot').lang = currentLang;
 
-function setTab(tab){
-  document.querySelectorAll('.tabs button').forEach(b=> b.classList.toggle('active', b.dataset.tab === tab));
-  document.querySelectorAll('.form-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel === tab));
+function showPanel(panel){
+  document.querySelectorAll('.form-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel === panel));
+  document.getElementById('authTabs').style.display = (panel === 'login' || panel === 'signup') ? 'flex' : 'none';
+  document.getElementById('footLinks').style.display = (panel === 'login' || panel === 'signup') ? 'block' : 'none';
 }
-document.querySelectorAll('.tabs button').forEach(btn=>{
+function setTab(tab){
+  document.querySelectorAll('#authTabs button').forEach(b=> b.classList.toggle('active', b.dataset.tab === tab));
+  showPanel(tab);
+}
+document.querySelectorAll('#authTabs button').forEach(btn=>{
   btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
 });
 if(params.get('tab') === 'signup' || params.get('role') === 'barber') setTab('signup');
@@ -220,24 +267,28 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   btn.disabled = false; btn.textContent = orig;
 });
 
+// what to do once the user has picked a language after signing up —
+// set right before we show the language step
+let afterLangChoice = null;
+
 document.getElementById('signupForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  const form = this;
   const btn = document.getElementById('signupBtn');
   const err = document.getElementById('signupError');
-  const info = document.getElementById('signupInfo');
   err.style.display = 'none';
-  info.style.display = 'none';
   btn.disabled = true; const orig = btn.textContent; btn.textContent = '...';
 
   const email = document.getElementById('signupEmail').value.trim();
   const password = document.getElementById('signupPassword').value;
-  const fullName = document.getElementById('signupName').value.trim();
+  const firstName = document.getElementById('signupFirstName').value.trim();
+  const lastName = document.getElementById('signupLastName').value.trim();
+  const fullName = `${firstName} ${lastName}`.trim();
   const phone = document.getElementById('signupPhone').value.trim();
+  const telegram = document.getElementById('signupTelegram').value.trim();
 
   const { data: authData, error: authError } = await supabaseClient.auth.signUp({
     email, password,
-    options: { data: { role: signupRole, full_name: fullName, phone: phone } }
+    options: { data: { role: signupRole, full_name: fullName, phone: phone, telegram_username: telegram || null } }
   });
   btn.disabled = false; btn.textContent = orig;
   if(authError){
@@ -246,25 +297,34 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     return;
   }
 
-  if(authData.session){
-    if(signupRole === 'client'){
-      const pendingRef = localStorage.getItem('ustara_pending_ref');
-      if(pendingRef){
-        await supabaseClient.rpc('record_referral', { p_code: pendingRef }).catch(()=>{});
-        localStorage.removeItem('ustara_pending_ref');
+  afterLangChoice = async ()=>{
+    if(authData.session){
+      if(signupRole === 'client'){
+        const pendingRef = localStorage.getItem('ustara_pending_ref');
+        if(pendingRef){
+          await supabaseClient.rpc('record_referral', { p_code: pendingRef }).catch(()=>{});
+          localStorage.removeItem('ustara_pending_ref');
+        }
+        window.location.href = 'client-dashboard.html';
+      } else {
+        await supabaseClient.auth.signOut();
+        showPanel('postlang');
+        document.getElementById('signupInfo').textContent = t('pending_after_signup');
       }
-      window.location.href = 'client-dashboard.html';
     } else {
-      await supabaseClient.auth.signOut();
-      form.style.display = 'none';
-      info.textContent = t('pending_after_signup');
-      info.style.display = 'block';
+      showPanel('postlang');
+      document.getElementById('signupInfo').textContent =
+        signupRole === 'client' ? t('check_email_client') : t('check_email_barber');
     }
-  } else {
-    form.style.display = 'none';
-    info.textContent = signupRole === 'client' ? t('check_email_client') : t('check_email_barber');
-    info.style.display = 'block';
-  }
+  };
+  showPanel('lang');
+});
+
+document.querySelectorAll('.lang-option').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    localStorage.setItem('ustara_lang', btn.dataset.lang);
+    if(afterLangChoice) await afterLangChoice();
+  });
 });
 
 supabaseClient.auth.getSession().then(({ data })=>{

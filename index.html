@@ -584,19 +584,12 @@ const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-(async function checkExistingSession(){
-  const { data } = await supabaseClient.auth.getSession();
-  if(!data.session) return; // not logged in — show the landing page normally
-
-  const userId = data.session.user.id;
-  const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
-  if(client){ window.location.replace('client-dashboard.html'); return; }
-
-  const { data: barber } = await supabaseClient.from('barbers').select('id').eq('id', userId).single();
-  if(barber){ window.location.replace('barber-dashboard.html'); return; }
-  // if neither matches (edge case: auth user with no profile row), fall
-  // through and just show the landing page normally
-})();
+// Phones get the minimal "app" entry (no landing page, just Create
+// account / Sign in) — desktop always sees the full landing page below
+// and must tap Sign in themselves, even if a session already exists.
+if(window.innerWidth <= 640){
+  window.location.replace('app-entry.html');
+}
 
 let currentLang = 'en';
 
@@ -624,10 +617,11 @@ function applyLang(lang){
 
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
   const btn = e.target.closest('button[data-lang]');
-  if(btn) applyLang(btn.dataset.lang);
+  if(btn){ applyLang(btn.dataset.lang); localStorage.setItem('ustara_lang', btn.dataset.lang); }
 });
 
-applyLang('en');
+const storedLang = localStorage.getItem('ustara_lang');
+applyLang(I18N[storedLang] ? storedLang : 'en');
 
 const revealEls = document.querySelectorAll('.reveal');
 const io = new IntersectionObserver((entries)=>{

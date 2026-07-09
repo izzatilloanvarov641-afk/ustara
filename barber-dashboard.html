@@ -1190,7 +1190,8 @@ const I18N = {
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
-let currentLang = I18N[browserLang] ? browserLang : 'en';
+const storedLang = localStorage.getItem('ustara_lang');
+let currentLang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
 function t(key){ return I18N[currentLang][key]; }
 
 function applyLang(lang){
@@ -1229,7 +1230,7 @@ let currentBookingFilter = 'all';
 applyLang(currentLang);
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
   const btn = e.target.closest('.lang-btn');
-  if(btn) applyLang(btn.dataset.lang);
+  if(btn){ applyLang(btn.dataset.lang); localStorage.setItem('ustara_lang', btn.dataset.lang); }
 });
 
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
