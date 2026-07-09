@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ustara</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#12151C">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#F6F1E4; --surface:#ECE5D2; --line:#D8CFB8; --ink:#1C1A14; --ink-dim:#6B6455;
+    --brass:#A9DB3A; --brass-soft:#CDFF5E;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px 28px calc(32px + env(safe-area-inset-bottom)); -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .logo{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:30px; margin-bottom:6px; }
+  .logo em{ font-style:italic; color:var(--brass); }
+  .tagline{ color:var(--ink-dim); font-size:14px; margin-bottom:56px; text-align:center; }
+  .choices{ width:100%; max-width:340px; display:flex; flex-direction:column; gap:14px; }
+  .choice-btn{
+    width:100%; padding:18px; border-radius:999px; font-size:15px; font-weight:700; cursor:pointer;
+    border:none; text-align:center; transition:transform .12s cubic-bezier(.3,1.5,.5,1);
+  }
+  .choice-btn:active{ transform:scale(0.96); }
+  .choice-btn.primary{ background:var(--brass); color:var(--ink); }
+  .choice-btn.secondary{ background:var(--surface); color:var(--ink); border:1px solid var(--line); }
+  .foot-link{ text-align:center; font-size:12px; color:var(--ink-dim); margin-top:40px; }
+  .foot-link a{ color:var(--ink); font-weight:600; text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="logo">ust<em>a</em>ra</div>
+<p class="tagline" id="tagline">Find your barber. Not just a shop.</p>
+
+<div class="choices">
+  <a class="choice-btn primary" id="signupLink" href="auth.html?tab=signup">Create account</a>
+  <a class="choice-btn secondary" id="loginLink" href="auth.html?tab=login">Sign in</a>
+</div>
+
+<div class="foot-link">
+  <a href="terms.html">Terms</a> &amp; <a href="privacy.html">Privacy</a>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const I18N = {
+  en:{ tagline:"Find your barber. Not just a shop.", signup:"Create account", login:"Sign in", terms:"Terms", privacy:"Privacy" },
+  uz:{ tagline:"Sartaroshingizni toping. Shunchaki do'kon emas.", signup:"Hisob yaratish", login:"Kirish", terms:"Shartlar", privacy:"Maxfiylik" },
+  ru:{ tagline:"Найдите своего барбера. Не просто салон.", signup:"Создать аккаунт", login:"Войти", terms:"Условия", privacy:"Конфиденциальность" }
+};
+const storedLang = localStorage.getItem('ustara_lang');
+const browserLang = (navigator.language || 'en').slice(0,2);
+const lang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
+document.getElementById('tagline').textContent = I18N[lang].tagline;
+document.getElementById('signupLink').textContent = I18N[lang].signup;
+document.getElementById('loginLink').textContent = I18N[lang].login;
+document.getElementById('htmlRoot').lang = lang;
+
+// "auto sign" lives here (the phone/app entry point) — if already logged
+// in, skip straight to the right dashboard instead of showing the chooser
+(async function checkExistingSession(){
+  const { data } = await supabaseClient.auth.getSession();
+  if(!data.session) return;
+  const userId = data.session.user.id;
+  const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
+  if(client){ window.location.replace('client-dashboard.html'); return; }
+  const { data: barber } = await supabaseClient.from('barbers').select('id').eq('id', userId).single();
+  if(barber){ window.location.replace('barber-dashboard.html'); return; }
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(console.warn);
+    });
+  }
+</script>
+</body>
+</html>

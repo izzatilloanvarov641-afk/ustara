@@ -928,7 +928,8 @@ const I18N = {
   }
 };
 
-let currentLang = 'en';
+const _storedLang = localStorage.getItem('ustara_lang');
+let currentLang = ['en','uz','ru'].includes(_storedLang) ? _storedLang : 'en';
 let clientData = null;
 let userEmail = '';
 let bookingsData = [];
@@ -1018,7 +1019,7 @@ function applyLang(lang){
 
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
   const btn = e.target.closest('.lang-btn');
-  if(btn) applyLang(btn.dataset.lang);
+  if(btn){ applyLang(btn.dataset.lang); localStorage.setItem('ustara_lang', btn.dataset.lang); }
 });
 
 /* ---------- navigation ---------- */
