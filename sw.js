@@ -6,7 +6,7 @@
 // Bump this on any release that changes cached static assets (icons etc.) —
 // assets are served cache-first, so without a new cache name returning
 // visitors keep old copies forever.
-const CACHE_NAME = 'ustara-v2';
+const CACHE_NAME = 'ustara-v3';
 const APP_SHELL = [
   '/index.html',
   '/app-entry.html',
@@ -45,8 +45,12 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          // Only cache good responses — caching a 404/500 here would make
+          // the offline fallback serve that error page forever after.
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return response;
         })
         .catch(() => caches.match(event.request))
