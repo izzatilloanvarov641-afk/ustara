@@ -1629,16 +1629,18 @@ function renderAnalytics(){
 
   // revenue by service, within the selected period
   const svcTotals = {};
+  const svcLabels = {};
   inPeriod.forEach(b=>{
     const key = b.service_key || 'other';
     svcTotals[key] = (svcTotals[key] || 0) + (Number(b.service_price)||0);
+    if(b.service_label) svcLabels[key] = b.service_label;
   });
   const svcEntries = Object.entries(svcTotals).sort((a,b)=> b[1]-a[1]);
   const svcMax = svcEntries.length ? svcEntries[0][1] : 0;
   const breakdownEl = document.getElementById('anServiceBreakdown');
   breakdownEl.innerHTML = svcEntries.length
     ? svcEntries.map(([key, amt])=>{
-        const name = serviceLabel(key);
+        const name = serviceLabel(key) !== key ? serviceLabel(key) : (svcLabels[key] || key);
         const pct = svcMax ? Math.round(amt/svcMax*100) : 0;
         return `<div class="an-svc-row"><span>${escapeHtml(name)}</span><span class="an-svc-bar" style="--pct:${pct}%;"></span><span>${formatPrice(amt)}</span></div>`;
       }).join('')
@@ -2151,7 +2153,7 @@ function serviceLabel(key){
 }
 
 function bookingRowHtml(b, withActions = true){
-  const svcName = b.service_key ? serviceLabel(b.service_key) : '';
+  const svcName = b.service_label || (b.service_key ? serviceLabel(b.service_key) : '');
   const statusLabel = t(b.status) || b.status;
   const meta = BOOKING_STATUS_META[b.status] || BOOKING_STATUS_META.pending;
   const refPhoto = b.reference_photo_url
@@ -2581,7 +2583,8 @@ function openWalkinModal(){
       barber_id: barberData.id, client_id: null,
       client_name: name || phone, client_phone: phone,
       start_time: selectedSlotIso, status: 'confirmed',
-      service_key: selectedService.key, service_duration_minutes: selectedService.duration,
+      service_key: selectedService.key, service_label: serviceLabel(selectedService.key),
+      service_duration_minutes: selectedService.duration,
       service_price: selectedService.price
     }]);
 
