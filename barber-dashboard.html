@@ -728,6 +728,15 @@
             </div>
           </div>
         </div>
+
+        <div class="chip-row">
+          <div class="chip-row-icon" style="background:var(--err); color:#fff;">🗑️</div>
+          <div class="chip-row-body">
+            <div class="chip-row-title" data-i18n="delete_account_link">Delete my account</div>
+            <div class="chip-row-sub" data-i18n="delete_account_row_sub">Permanently deletes your profile, bookings, services, and photos.</div>
+            <button class="btn" id="deleteAccountLink" style="margin-top:10px; padding:8px 14px; font-size:12.5px; background:none; border:1px solid var(--err); color:var(--err);" data-i18n="delete_account_link">Delete my account</button>
+          </div>
+        </div>
       </div>
 
       <div class="section-title">
@@ -982,6 +991,15 @@ const I18N = {
     auto_reminders_enable:"Enable automatic reminders", auto_reminders_days:"Remind after this many days of inactivity",
     account_section_title:"Account", badge_new:"New",
     nav_photos:"Photos", nav_bookings:"Bookings", logout:"Log out",
+    delete_account_link:"Delete my account",
+    delete_account_row_sub:"Permanently deletes your profile, bookings, services, and photos.",
+    delete_account_title:"Delete your account?",
+    delete_account_body:"This permanently deletes your profile, services, bookings, and photos. This can't be undone.",
+    delete_account_confirm_label:"Type DELETE to confirm",
+    delete_account_btn:"Delete my account", delete_account_cancel:"Cancel",
+    delete_account_wrong_word:"Type DELETE exactly to confirm.",
+    delete_account_failed:"Couldn't delete your account — please try again or contact support.",
+    delete_account_deleting:"Deleting…",
     foot_terms:"Terms", foot_privacy:"Privacy",
     ov_title:"Welcome back", ov_sub:"Here's where things stand today.",
     stat_upcoming:"Upcoming bookings", stat_pending:"Awaiting your confirmation", stat_services:"Active services",
@@ -1063,6 +1081,15 @@ const I18N = {
     auto_reminders_enable:"Avtomatik eslatmalarni yoqish", auto_reminders_days:"Necha kun faolsizlikdan so'ng eslatish",
     account_section_title:"Hisob", badge_new:"Yangi",
     nav_photos:"Suratlar", nav_bookings:"Bandlar", logout:"Chiqish",
+    delete_account_link:"Hisobimni o'chirish",
+    delete_account_row_sub:"Bu profilingiz, bandlovlaringiz, xizmatlaringiz va suratlaringizni butunlay o'chiradi.",
+    delete_account_title:"Hisobingizni o'chirasizmi?",
+    delete_account_body:"Bu profilingiz, xizmatlaringiz, bandlovlaringiz va suratlaringizni butunlay o'chiradi. Buni ortga qaytarib bo'lmaydi.",
+    delete_account_confirm_label:"Tasdiqlash uchun DELETE deb yozing",
+    delete_account_btn:"Hisobimni o'chirish", delete_account_cancel:"Bekor qilish",
+    delete_account_wrong_word:"Tasdiqlash uchun aynan DELETE deb yozing.",
+    delete_account_failed:"Hisobingizni o'chirib bo'lmadi — qaytadan urinib ko'ring yoki qo'llab-quvvatlash xizmatiga murojaat qiling.",
+    delete_account_deleting:"O'chirilmoqda…",
     foot_terms:"Shartlar", foot_privacy:"Maxfiylik",
     ov_title:"Xush kelibsiz", ov_sub:"Bugungi holat shu yerda.",
     stat_upcoming:"Kelgusi bandlar", stat_pending:"Tasdiqlashingizni kutmoqda", stat_services:"Faol xizmatlar",
@@ -1144,6 +1171,15 @@ const I18N = {
     auto_reminders_enable:"Включить автоматические напоминания", auto_reminders_days:"Напоминать после стольких дней бездействия",
     account_section_title:"Аккаунт", badge_new:"Новое",
     nav_photos:"Фото", nav_bookings:"Записи", logout:"Выйти",
+    delete_account_link:"Удалить аккаунт",
+    delete_account_row_sub:"Это навсегда удалит ваш профиль, записи, услуги и фото.",
+    delete_account_title:"Удалить ваш аккаунт?",
+    delete_account_body:"Это навсегда удалит ваш профиль, услуги, записи и фото. Отменить это нельзя.",
+    delete_account_confirm_label:"Введите DELETE для подтверждения",
+    delete_account_btn:"Удалить аккаунт", delete_account_cancel:"Отмена",
+    delete_account_wrong_word:"Введите ровно DELETE для подтверждения.",
+    delete_account_failed:"Не удалось удалить аккаунт — попробуйте снова или обратитесь в поддержку.",
+    delete_account_deleting:"Удаление…",
     foot_terms:"Условия", foot_privacy:"Конфиденциальность",
     ov_title:"С возвращением", ov_sub:"Вот как обстоят дела сегодня.",
     stat_upcoming:"Предстоящие записи", stat_pending:"Ждут вашего подтверждения", stat_services:"Активные услуги",
@@ -2759,6 +2795,68 @@ document.getElementById('saveLocationBtn').addEventListener('click', async ()=>{
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
   window.location.href = 'index.html';
+});
+
+/* ---------- delete account (Play Store requires an in-app way to do this) ---------- */
+document.getElementById('deleteAccountLink').addEventListener('click', ()=>{
+  const overlay = document.createElement('div');
+  overlay.className = 'walkin-modal-overlay';
+  overlay.innerHTML = `
+    <div class="walkin-modal">
+      <button class="walkin-modal-close" id="deleteAccountCloseBtn">&times;</button>
+      <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:20px; color:var(--err); margin-bottom:10px;">${t('delete_account_title')}</h2>
+      <p style="font-size:13px; color:var(--ink-dim); margin-bottom:16px; line-height:1.55;">${t('delete_account_body')}</p>
+      <div class="field-group">
+        <label>${t('delete_account_confirm_label')}</label>
+        <input type="text" id="deleteConfirmInput">
+      </div>
+      <div id="deleteAccountErr" style="color:var(--err); font-size:12.5px; margin-bottom:12px; display:none;"></div>
+      <button class="btn" id="confirmDeleteBtn" style="width:100%; background:var(--err); color:#fff;">${t('delete_account_btn')}</button>
+      <div style="text-align:center; font-size:12.5px; color:var(--ink-dim); margin-top:14px; cursor:pointer;" id="cancelDeleteBtn">${t('delete_account_cancel')}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#deleteAccountCloseBtn').addEventListener('click', close);
+  overlay.querySelector('#cancelDeleteBtn').addEventListener('click', close);
+
+  overlay.querySelector('#confirmDeleteBtn').addEventListener('click', async ()=>{
+    const val = overlay.querySelector('#deleteConfirmInput').value.trim();
+    const err = overlay.querySelector('#deleteAccountErr');
+    if(val !== 'DELETE'){
+      err.textContent = t('delete_account_wrong_word');
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    const btn = overlay.querySelector('#confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = t('delete_account_deleting');
+
+    // Best-effort storage cleanup (avatar + portfolio) — never let this
+    // block the actual account/data deletion below.
+    try {
+      const { data: rootFiles } = await supabaseClient.storage.from('barber-media').list(barberData.id);
+      const { data: portfolioFiles } = await supabaseClient.storage.from('barber-media').list(`${barberData.id}/portfolio`);
+      const paths = [
+        ...(rootFiles || []).filter(f => f.id).map(f => `${barberData.id}/${f.name}`),
+        ...(portfolioFiles || []).map(f => `${barberData.id}/portfolio/${f.name}`)
+      ];
+      if(paths.length) await supabaseClient.storage.from('barber-media').remove(paths);
+    } catch(e){ console.warn('Storage cleanup failed (continuing with deletion):', e); }
+
+    const { error } = await supabaseClient.rpc('delete_own_account');
+    if(error){
+      console.error('Account deletion failed:', error);
+      err.textContent = t('delete_account_failed');
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = t('delete_account_btn');
+      return;
+    }
+    await supabaseClient.auth.signOut();
+    window.location.href = 'index.html';
+  });
 });
 
 init();
