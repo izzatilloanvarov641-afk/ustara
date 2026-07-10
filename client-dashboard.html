@@ -1193,7 +1193,7 @@ async function loadHomeBarbers(){
 function bigTileHtml(b){
   const barber = b.barbers || {};
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
-  const svcName = b.service_key ? mapServiceLabel(b.barber_id, b.service_key) : '';
+  const svcName = b.service_label || (b.service_key ? mapServiceLabel(b.barber_id, b.service_key) : '');
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   const qrData = encodeURIComponent(`USTARA-BOOKING-${b.id}`);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
@@ -1241,7 +1241,7 @@ function bookingListRowHtml(b){
   const barber = b.barbers || {};
   const canCancel = (b.status === 'pending' || b.status === 'confirmed') && new Date(b.start_time) > new Date();
   const canRemove = b.status !== 'confirmed'; // never let a confirmed (real upcoming) booking be hidden
-  const svcName = b.service_key ? mapServiceLabel(b.barber_id, b.service_key) : '';
+  const svcName = b.service_label || (b.service_key ? mapServiceLabel(b.barber_id, b.service_key) : '');
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   const shareAction = b.status === 'completed'
     ? (b.after_photo_url
@@ -2208,7 +2208,8 @@ async function showMapDayPicker(b, serviceKey, duration, price, addonKeys = []){
       const { error } = await supabaseClient.from('bookings').insert([{
         barber_id: b.id, client_id: clientData.id,
         client_name: clientData.full_name, client_phone: clientData.phone,
-        start_time: selectedSlotIso, status:'pending', service_key: serviceKey, service_duration_minutes: duration,
+        start_time: selectedSlotIso, status:'pending', service_key: serviceKey,
+        service_label: mapServiceLabel(b.id, serviceKey), service_duration_minutes: duration,
         service_price: price, reference_photo_url: referencePhotoUrl, style_notes: styleNotesToSave,
         addon_keys: addonKeys
       }]);
@@ -2418,7 +2419,7 @@ function attachViewDetailsHandlers(container){
 
 function showBookingDetailsModal(b){
   const barber = b.barbers || {};
-  const svcName = b.service_key ? mapServiceLabel(b.barber_id, b.service_key) : '';
+  const svcName = b.service_label || (b.service_key ? mapServiceLabel(b.barber_id, b.service_key) : '');
   const svcPrice = b.service_price ? formatPrice(b.service_price) : '';
   const hasLocation = barber.latitude && barber.longitude && barber.is_location_verified;
   const overlay = document.createElement('div');

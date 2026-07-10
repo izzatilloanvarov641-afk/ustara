@@ -3,10 +3,13 @@
 // Deliberately simple — does NOT cache API/Supabase requests, so booking
 // data is always fresh; only static pages get cached.
 
-const CACHE_NAME = 'ustara-v1';
+// Bump this on any release that changes cached static assets (icons etc.) —
+// assets are served cache-first, so without a new cache name returning
+// visitors keep old copies forever.
+const CACHE_NAME = 'ustara-v2';
 const APP_SHELL = [
   '/index.html',
-  '/browse.html',
+  '/app-entry.html',
   '/profile.html',
   '/client-dashboard.html',
   '/barber-dashboard.html',
