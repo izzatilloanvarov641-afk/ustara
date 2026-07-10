@@ -734,6 +734,9 @@
     </div>
 
     <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
+    <div style="text-align:center; margin-top:14px;">
+      <span id="deleteAccountLink" style="font-size:12px; color:var(--ink-dim); text-decoration:underline; cursor:pointer;" data-i18n="delete_account_link">Delete my account</span>
+    </div>
 
     <div style="text-align:center; font-size:12px; color:var(--ink-dim); margin-top:18px;">
       <a href="terms.html" data-i18n="foot_terms" style="color:inherit; text-decoration:underline;">Terms</a>
@@ -789,6 +792,14 @@ const I18N = {
     create_share_card:"Create share card", share_action:"Share",
     share_card_line:"Fresh cut by {barber}",
     account_title:"Account", language_title:"Language", logout:"Log out",
+    delete_account_link:"Delete my account",
+    delete_account_title:"Delete your account?",
+    delete_account_body:"This permanently deletes your profile, bookings, favorites, and reviews. This can't be undone.",
+    delete_account_confirm_label:'Type DELETE to confirm',
+    delete_account_btn:"Delete my account", delete_account_cancel:"Cancel",
+    delete_account_wrong_word:"Type DELETE exactly to confirm.",
+    delete_account_failed:"Couldn't delete your account — please try again or contact support.",
+    delete_account_deleting:"Deleting…",
     telegram_title:"Telegram alerts", telegram_sub:"Get booking confirmations and reminders straight to Telegram.",
     telegram_connect_btn:"Connect Telegram", telegram_connected:"Connected", telegram_checking:"Checking…",
     telegram_waiting:"Opening Telegram… come back here once you've tapped Start.",
@@ -839,6 +850,14 @@ const I18N = {
     create_share_card:"Ulashish kartasini yaratish", share_action:"Ulashish",
     share_card_line:"{barber} tomonidan yangi soch turmagi",
     account_title:"Hisob", language_title:"Til", logout:"Chiqish",
+    delete_account_link:"Hisobimni o'chirish",
+    delete_account_title:"Hisobingizni o'chirasizmi?",
+    delete_account_body:"Bu profilingiz, bandlovlaringiz, sevimlilaringiz va sharhlaringizni butunlay o'chiradi. Buni ortga qaytarib bo'lmaydi.",
+    delete_account_confirm_label:"Tasdiqlash uchun DELETE deb yozing",
+    delete_account_btn:"Hisobimni o'chirish", delete_account_cancel:"Bekor qilish",
+    delete_account_wrong_word:"Tasdiqlash uchun aynan DELETE deb yozing.",
+    delete_account_failed:"Hisobingizni o'chirib bo'lmadi — qaytadan urinib ko'ring yoki qo'llab-quvvatlash xizmatiga murojaat qiling.",
+    delete_account_deleting:"O'chirilmoqda…",
     telegram_title:"Telegram xabarnomalari", telegram_sub:"Bandlash tasdiqlari va eslatmalarni to'g'ridan-to'g'ri Telegramda oling.",
     telegram_connect_btn:"Telegramni ulash", telegram_connected:"Ulangan", telegram_checking:"Tekshirilmoqda…",
     telegram_waiting:"Telegram ochilmoqda… Start tugmasini bosgach shu yerga qayting.",
@@ -889,6 +908,14 @@ const I18N = {
     create_share_card:"Создать карточку", share_action:"Поделиться",
     share_card_line:"Свежая стрижка от {barber}",
     account_title:"Аккаунт", language_title:"Язык", logout:"Выйти",
+    delete_account_link:"Удалить аккаунт",
+    delete_account_title:"Удалить ваш аккаунт?",
+    delete_account_body:"Это навсегда удалит ваш профиль, записи, избранное и отзывы. Отменить это нельзя.",
+    delete_account_confirm_label:"Введите DELETE для подтверждения",
+    delete_account_btn:"Удалить аккаунт", delete_account_cancel:"Отмена",
+    delete_account_wrong_word:"Введите ровно DELETE для подтверждения.",
+    delete_account_failed:"Не удалось удалить аккаунт — попробуйте снова или обратитесь в поддержку.",
+    delete_account_deleting:"Удаление…",
     telegram_title:"Уведомления в Telegram", telegram_sub:"Получайте подтверждения и напоминания о записи прямо в Telegram.",
     telegram_connect_btn:"Подключить Telegram", telegram_connected:"Подключено", telegram_checking:"Проверка…",
     telegram_waiting:"Открываем Telegram… вернитесь сюда после нажатия Start.",
@@ -2699,6 +2726,65 @@ function setupStyleProfile(){
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   await supabaseClient.auth.signOut();
   window.location.href = 'index.html';
+});
+
+/* ---------- delete account (Play Store requires an in-app way to do this) ---------- */
+document.getElementById('deleteAccountLink').addEventListener('click', ()=>{
+  const overlay = document.createElement('div');
+  overlay.className = 'details-modal-overlay';
+  overlay.innerHTML = `
+    <div class="details-modal">
+      <button class="details-modal-close">&times;</button>
+      <div class="details-modal-name" style="color:var(--danger);">${t('delete_account_title')}</div>
+      <p style="font-size:13px; color:var(--ink-dim); margin:4px 0 16px; line-height:1.55;">${t('delete_account_body')}</p>
+      <div style="text-align:left; margin-bottom:14px;">
+        <label style="font-size:12px; color:var(--ink-dim); display:block; margin-bottom:6px;">${t('delete_account_confirm_label')}</label>
+        <input type="text" id="deleteConfirmInput" style="width:100%; padding:12px 14px; border-radius:var(--r-input); border:1px solid var(--line); font-size:14px; font-family:'IBM Plex Sans', sans-serif;">
+      </div>
+      <div id="deleteAccountErr" style="color:var(--danger); font-size:12.5px; margin-bottom:10px; display:none;"></div>
+      <button class="review-submit-btn" id="confirmDeleteBtn" style="background:var(--danger); color:#fff;">${t('delete_account_btn')}</button>
+      <div class="review-skip-link" id="cancelDeleteBtn">${t('delete_account_cancel')}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('.details-modal-close').addEventListener('click', close);
+  overlay.querySelector('#cancelDeleteBtn').addEventListener('click', close);
+
+  overlay.querySelector('#confirmDeleteBtn').addEventListener('click', async ()=>{
+    const val = overlay.querySelector('#deleteConfirmInput').value.trim();
+    const err = overlay.querySelector('#deleteAccountErr');
+    if(val !== 'DELETE'){
+      err.textContent = t('delete_account_wrong_word');
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    const btn = overlay.querySelector('#confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = t('delete_account_deleting');
+
+    // Best-effort storage cleanup — never let this block the actual
+    // account/data deletion below.
+    try {
+      const { data: files } = await supabaseClient.storage.from('booking-references').list(clientData.id);
+      if(files && files.length){
+        await supabaseClient.storage.from('booking-references').remove(files.map(f => `${clientData.id}/${f.name}`));
+      }
+    } catch(e){ console.warn('Storage cleanup failed (continuing with deletion):', e); }
+
+    const { error } = await supabaseClient.rpc('delete_own_account');
+    if(error){
+      console.error('Account deletion failed:', error);
+      err.textContent = t('delete_account_failed');
+      err.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = t('delete_account_btn');
+      return;
+    }
+    await supabaseClient.auth.signOut();
+    window.location.href = 'index.html';
+  });
 });
 
 init();
