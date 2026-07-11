@@ -57,35 +57,64 @@ async function sendTelegramMessage(chatId: number, text: string, buttons?: TgBut
   }
 }
 
-// Lightly rephrases a real review into a short teaser. Never invents new
-// claims — if Gemini is unavailable or errors, callers fall back to the
-// raw review text.
-async function polishReviewText(rawText: string, barberName: string): Promise<string | null> {
-  if (!GEMINI_KEY || !rawText.trim()) return null;
+// The review comment itself is always shown verbatim (real social proof,
+// never rewritten). Gemini's job is only the closing invite line — one
+// short, catchy call-to-action that reads differently almost every time.
+// A random "angle" in the prompt plus high temperature gives the variety;
+// if Gemini is down we fall back to a rotating set of prewritten lines.
+const INVITE_ANGLES = [
+  "urgency — good chairs fill up fast",
+  "the feeling of walking out with a fresh cut",
+  "complimenting this barber's craft",
+  "getting ready for the weekend or a big day",
+  "treating yourself, self-care",
+  "no more queues — book a time and walk in",
+  "your next haircut is overdue",
+];
+
+const FALLBACK_INVITES = [
+  "💈 Book your slot — the barber is waiting.",
+  "✂️ One tap and the chair is yours.",
+  "🔥 Slots go fast — grab yours now.",
+  "💈 Your next fresh cut is one tap away.",
+  "✂️ Don't wait in line — book your time.",
+];
+
+async function generateInviteLine(barberName: string, rating: number, comment: string): Promise<string> {
+  const fallback = FALLBACK_INVITES[Math.floor(Math.random() * FALLBACK_INVITES.length)];
+  if (!GEMINI_KEY) return fallback;
   try {
+    const angle = INVITE_ANGLES[Math.floor(Math.random() * INVITE_ANGLES.length)];
     const prompt =
-      `Rewrite this real customer review into one short, upbeat sentence ` +
-      `(max 140 characters) for a push notification, in the same language ` +
-      `as the review. Keep it truthful — don't add details that aren't in ` +
-      `the original. Barber's name is "${barberName}". Review: "${rawText}"`;
+      `You write closing lines for push notifications in a barber-booking app in Tashkent.\n` +
+      `A client just left a ${rating}-star review for barber "${barberName}".` +
+      (comment ? ` The review says: "${comment}".\n` : `\n`) +
+      `Write ONE short invite line (under 90 characters) nudging other clients to book this barber.\n` +
+      `Angle to use this time: ${angle}.\n` +
+      `Write it in the same language as the review text; if there is no review text, use Uzbek.\n` +
+      `You may start with one fitting emoji. No hashtags, no quotes around the line, ` +
+      `no invented facts about the barber — just the invitation. Reply with the line only.`;
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 1.3, topP: 0.95, maxOutputTokens: 60 },
+        }),
       },
     );
     if (!res.ok) {
       console.error("Gemini call failed:", await res.text());
-      return null;
+      return fallback;
     }
     const json = await res.json();
-    const out = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-    return out || null;
+    const out = json?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/^["'«]|["'»]$/g, "");
+    return out || fallback;
   } catch (e) {
     console.error("Gemini error:", e);
-    return null;
+    return fallback;
   }
 }
 
@@ -222,12 +251,14 @@ async function broadcastReview(reviewId: string) {
 
   const barberName = (review as any).barbers?.full_name ?? "a barber";
   const rawComment = (review.comment ?? "").trim();
-  const teaser = rawComment ? (await polishReviewText(rawComment, barberName)) ?? rawComment : null;
+  const inviteLine = await generateInviteLine(barberName, review.rating, rawComment);
 
-  const stars = "⭐".repeat(review.rating) + "☆".repeat(5 - review.rating);
-  const text = teaser
-    ? `${stars} New review for <b>${escapeHtml(barberName)}</b>\n\n“${escapeHtml(teaser)}”`
-    : `${stars} <b>${escapeHtml(barberName)}</b> just got a new ${review.rating}-star review on Ustara.`;
+  // Real comment shown verbatim as social proof; Gemini only writes the
+  // closing invite line. Layout: barber + stars, quoted review, invite.
+  const stars = "⭐".repeat(review.rating);
+  const header = `💈 <b>${escapeHtml(barberName)}</b>  ${stars}`;
+  const quote = rawComment ? `\n\n<i>“${escapeHtml(rawComment)}”</i>` : "";
+  const text = `${header}${quote}\n\n${escapeHtml(inviteLine)}`;
 
   const profileUrl = `${SITE_URL}/profile.html?id=${review.barber_id}`;
 
