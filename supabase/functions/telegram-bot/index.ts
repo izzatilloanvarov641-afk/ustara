@@ -17,7 +17,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Base URL for the "View profile" / "Book now" buttons sent in Telegram messages.
-const SITE_URL = "https://ustara-three.vercel.app";
+const SITE_URL = "https://ustara.org";
 
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
