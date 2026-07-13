@@ -186,6 +186,8 @@ const T = {
        back:"Back", location:"Location", min:"min",
        trust_clients:"Clients", trust_years:"Years exp.", trust_verified:"Verified", sticky_book:"Book with {name}",
        reviews_word:"reviews", reviews_title:"Reviews", new_barber:"New to Ustara",
+       active_booking_notice:"You already have an upcoming booking with {name} on {date}. Cancel it or wait until that day passes before booking again.",
+       active_booking_cta:"Go to my bookings",
        foot_terms:"Terms", foot_privacy:"Privacy" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
@@ -197,6 +199,8 @@ const T = {
        back:"Orqaga", location:"Joylashuv", min:"daq",
        trust_clients:"Mijozlar", trust_years:"Tajriba", trust_verified:"Tasdiqlangan", sticky_book:"{name} bilan band qilish",
        reviews_word:"sharh", reviews_title:"Sharhlar", new_barber:"Ustara'da yangi",
+       active_booking_notice:"Sizda {name} bilan {date} sanasiga band qilingan uchrashuv bor. Yangisini band qilishdan oldin uni bekor qiling yoki o'sha kun o'tishini kuting.",
+       active_booking_cta:"Bandlarimga o'tish",
        foot_terms:"Shartlar", foot_privacy:"Maxfiylik" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
@@ -208,6 +212,8 @@ const T = {
        back:"Назад", location:"Локация", min:"мин",
        trust_clients:"Клиентов", trust_years:"Опыт", trust_verified:"Проверен", sticky_book:"Записаться к {name}",
        reviews_word:"отзывов", reviews_title:"Отзывы", new_barber:"Новичок на Ustara",
+       active_booking_notice:"У вас уже есть предстоящая запись к {name} на {date}. Отмените её или дождитесь, пока этот день пройдёт, чтобы записаться снова.",
+       active_booking_cta:"Перейти к моим записям",
        foot_terms:"Условия", foot_privacy:"Конфиденциальность" }
 };
 const storedLang = localStorage.getItem('ustara_lang');
@@ -231,6 +237,20 @@ function serviceName(key){
 
 let currentUser = null, currentClientProfile = null, barberData = null, servicesData = [];
 let favoriteIds = new Set();
+let activeBooking = null;
+
+async function loadActiveBooking(){
+  if(!currentUser) { activeBooking = null; return; }
+  const startOfToday = new Date(); startOfToday.setHours(0,0,0,0);
+  const { data } = await supabaseClient.from('bookings')
+    .select('id, start_time, barbers(full_name)')
+    .eq('client_id', currentUser.id)
+    .in('status', ['pending','confirmed'])
+    .gte('start_time', startOfToday.toISOString())
+    .order('start_time', { ascending:true })
+    .limit(1);
+  activeBooking = (data && data[0]) || null;
+}
 
 async function init(){
   const params = new URLSearchParams(window.location.search);
@@ -269,6 +289,7 @@ async function init(){
     if(currentClientProfile){
       const { data: favs } = await supabaseClient.from('favorites').select('barber_id').eq('client_id', currentUser.id);
       favoriteIds = new Set((favs || []).map(f => f.barber_id));
+      await loadActiveBooking();
     }
   }
 
@@ -363,6 +384,12 @@ function render(portfolioPhotos, completedCount, reviewsData){
 
 function renderServiceChoices(){
   const area = document.getElementById('bookingArea');
+  if(activeBooking){
+    const name = escapeHtml((activeBooking.barbers && activeBooking.barbers.full_name) || '');
+    const date = new Date(activeBooking.start_time).toLocaleDateString(lang==='en'?'en-US':lang, { weekday:'short', day:'numeric', month:'short' });
+    area.innerHTML = `<div class="no-slots-msg">${t('active_booking_notice').replace('{name}', name).replace('{date}', date)}<br><a href="client-dashboard.html" style="color:var(--gold-soft); font-weight:700;">${t('active_booking_cta')} →</a></div>`;
+    return;
+  }
   if(servicesData.length === 0){
     area.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`;
     return;
@@ -542,6 +569,11 @@ async function showDayPicker(serviceKey, duration, price, addonKeys = []){
         slotGrid.innerHTML = `<div class="login-prompt">${t('login_prompt')}<br><a href="auth.html">${t('login_btn')} →</a></div>`;
         return;
       }
+      await loadActiveBooking();
+      if(activeBooking){
+        renderServiceChoices();
+        return;
+      }
       confirmBtn.disabled = true;
       confirmBtn.textContent = t('booking_in_progress');
 
@@ -572,6 +604,11 @@ async function showDayPicker(serviceKey, duration, price, addonKeys = []){
       }]);
       if(error){
         console.error('Booking insert failed:', error);
+        if(error.code === '42501'){
+          await loadActiveBooking();
+          renderServiceChoices();
+          return;
+        }
         slotGrid.innerHTML = `<div class="no-slots-msg">${t('booking_failed')}${error.code !== '23505' ? `<br><span style="font-size:11px; opacity:0.7;">(${escapeHtml(error.message)})</span>` : ''}</div>`;
         return;
       }
