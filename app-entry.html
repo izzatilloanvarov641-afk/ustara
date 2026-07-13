@@ -112,6 +112,8 @@
   <a class="choice-btn secondary" id="loginLink" href="auth.html?tab=login">Sign in</a>
 </div>
 
+<a href="client-dashboard.html" id="guestLink" style="text-align:center; font-size:12.5px; color:var(--ink-dim); text-decoration:underline; padding:4px 6px;">Continue as a guest</a>
+
 <button type="button" class="install-btn" id="installAppBtn">📲 <span id="installBtnText">Install app</span></button>
 
 <div class="foot-link">
@@ -128,17 +130,17 @@ const I18N = {
     heroTitle:'Find your <em>barber.</em><br>Not just a shop.',
     heroLede:"A barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them.",
     prop1:"Browse real portfolios", prop2:"Book in seconds", prop3:"Rebook your favorite",
-    signup:"Create account", login:"Sign in", terms:"Terms", privacy:"Privacy", install:"Install app" },
+    signup:"Create account", login:"Sign in", guest:"Continue as a guest", terms:"Terms", privacy:"Privacy", install:"Install app" },
   uz:{ launch:"Toshkentda ishga tushdi",
     heroTitle:'<em>Sartaroshingizni</em> toping.<br>Shunchaki do\'kon emas.',
     heroLede:"Sartaroshning obro'si sartaroshning o'ziga tegishli — portfolio, mijozlar va bandlovlar u bilan boradi.",
     prop1:"Haqiqiy portfoliolarni ko'ring", prop2:"Soniyalarda band qiling", prop3:"Sevimlingizni qayta band qiling",
-    signup:"Hisob yaratish", login:"Kirish", terms:"Shartlar", privacy:"Maxfiylik", install:"Ilovani o'rnatish" },
+    signup:"Hisob yaratish", login:"Kirish", guest:"Mehmon sifatida davom etish", terms:"Shartlar", privacy:"Maxfiylik", install:"Ilovani o'rnatish" },
   ru:{ launch:"Уже работает в Ташкенте",
     heroTitle:'Найдите своего <em>барбера.</em><br>Не просто салон.',
     heroLede:"Репутация барбера принадлежит барберу — портфолио, клиенты и записи следуют за ним.",
     prop1:"Смотрите реальные портфолио", prop2:"Бронируйте за секунды", prop3:"Повторяйте у любимого барбера",
-    signup:"Создать аккаунт", login:"Войти", terms:"Условия", privacy:"Конфиденциальность", install:"Установить приложение" }
+    signup:"Создать аккаунт", login:"Войти", guest:"Продолжить как гость", terms:"Условия", privacy:"Конфиденциальность", install:"Установить приложение" }
 };
 
 const storedLang = localStorage.getItem('ustara_lang');
@@ -153,6 +155,7 @@ document.getElementById('prop2').textContent = dict.prop2;
 document.getElementById('prop3').textContent = dict.prop3;
 document.getElementById('signupLink').textContent = dict.signup;
 document.getElementById('loginLink').textContent = dict.login;
+document.getElementById('guestLink').textContent = dict.guest;
 document.getElementById('termsLink').textContent = dict.terms;
 document.getElementById('privacyLink').textContent = dict.privacy;
 document.getElementById('installBtnText').textContent = dict.install;

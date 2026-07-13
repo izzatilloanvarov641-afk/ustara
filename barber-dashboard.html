@@ -730,6 +730,14 @@
         </div>
 
         <div class="chip-row">
+          <div class="chip-row-icon chip-terracotta">🚪</div>
+          <div class="chip-row-body">
+            <div class="chip-row-title" data-i18n="logout">Log out</div>
+            <button class="btn btn-secondary" id="profileLogoutBtn" data-i18n="logout" style="margin-top:10px; padding:8px 14px; font-size:12.5px;">Log out</button>
+          </div>
+        </div>
+
+        <div class="chip-row">
           <div class="chip-row-icon" style="background:var(--err); color:#fff;">🗑️</div>
           <div class="chip-row-body">
             <div class="chip-row-title" data-i18n="delete_account_link">Delete my account</div>
@@ -2792,10 +2800,12 @@ document.getElementById('saveLocationBtn').addEventListener('click', async ()=>{
   }
 });
 
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+async function logoutBarber(){
   await supabaseClient.auth.signOut();
   window.location.href = 'index.html';
-});
+}
+document.getElementById('logoutBtn').addEventListener('click', logoutBarber);
+document.getElementById('profileLogoutBtn').addEventListener('click', logoutBarber);
 
 /* ---------- delete account (Play Store requires an in-app way to do this) ---------- */
 document.getElementById('deleteAccountLink').addEventListener('click', ()=>{
