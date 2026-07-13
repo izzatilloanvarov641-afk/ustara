@@ -1047,6 +1047,8 @@ const I18N = {
     bookings_sub:"Everyone who's booked with you.",
     filter_all:"All", filter_pending:"Pending", filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     empty_bookings:"No bookings yet.", confirm:"Confirm", cancel_booking:"Cancel", mark_completed:"Mark completed",
+    mark_noshow:"Client didn't come", noshow_confirm:"Mark this client as a no-show? This docks them 500 points and can't be undone.",
+    no_show:"didn't show up", noshow_too_early:"Available once the booking time has passed",
     confirmed:"confirmed", cancelled:"cancelled", pending:"pending", completed:"completed",
     day_mon:"Mon", day_tue:"Tue", day_wed:"Wed", day_thu:"Thu", day_fri:"Fri", day_sat:"Sat", day_sun:"Sun",
     min:"min"
@@ -1137,6 +1139,8 @@ const I18N = {
     bookings_sub:"Siz bilan band qilganlarning barchasi.",
     filter_all:"Barchasi", filter_pending:"Kutilmoqda", filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     empty_bookings:"Hozircha bandlar yo'q.", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish", mark_completed:"Bajarildi deb belgilash",
+    mark_noshow:"Mijoz kelmadi", noshow_confirm:"Bu mijozni kelmadi deb belgilaysizmi? Bu undan 500 ball yechadi va ortga qaytarib bo'lmaydi.",
+    no_show:"kelmadi", noshow_too_early:"Band qilingan vaqt o'tgach mavjud bo'ladi",
     confirmed:"tasdiqlangan", cancelled:"bekor qilingan", pending:"kutilmoqda", completed:"bajarildi",
     day_mon:"Du", day_tue:"Se", day_wed:"Ch", day_thu:"Pa", day_fri:"Ju", day_sat:"Sh", day_sun:"Ya",
     min:"daq"
@@ -1227,6 +1231,8 @@ const I18N = {
     bookings_sub:"Все, кто записался к вам.",
     filter_all:"Все", filter_pending:"Ожидают", filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     empty_bookings:"Записей пока нет.", confirm:"Подтвердить", cancel_booking:"Отменить", mark_completed:"Отметить выполненным",
+    mark_noshow:"Клиент не пришёл", noshow_confirm:"Отметить, что клиент не пришёл? С него спишется 500 баллов, это нельзя отменить.",
+    no_show:"не пришёл", noshow_too_early:"Станет доступно после времени записи",
     confirmed:"подтверждено", cancelled:"отменено", pending:"ожидает", completed:"выполнено",
     day_mon:"Пн", day_tue:"Вт", day_wed:"Ср", day_thu:"Чт", day_fri:"Пт", day_sat:"Сб", day_sun:"Вс",
     min:"мин"
@@ -2187,7 +2193,8 @@ const BOOKING_STATUS_META = {
   pending:   { icon:'⏳', chip:'status-pending' },
   confirmed: { icon:'✅', chip:'status-confirmed' },
   cancelled: { icon:'❌', chip:'status-cancelled' },
-  completed: { icon:'🏁', chip:'status-completed' }
+  completed: { icon:'🏁', chip:'status-completed' },
+  no_show:   { icon:'🚫', chip:'status-cancelled' }
 };
 
 function serviceLabel(key){
@@ -2222,9 +2229,15 @@ function bookingRowHtml(b, withActions = true){
           <button class="btn btn-primary" data-confirm="${b.id}">${t('confirm')}</button>
           <button class="btn btn-secondary" data-cancel="${b.id}">${t('cancel_booking')}</button>
         </div>
-      ` : withActions && b.status === 'confirmed' ? `
+      ` : withActions && b.status === 'confirmed' && new Date(b.start_time) <= new Date() ? `
         <div class="booking-actions">
           <button class="btn btn-primary" data-complete="${b.id}" data-service-key="${b.service_key || ''}" data-existing-price="${b.service_price ?? ''}">${t('mark_completed')}</button>
+          <button class="btn btn-secondary" data-noshow="${b.id}">${t('mark_noshow')}</button>
+        </div>
+      ` : withActions && b.status === 'confirmed' ? `
+        <div>
+          <span class="booking-status ${meta.chip}">${meta.icon} ${statusLabel}</span>
+          <div style="font-size:11px; color:var(--ink-dim); margin-top:4px;">${t('noshow_too_early')}</div>
         </div>
       ` : `<span class="booking-status ${meta.chip}">${meta.icon} ${statusLabel}</span>`}
     </div>
@@ -2283,16 +2296,22 @@ function renderBookingsList(){
         const service = servicesData.find(s => s.service_key === serviceKey);
         price = service ? (service.price || 0) : 0;
       }
-      const flat = barberData.commission_flat ?? 1000;
-      const percent = barberData.commission_percent ?? 3;
-      const commission = flat + Math.round(price * percent / 100);
-      const { error } = await supabaseClient.from('bookings').update({
-        status: 'completed',
-        service_price: price,
-        commission_amount: commission,
-        completed_at: new Date().toISOString()
-      }).eq('id', bookingId);
-      if(error) console.error('Failed to mark booking completed:', error);
+      // commission (walk-in exclusion) and the "time must have passed" rule
+      // are both enforced server-side in this RPC, not just here — see
+      // mark_booking_completed() in sql/23-noshow-and-commission-fix.sql
+      const { error } = await supabaseClient.rpc('mark_booking_completed', {
+        p_booking_id: bookingId, p_price: price
+      });
+      if(error){ console.error('Failed to mark booking completed:', error); btn.disabled = false; }
+      await refreshBookings();
+    });
+  });
+  area.querySelectorAll('[data-noshow]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm(t('noshow_confirm'))) return;
+      btn.disabled = true;
+      const { error } = await supabaseClient.rpc('mark_no_show', { p_booking_id: btn.dataset.noshow });
+      if(error){ console.error('Failed to mark no-show:', error); btn.disabled = false; }
       await refreshBookings();
     });
   });

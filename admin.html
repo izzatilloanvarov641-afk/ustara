@@ -69,6 +69,7 @@
 
   .section-title{ font-family:'Fraunces', serif; font-size:19px; font-weight:500; margin:52px 0 18px; }
   .stat-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:24px; }
+  #platformStats{ grid-template-columns:repeat(4, 1fr); }
   @media (max-width:640px){ .stat-row{ grid-template-columns:1fr; } }
   .stat-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px; }
   .stat-num{ font-family:'Fraunces', serif; font-size:28px; color:var(--brass); }
@@ -133,6 +134,9 @@
 
 <main id="adminMain" style="display:none;">
   <div class="wrap">
+    <div class="admin-section-label" data-i18n="section_overview">Platform overview</div>
+    <div class="stat-row" id="platformStats"></div>
+
     <div class="admin-section-label" data-i18n="section_approval">Barber approval</div>
     <h1 data-i18n="title">Pending barbers</h1>
     <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
@@ -198,7 +202,9 @@ const I18N = {
     l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
     proofs_title:"Proof of payment", proofs_sub:"Compare the screenshot against the owed amount below it, then mark as paid or reject.",
     empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
-    mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview" },
+    mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview",
+    section_overview:"Platform overview", stat_barbers_joined:"Barbers joined", stat_clients_joined:"Clients joined",
+    stat_bookings_completed:"Bookings completed", stat_no_shows:"No-shows" },
   uz:{ logout:"Chiqish", login_title:"Admin kirish", l_email:"Email", l_password:"Parol",
     err_generic:"Email yoki parol noto'g'ri.", login_btn:"Kirish", signup_btn:"Hisob yaratish",
     toggle_signup:'Birinchi marta? <span>Admin hisobini yarating</span>', toggle_login:'Hisobingiz bormi? <span>Kirish</span>',
@@ -214,7 +220,9 @@ const I18N = {
     l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
     proofs_title:"To'lov isboti", proofs_sub:"Skrinshotni pastdagi qarz summasi bilan solishtiring, so'ng to'landi deb belgilang yoki rad eting.",
     empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
-    mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi" },
+    mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi",
+    section_overview:"Platforma umumiy ko'rinishi", stat_barbers_joined:"Qo'shilgan sartaroshlar", stat_clients_joined:"Qo'shilgan mijozlar",
+    stat_bookings_completed:"Bajarilgan bandlar", stat_no_shows:"Kelmagan mijozlar" },
   ru:{ logout:"Выйти", login_title:"Вход для админа", l_email:"Email", l_password:"Пароль",
     err_generic:"Неверный email или пароль.", login_btn:"Войти", signup_btn:"Создать аккаунт",
     toggle_signup:'Первый раз? <span>Создать аккаунт админа</span>', toggle_login:'Уже есть аккаунт? <span>Войти</span>',
@@ -230,7 +238,9 @@ const I18N = {
     l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
     proofs_title:"Доказательство оплаты", proofs_sub:"Сравните скриншот с суммой долга под ним, затем отметьте оплаченным или отклоните.",
     empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
-    mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода" }
+    mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода",
+    section_overview:"Обзор платформы", stat_barbers_joined:"Присоединилось барберов", stat_clients_joined:"Присоединилось клиентов",
+    stat_bookings_completed:"Завершено записей", stat_no_shows:"Не пришли" }
 };
 
 const browserLang = (navigator.language || 'en').slice(0,2);
@@ -300,11 +310,40 @@ async function checkAuthorizedAndEnter(user){
   }
   document.getElementById('logoutBtn').style.display = 'inline-block';
   document.getElementById('adminMain').style.display = 'block';
+  loadPlatformOverview();
   loadPending();
   loadPendingLocations();
   loadPayoutSettings();
   loadProofs();
   loadRevenue();
+}
+
+/* ---------- platform overview ---------- */
+async function loadPlatformOverview(){
+  const [barbers, clients, bookingsCompleted, noShows] = await Promise.all([
+    supabaseClient.from('barbers').select('*', { count:'exact', head:true }),
+    supabaseClient.from('clients').select('*', { count:'exact', head:true }),
+    supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status', 'completed'),
+    supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status', 'no_show'),
+  ]);
+  document.getElementById('platformStats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num">${barbers.count ?? 0}</div>
+      <div class="stat-label">${t('stat_barbers_joined')}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${clients.count ?? 0}</div>
+      <div class="stat-label">${t('stat_clients_joined')}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${bookingsCompleted.count ?? 0}</div>
+      <div class="stat-label">${t('stat_bookings_completed')}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${noShows.count ?? 0}</div>
+      <div class="stat-label">${t('stat_no_shows')}</div>
+    </div>
+  `;
 }
 
 /* ---------- payout account ---------- */

@@ -253,6 +253,7 @@
   .status-badge.pending{ background:var(--warning-bg); color:var(--warning); }
   .status-badge.cancelled{ background:var(--danger-bg); color:var(--danger); }
   .status-badge.completed{ background:var(--surface-alt); color:var(--ink-dim); }
+  .status-badge.no_show{ background:var(--danger-bg); color:var(--danger); }
   .wallet-cancel{
     font-size:10.5px; font-weight:700; color:var(--danger); background:none; border:1px solid #F3CFCF;
     padding:5px 11px; border-radius:16px; cursor:pointer;
@@ -810,7 +811,7 @@ const I18N = {
     nav_home:"Home", nav_bookings:"Bookings", nav_map:"Map", nav_account:"Account",
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
     empty_btn:"Browse barbers", rv_name:"Name", rv_phone:"Phone", rv_email:"Email",
-    stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed",
+    stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed", no_show:"didn't show up",
     favorites_title:"Your favorites", notifications_title:"Notifications", close_label:"Close", no_notifications:"No notifications yet.",
     rebook_nudge:"It's been a while since your last visit with {barber} — ready for another?", rebook_cta:"Book again",
     review_prompt_title:"How was your cut with {barber}?", review_comment_ph:"Leave a comment (optional)",
@@ -874,7 +875,7 @@ const I18N = {
     nav_home:"Bosh sahifa", nav_bookings:"Bandlar", nav_map:"Xarita", nav_account:"Hisob",
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
     empty_btn:"Sartaroshlarni ko'rish", rv_name:"Ism", rv_phone:"Telefon", rv_email:"Email",
-    stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi",
+    stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi", no_show:"kelmadi",
     favorites_title:"Sevimlilaringiz", notifications_title:"Bildirishnomalar", close_label:"Yopish", no_notifications:"Hozircha bildirishnoma yo'q.",
     rebook_nudge:"{barber} bilan oxirgi tashrifingizdan beri vaqt o'tdi — yana borasizmi?", rebook_cta:"Qayta band qilish",
     review_prompt_title:"{barber} bilan soch olish qanday o'tdi?", review_comment_ph:"Izoh qoldiring (ixtiyoriy)",
@@ -938,7 +939,7 @@ const I18N = {
     nav_home:"Главная", nav_bookings:"Записи", nav_map:"Карта", nav_account:"Аккаунт",
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
     empty_btn:"Смотреть барберов", rv_name:"Имя", rv_phone:"Телефон", rv_email:"Email",
-    stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено",
+    stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено", no_show:"не пришёл",
     favorites_title:"Ваши избранные", notifications_title:"Уведомления", close_label:"Закрыть", no_notifications:"Уведомлений пока нет.",
     rebook_nudge:"Прошло время с последнего визита к {barber} — не пора ли снова?", rebook_cta:"Записаться снова",
     review_prompt_title:"Как прошла стрижка у {barber}?", review_comment_ph:"Оставьте комментарий (необязательно)",
@@ -1303,7 +1304,7 @@ function bigTileHtml(b){
   `;
 }
 
-const STATUS_EMOJI = { confirmed:'✅', pending:'⏳', cancelled:'❌', completed:'✔️' };
+const STATUS_EMOJI = { confirmed:'✅', pending:'⏳', cancelled:'❌', completed:'✔️', no_show:'🚫' };
 
 function bookingCardHtml(b){
   const barber = b.barbers || {};
@@ -1495,10 +1496,12 @@ function renderDashboardTiles(){
   const completed = bookingsData.filter(b => b.status === 'completed');
   const completedCount = completed.length;
 
-  // loyalty: 100 pts per completed visit + accumulated daily check-in bonus 
-  // points, combined into one running total; every 1000 points = a tier
+  // loyalty: 100 pts per completed visit + accumulated daily check-in bonus
+  // points, minus 500 pts per no-show, combined into one running total;
+  // every 1000 points = a tier
   const tierNames = ['Bronze', 'Silver', 'Gold', 'Platinum'];
-  const totalPoints = (completedCount * 100) + (clientData.checkin_bonus_points || 0);
+  const totalPoints = Math.max(0,
+    (completedCount * 100) + (clientData.checkin_bonus_points || 0) - (clientData.penalty_points || 0));
   const tierIndex = Math.min(Math.floor(totalPoints / 1000), tierNames.length - 1);
   const pointsThisTier = totalPoints % 1000;
 
