@@ -1040,6 +1040,11 @@ const I18N = {
     filter_all:"All", filter_pending:"Pending", filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     empty_bookings:"No bookings yet.", confirm:"Confirm", cancel_booking:"Cancel", mark_completed:"Mark completed",
     confirmed:"confirmed", cancelled:"cancelled", pending:"pending", completed:"completed",
+    deposit_status_pending:"Awaiting 20% deposit", deposit_status_paid:"Deposit secured",
+    deposit_status_refund_due:"Refund owed to client", deposit_status_refunded:"Deposit refunded",
+    deposit_status_forfeited:"Deposit forfeited (kept)",
+    deposit_confirm_received:"Confirm deposit received", deposit_mark_refunded:"Mark refunded",
+    deposit_mark_refunded_confirm:"Confirm you've sent this deposit back to the client?",
     day_mon:"Mon", day_tue:"Tue", day_wed:"Wed", day_thu:"Thu", day_fri:"Fri", day_sat:"Sat", day_sun:"Sun",
     min:"min"
   },
@@ -1130,6 +1135,11 @@ const I18N = {
     filter_all:"Barchasi", filter_pending:"Kutilmoqda", filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     empty_bookings:"Hozircha bandlar yo'q.", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish", mark_completed:"Bajarildi deb belgilash",
     confirmed:"tasdiqlangan", cancelled:"bekor qilingan", pending:"kutilmoqda", completed:"bajarildi",
+    deposit_status_pending:"20% depozit kutilmoqda", deposit_status_paid:"Depozit to'landi",
+    deposit_status_refund_due:"Mijozga qaytarish kerak", deposit_status_refunded:"Depozit qaytarildi",
+    deposit_status_forfeited:"Depozit ushlab qolindi",
+    deposit_confirm_received:"Depozit qabul qilindi deb belgilash", deposit_mark_refunded:"Qaytarildi deb belgilash",
+    deposit_mark_refunded_confirm:"Bu depozitni mijozga qaytarganingizni tasdiqlaysizmi?",
     day_mon:"Du", day_tue:"Se", day_wed:"Ch", day_thu:"Pa", day_fri:"Ju", day_sat:"Sh", day_sun:"Ya",
     min:"daq"
   },
@@ -1220,6 +1230,11 @@ const I18N = {
     filter_all:"Все", filter_pending:"Ожидают", filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     empty_bookings:"Записей пока нет.", confirm:"Подтвердить", cancel_booking:"Отменить", mark_completed:"Отметить выполненным",
     confirmed:"подтверждено", cancelled:"отменено", pending:"ожидает", completed:"выполнено",
+    deposit_status_pending:"Ожидается депозит 20%", deposit_status_paid:"Депозит внесён",
+    deposit_status_refund_due:"Нужно вернуть клиенту", deposit_status_refunded:"Депозит возвращён",
+    deposit_status_forfeited:"Депозит удержан",
+    deposit_confirm_received:"Подтвердить получение депозита", deposit_mark_refunded:"Отметить возврат",
+    deposit_mark_refunded_confirm:"Подтверждаете, что вернули этот депозит клиенту?",
     day_mon:"Пн", day_tue:"Вт", day_wed:"Ср", day_thu:"Чт", day_fri:"Пт", day_sat:"Сб", day_sun:"Вс",
     min:"мин"
   }
@@ -2188,6 +2203,32 @@ function serviceLabel(key){
   return (existing && existing.custom_label) || SERVICES_LOCAL[currentLang][key] || key;
 }
 
+const DEPOSIT_STATUS_META = {
+  pending: { icon:'⏳', chip:'status-pending' },
+  paid: { icon:'✅', chip:'status-confirmed' },
+  refund_due: { icon:'↩️', chip:'status-pending' },
+  refunded: { icon:'↩️', chip:'status-completed' },
+  forfeited: { icon:'🚫', chip:'status-cancelled' }
+};
+
+function depositBadgeHtml(b){
+  if(!b.deposit_status || b.deposit_status === 'not_required') return '';
+  const meta = DEPOSIT_STATUS_META[b.deposit_status];
+  if(!meta) return '';
+  const amount = b.deposit_amount ? formatPrice(b.deposit_amount) : '';
+  return `<div class="deposit-badge ${meta.chip}" style="font-size:12px; margin-top:4px;">${meta.icon} ${t('deposit_status_' + b.deposit_status)}${amount ? ' · ' + amount : ''}</div>`;
+}
+
+function depositActionsHtml(b){
+  if(b.deposit_status === 'pending' && b.deposit_proof_path){
+    return `<button class="btn btn-secondary" data-deposit-received="${b.id}">${t('deposit_confirm_received')}</button>`;
+  }
+  if(b.deposit_status === 'refund_due'){
+    return `<button class="btn btn-secondary" data-deposit-refunded="${b.id}">${t('deposit_mark_refunded')}</button>`;
+  }
+  return '';
+}
+
 function bookingRowHtml(b, withActions = true){
   const svcName = b.service_label || (b.service_key ? serviceLabel(b.service_key) : '');
   const statusLabel = t(b.status) || b.status;
@@ -2201,6 +2242,8 @@ function bookingRowHtml(b, withActions = true){
   const addonNames = (b.addon_keys && b.addon_keys.length > 0)
     ? b.addon_keys.map(k => serviceLabel(k)).join(', ')
     : '';
+  const depositBadge = depositBadgeHtml(b);
+  const depositActions = withActions ? depositActionsHtml(b) : '';
   return `
     <div class="booking-row">
       ${refPhoto}
@@ -2208,6 +2251,7 @@ function bookingRowHtml(b, withActions = true){
         <strong>${escapeHtml(b.client_name)}</strong> ${clientVisitBadge(b.client_id)}${svcName ? ' · ' + escapeHtml(svcName) : ''}${addonNames ? ' + ' + escapeHtml(addonNames) : ''}<br>
         <span style="color:var(--ink-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
         ${styleNote}
+        ${depositBadge}
       </div>
       ${withActions && b.status === 'pending' ? `
         <div class="booking-actions">
@@ -2216,9 +2260,11 @@ function bookingRowHtml(b, withActions = true){
         </div>
       ` : withActions && b.status === 'confirmed' ? `
         <div class="booking-actions">
+          ${depositActions}
           <button class="btn btn-primary" data-complete="${b.id}" data-service-key="${b.service_key || ''}" data-existing-price="${b.service_price ?? ''}">${t('mark_completed')}</button>
+          <button class="btn btn-secondary" data-cancel="${b.id}">${t('cancel_booking')}</button>
         </div>
-      ` : `<span class="booking-status ${meta.chip}">${meta.icon} ${statusLabel}</span>`}
+      ` : `<span class="booking-status ${meta.chip}">${meta.icon} ${statusLabel}</span>${depositActions}`}
     </div>
   `;
 }
@@ -2234,12 +2280,20 @@ function renderBookingsList(){
   area.querySelectorAll('[data-confirm]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('bookings').update({ status:'confirmed' }).eq('id', btn.dataset.confirm);
       const booking = bookingsData.find(b => b.id === btn.dataset.confirm);
+      // deposit only applies to bookings with a known price; a barber
+      // walk-in or older booking with no service_price just skips it
+      const depositAmount = booking && booking.service_price ? Math.round(booking.service_price * 0.2) : 0;
+      await supabaseClient.from('bookings').update({
+        status:'confirmed',
+        ...(depositAmount > 0 ? { deposit_amount: depositAmount, deposit_status: 'pending' } : {})
+      }).eq('id', btn.dataset.confirm);
       if(booking){
         await supabaseClient.from('notifications').insert([{
           client_id: booking.client_id, type: 'booking_confirmed', related_booking_id: booking.id,
-          message: `${barberData.full_name} confirmed your booking for ${new Date(booking.start_time).toLocaleString()}.`
+          message: depositAmount > 0
+            ? `${barberData.full_name} confirmed your booking for ${new Date(booking.start_time).toLocaleString()}. Pay a ${formatPrice(depositAmount)} deposit to secure it.`
+            : `${barberData.full_name} confirmed your booking for ${new Date(booking.start_time).toLocaleString()}.`
         }]).then(({error}) => { if(error) console.warn('Notification insert failed (non-critical):', error); });
       }
       await refreshBookings();
@@ -2248,14 +2302,36 @@ function renderBookingsList(){
   area.querySelectorAll('[data-cancel]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('bookings').update({ status:'cancelled' }).eq('id', btn.dataset.cancel);
       const booking = bookingsData.find(b => b.id === btn.dataset.cancel);
+      // barber-initiated cancellation is never the client's fault, so any
+      // paid deposit always owes a refund regardless of timing
+      const depositUpdate = booking && booking.deposit_status === 'paid' ? { deposit_status: 'refund_due' } : {};
+      await supabaseClient.from('bookings').update({ status:'cancelled', ...depositUpdate }).eq('id', btn.dataset.cancel);
       if(booking){
         await supabaseClient.from('notifications').insert([{
           client_id: booking.client_id, type: 'booking_cancelled_by_barber', related_booking_id: booking.id,
-          message: `${barberData.full_name} had to cancel your booking for ${new Date(booking.start_time).toLocaleString()}.`
+          message: depositUpdate.deposit_status === 'refund_due'
+            ? `${barberData.full_name} had to cancel your booking for ${new Date(booking.start_time).toLocaleString()}. Your deposit will be refunded.`
+            : `${barberData.full_name} had to cancel your booking for ${new Date(booking.start_time).toLocaleString()}.`
         }]).then(({error}) => { if(error) console.warn('Notification insert failed (non-critical):', error); });
       }
+      await refreshBookings();
+    });
+  });
+  area.querySelectorAll('[data-deposit-received]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      await supabaseClient.from('bookings').update({
+        deposit_status: 'paid', deposit_paid_at: new Date().toISOString()
+      }).eq('id', btn.dataset.depositReceived);
+      await refreshBookings();
+    });
+  });
+  area.querySelectorAll('[data-deposit-refunded]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm(t('deposit_mark_refunded_confirm'))) return;
+      btn.disabled = true;
+      await supabaseClient.from('bookings').update({ deposit_status: 'refunded' }).eq('id', btn.dataset.depositRefunded);
       await refreshBookings();
     });
   });

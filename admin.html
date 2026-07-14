@@ -154,6 +154,16 @@
         <label data-i18n="l_card_name">Card holder name</label>
         <input type="text" id="payoutCardName" placeholder="ISLOMOVA D">
       </div>
+      <div class="admin-section-label" style="margin-top:28px;" data-i18n="section_click">Click.uz deposit settings</div>
+      <p class="sub" style="margin-top:2px;" data-i18n="click_sub">From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.</p>
+      <div class="field-group">
+        <label data-i18n="l_click_merchant_id">Merchant ID</label>
+        <input type="text" id="clickMerchantId" placeholder="12345">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <label data-i18n="l_click_service_id">Service ID</label>
+        <input type="text" id="clickServiceId" placeholder="67890">
+      </div>
       <button class="btn btn-primary" id="savePayoutBtn" style="width:auto; margin-top:16px;" data-i18n="save_payout">Save payout account</button>
       <div class="save-msg" id="payoutSaveMsg"></div>
     </div>
@@ -196,6 +206,8 @@ const I18N = {
     section_approval:"Barber approval", section_payments:"Payments",
     payout_title:"Payout account", payout_sub:"Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.",
     l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
+    section_click:"Click.uz deposit settings", click_sub:"From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.",
+    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
     proofs_title:"Proof of payment", proofs_sub:"Compare the screenshot against the owed amount below it, then mark as paid or reject.",
     empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
     mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview" },
@@ -212,6 +224,8 @@ const I18N = {
     section_approval:"Sartaroshni tasdiqlash", section_payments:"To'lovlar",
     payout_title:"To'lov kartasi", payout_sub:"Sartaroshlar buni o'zlarining To'lovlar bo'limida ko'rishadi. Istalgan vaqtda o'zgartiring — har bir sartarosh yangisini darhol ko'radi.",
     l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
+    section_click:"Click.uz depozit sozlamalari", click_sub:"Click merchant kabinetingizdan — bu maxfiy emas, shu yerda saqlash xavfsiz. Maxfiy kalit esa click-payment Edge Function sirlariga qo'yiladi.",
+    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
     proofs_title:"To'lov isboti", proofs_sub:"Skrinshotni pastdagi qarz summasi bilan solishtiring, so'ng to'landi deb belgilang yoki rad eting.",
     empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
     mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi" },
@@ -228,6 +242,8 @@ const I18N = {
     section_approval:"Подтверждение барберов", section_payments:"Платежи",
     payout_title:"Карта для выплат", payout_sub:"Барберы видят эту карту на вкладке Платежи. Меняйте в любой момент — каждый барбер сразу увидит новую.",
     l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
+    section_click:"Настройки депозита Click.uz", click_sub:"Из вашего личного кабинета Click — это не секрет, здесь хранить безопасно. Секретный ключ добавляется в секреты Edge Function click-payment.",
+    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
     proofs_title:"Доказательство оплаты", proofs_sub:"Сравните скриншот с суммой долга под ним, затем отметьте оплаченным или отклоните.",
     empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
     mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода" }
@@ -313,6 +329,8 @@ async function loadPayoutSettings(){
   if(error){ console.error('Failed to load payout settings:', error); return; }
   document.getElementById('payoutCardNumber').value = data?.payout_card_number || '';
   document.getElementById('payoutCardName').value = data?.payout_card_name || '';
+  document.getElementById('clickMerchantId').value = data?.click_merchant_id || '';
+  document.getElementById('clickServiceId').value = data?.click_service_id || '';
 }
 
 document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
@@ -321,7 +339,9 @@ document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
   btn.disabled = true;
   const { error } = await supabaseClient.from('platform_settings').update({
     payout_card_number: document.getElementById('payoutCardNumber').value.trim(),
-    payout_card_name: document.getElementById('payoutCardName').value.trim()
+    payout_card_name: document.getElementById('payoutCardName').value.trim(),
+    click_merchant_id: document.getElementById('clickMerchantId').value.trim() || null,
+    click_service_id: document.getElementById('clickServiceId').value.trim() || null
   }).eq('id', 1);
   btn.disabled = false;
   if(error){
