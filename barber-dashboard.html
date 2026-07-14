@@ -1285,6 +1285,12 @@ function applyLang(lang){
   }
 }
 
+// Deposit-on-confirm is built and ready but paused for now — flip this back
+// to true (and nothing else) once we're ready to require the 20% deposit
+// again. Leaving it off just skips setting deposit_amount/deposit_status at
+// confirm time, so every downstream deposit UI stays dormant on its own.
+const DEPOSIT_FEATURE_ENABLED = false;
+
 let barberData = null;
 let servicesData = [];
 let bookingsData = [];
@@ -2307,7 +2313,7 @@ function renderBookingsList(){
       const booking = bookingsData.find(b => b.id === btn.dataset.confirm);
       // deposit only applies to bookings with a known price; a barber
       // walk-in or older booking with no service_price just skips it
-      const depositAmount = booking && booking.service_price ? Math.round(booking.service_price * 0.2) : 0;
+      const depositAmount = DEPOSIT_FEATURE_ENABLED && booking && booking.service_price ? Math.round(booking.service_price * 0.2) : 0;
       await supabaseClient.from('bookings').update({
         status:'confirmed',
         ...(depositAmount > 0 ? { deposit_amount: depositAmount, deposit_status: 'pending' } : {})
