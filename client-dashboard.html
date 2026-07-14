@@ -233,8 +233,18 @@
 
   .wallet-card{
     background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:16px;
-    margin-bottom:12px; box-shadow:var(--sh-soft); display:flex; gap:13px; align-items:center;
+    margin-bottom:12px; box-shadow:var(--sh-soft); display:flex; flex-wrap:wrap; gap:13px; align-items:center;
   }
+  .deposit-box{
+    flex:1 1 100%; background:var(--surface-alt); border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; font-size:12.5px; font-weight:600; color:var(--ink);
+  }
+  .deposit-box-line{ margin-bottom:8px; font-weight:700; }
+  .deposit-box-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .deposit-upload-label{ cursor:pointer; }
+  .deposit-proof-sent{ font-size:12px; color:var(--ink-dim); font-style:italic; }
+  .deposit-status-paid{ color:var(--gold); }
+  .deposit-status-refund_due, .deposit-status-forfeited{ color:var(--ink-dim); }
   .wallet-avatar{
     width:50px; height:50px; border-radius:50%; background:var(--surface-alt); flex-shrink:0; overflow:hidden;
     display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk', sans-serif; font-style:normal; font-weight:600;
@@ -788,6 +798,14 @@ const I18N = {
     bookings_title:"Your bookings", filter_all:"All", filter_pending:"Pending",
     filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.", remove_booking:"Remove",
+    cancel_confirm_refund:"Cancel this booking? You cancelled 24h+ ahead, so your deposit will be refunded.",
+    cancel_confirm_forfeit:"Cancel this booking? It's within 24h of your appointment, so your deposit won't be refunded.",
+    deposit_pay_prompt:"Pay a {amount} deposit to secure this booking.",
+    deposit_pay_click:"Pay with Click", deposit_upload_proof:"I've paid — upload proof",
+    deposit_proof_sent:"Proof sent — awaiting barber confirmation", deposit_proof_failed:"Couldn't upload — please try again.",
+    deposit_status_pending:"Awaiting your 20% deposit", deposit_status_paid:"Deposit secured ✓",
+    deposit_status_refund_due:"Deposit refund on its way", deposit_status_refunded:"Deposit refunded",
+    deposit_status_forfeited:"Deposit not refunded (cancelled late)",
     share_prompt_title:"Show off your fresh cut?", add_after_photo:"Add a photo",
     take_photo:"Take a photo", choose_from_gallery:"Choose from gallery",
     create_share_card:"Create share card", share_action:"Share",
@@ -852,6 +870,14 @@ const I18N = {
     bookings_title:"Bandlaringiz", filter_all:"Barchasi", filter_pending:"Kutilmoqda",
     filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.", remove_booking:"O'chirish",
+    cancel_confirm_refund:"Bandni bekor qilasizmi? 24 soatdan oldin bekor qilyapsiz, shuning uchun depozitingiz qaytariladi.",
+    cancel_confirm_forfeit:"Bandni bekor qilasizmi? Uchrashuvga 24 soatdan kam qoldi, shuning uchun depozit qaytarilmaydi.",
+    deposit_pay_prompt:"Bandni saqlab qolish uchun {amount} depozit to'lang.",
+    deposit_pay_click:"Click orqali to'lash", deposit_upload_proof:"To'ladim — chekni yuklash",
+    deposit_proof_sent:"Chek yuborildi — sartarosh tasdiqlashini kuting", deposit_proof_failed:"Yuklab bo'lmadi — qayta urinib ko'ring.",
+    deposit_status_pending:"20% depozitingiz kutilmoqda", deposit_status_paid:"Depozit qabul qilindi ✓",
+    deposit_status_refund_due:"Depozit qaytarilmoqda", deposit_status_refunded:"Depozit qaytarildi",
+    deposit_status_forfeited:"Depozit qaytarilmadi (kech bekor qilindi)",
     share_prompt_title:"Yangi sochingizni ko'rsatasizmi?", add_after_photo:"Surat qo'shish",
     take_photo:"Surat olish", choose_from_gallery:"Galereyadan tanlash",
     create_share_card:"Ulashish kartasini yaratish", share_action:"Ulashish",
@@ -916,6 +942,14 @@ const I18N = {
     bookings_title:"Ваши записи", filter_all:"Все", filter_pending:"Ожидают",
     filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.", remove_booking:"Удалить",
+    cancel_confirm_refund:"Отменить запись? Вы отменяете за 24+ часа, депозит будет возвращён.",
+    cancel_confirm_forfeit:"Отменить запись? До визита меньше 24 часов, депозит не будет возвращён.",
+    deposit_pay_prompt:"Внесите депозит {amount}, чтобы закрепить запись.",
+    deposit_pay_click:"Оплатить через Click", deposit_upload_proof:"Я оплатил — загрузить чек",
+    deposit_proof_sent:"Чек отправлен — ждём подтверждения барбера", deposit_proof_failed:"Не удалось загрузить — попробуйте снова.",
+    deposit_status_pending:"Ожидается депозит 20%", deposit_status_paid:"Депозит внесён ✓",
+    deposit_status_refund_due:"Депозит будет возвращён", deposit_status_refunded:"Депозит возвращён",
+    deposit_status_forfeited:"Депозит не возвращён (поздняя отмена)",
     share_prompt_title:"Покажете свою новую стрижку?", add_after_photo:"Добавить фото",
     take_photo:"Сделать фото", choose_from_gallery:"Выбрать из галереи",
     create_share_card:"Создать карточку", share_action:"Поделиться",
@@ -979,6 +1013,7 @@ let currentLang = ['en','uz','ru'].includes(_storedLang) ? _storedLang : 'en';
 let clientData = null;
 let userEmail = '';
 let bookingsData = [];
+let clickSettings = null;
 let reviewedBookingIds = new Set();
 let currentFilter = 'all';
 let favoritesData = [];
@@ -1158,6 +1193,9 @@ async function init(){
   const { data: myReviews } = await supabaseClient.from('reviews').select('booking_id').eq('client_id', user.id);
   reviewedBookingIds = new Set((myReviews || []).map(r => r.booking_id));
 
+  const { data: settings } = await supabaseClient.from('platform_settings').select('click_merchant_id, click_service_id').eq('id', 1).maybeSingle();
+  clickSettings = settings || null;
+
   const pendingRef = localStorage.getItem('ustara_pending_ref');
   if(pendingRef){
     await supabaseClient.rpc('record_referral', { p_code: pendingRef }).catch(()=>{});
@@ -1299,12 +1337,55 @@ function bigTileHtml(b){
         <button class="appt-btn" data-view-booking="${b.id}">${t('view_details')}</button>
         <button class="appt-btn solid" data-calendar="${b.id}">${t('add_calendar')}</button>
       </div>
+      ${depositSectionHtml(b)}
       ${canCancel ? `<div class="appt-cancel-link" data-cancel-id="${b.id}">${t('cancel_booking')}</div>` : ''}
     </div>
   `;
 }
 
 const STATUS_EMOJI = { confirmed:'✅', pending:'⏳', cancelled:'❌', completed:'✔️', no_show:'🚫' };
+const DEPOSIT_EMOJI = { pending:'⏳', paid:'✅', refund_due:'↩️', refunded:'↩️', forfeited:'🚫' };
+
+function depositSectionHtml(b){
+  if(!b.deposit_status || b.deposit_status === 'not_required') return '';
+  const amount = b.deposit_amount ? formatPrice(b.deposit_amount) : '';
+  if(b.deposit_status === 'pending'){
+    const clickUrl = (clickSettings && clickSettings.click_merchant_id && clickSettings.click_service_id)
+      ? `https://my.click.uz/services/pay?service_id=${encodeURIComponent(clickSettings.click_service_id)}&merchant_id=${encodeURIComponent(clickSettings.click_merchant_id)}&amount=${b.deposit_amount}&transaction_param=${b.id}&return_url=${encodeURIComponent(location.href)}`
+      : null;
+    return `
+      <div class="deposit-box" data-booking-id="${b.id}">
+        <div class="deposit-box-line">💳 ${t('deposit_pay_prompt').replace('{amount}', amount)}</div>
+        <div class="deposit-box-actions">
+          ${clickUrl ? `<a class="appt-btn solid" href="${clickUrl}" target="_blank" rel="noopener">${t('deposit_pay_click')}</a>` : ''}
+          ${b.deposit_proof_path
+            ? `<span class="deposit-proof-sent">${t('deposit_proof_sent')}</span>`
+            : `<label class="appt-btn deposit-upload-label">${t('deposit_upload_proof')}<input type="file" accept="image/*" data-deposit-upload="${b.id}" hidden></label>`}
+        </div>
+      </div>`;
+  }
+  return `<div class="deposit-box deposit-status-${b.deposit_status}">${DEPOSIT_EMOJI[b.deposit_status] || ''} ${t('deposit_status_' + b.deposit_status)}${amount ? ' · ' + amount : ''}</div>`;
+}
+
+function attachDepositHandlers(container){
+  container.querySelectorAll('[data-deposit-upload]').forEach(input=>{
+    input.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const bookingId = input.dataset.depositUpload;
+      const ext = file.name.split('.').pop();
+      const path = `${clientData.id}/${bookingId}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabaseClient.storage.from('deposit-proofs').upload(path, file);
+      if(uploadError){
+        console.error('Deposit proof upload failed:', uploadError);
+        alert(t('deposit_proof_failed'));
+        return;
+      }
+      await supabaseClient.from('bookings').update({ deposit_proof_path: path }).eq('id', bookingId);
+      await refreshBookingsAfterNewBooking();
+    });
+  });
+}
 
 function bookingCardHtml(b){
   const barber = b.barbers || {};
@@ -1349,6 +1430,7 @@ function bookingListRowHtml(b){
         ${canRemove ? `<button class="wallet-remove" data-remove-id="${b.id}">${t('remove_booking')}</button>` : ''}
         ${shareAction}
       </div>
+      ${depositSectionHtml(b)}
     </div>
   `;
 }
@@ -1406,14 +1488,24 @@ function attachCancelHandlers(container){
   container.querySelectorAll('[data-cancel-id]').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
-      if(!confirm(t('cancel_confirm'))) return;
+      const booking = bookingsData.find(b => b.id === btn.dataset.cancelId);
+      const hoursUntil = booking ? (new Date(booking.start_time) - new Date()) / 3600000 : Infinity;
+      const depositWasPaid = booking && booking.deposit_status === 'paid';
+      const confirmMsg = depositWasPaid
+        ? (hoursUntil >= 24 ? t('cancel_confirm_refund') : t('cancel_confirm_forfeit'))
+        : t('cancel_confirm');
+      if(!confirm(confirmMsg)) return;
       const original = btn.textContent;
       btn.style.pointerEvents = 'none';
       btn.textContent = '...';
+      const depositUpdate = depositWasPaid
+        ? { deposit_status: hoursUntil >= 24 ? 'refund_due' : 'forfeited' }
+        : {};
       const { error } = await supabaseClient.from('bookings').update({
         status: 'cancelled',
         cancelled_by: 'client',
-        barber_seen_cancellation: false
+        barber_seen_cancellation: false,
+        ...depositUpdate
       }).eq('id', btn.dataset.cancelId);
       if(error){
         console.error('Cancel failed:', error);
@@ -1486,6 +1578,7 @@ function renderHomeBookings(){
   attachCancelHandlers(area);
   attachCalendarHandlers(area);
   attachViewDetailsHandlers(area);
+  attachDepositHandlers(area);
   revealNow(area);
 }
 
@@ -1604,6 +1697,7 @@ function renderAllBookings(){
   attachCancelHandlers(area);
   attachRemoveHandlers(area);
   attachShareHandlers(area);
+  attachDepositHandlers(area);
   revealNow(area);
 }
 document.getElementById('bookingFilterTabs').addEventListener('click', (e)=>{

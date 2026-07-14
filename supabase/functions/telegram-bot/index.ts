@@ -190,6 +190,16 @@ async function handleStartWithCode(chatId: number, code: string) {
   }
 
   const table = linkRow.role === "barber" ? "barbers" : "clients";
+
+  // telegram_chat_id is unique per table (see sql/15-telegram-bot.sql), so
+  // relinking a Telegram account that's already attached to a different
+  // profile (a second test account, a rebuilt profile, switching roles,
+  // etc.) would otherwise fail that constraint and get stuck retrying
+  // forever. Clear any existing holder of this chat id first so linking
+  // always just transfers the connection instead of erroring.
+  await supabase.from("clients").update({ telegram_chat_id: null }).eq("telegram_chat_id", chatId);
+  await supabase.from("barbers").update({ telegram_chat_id: null }).eq("telegram_chat_id", chatId);
+
   const { error: updateErr } = await supabase
     .from(table)
     .update({ telegram_chat_id: chatId })

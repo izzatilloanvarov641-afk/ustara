@@ -158,6 +158,16 @@
         <label data-i18n="l_card_name">Card holder name</label>
         <input type="text" id="payoutCardName" placeholder="ISLOMOVA D">
       </div>
+      <div class="admin-section-label" style="margin-top:28px;" data-i18n="section_click">Click.uz deposit settings</div>
+      <p class="sub" style="margin-top:2px;" data-i18n="click_sub">From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.</p>
+      <div class="field-group">
+        <label data-i18n="l_click_merchant_id">Merchant ID</label>
+        <input type="text" id="clickMerchantId" placeholder="12345">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <label data-i18n="l_click_service_id">Service ID</label>
+        <input type="text" id="clickServiceId" placeholder="67890">
+      </div>
       <button class="btn btn-primary" id="savePayoutBtn" style="width:auto; margin-top:16px;" data-i18n="save_payout">Save payout account</button>
       <div class="save-msg" id="payoutSaveMsg"></div>
     </div>
@@ -197,9 +207,12 @@ const I18N = {
     approve:"Approve", reject:"Reject", not_set:"—",
     loc_title:"Pending location verification", loc_sub:"Confirm a barber's pin is a real, findable shop before it appears on the public map.",
     empty_location:"No locations waiting for verification.", view_map:"View on map ↗", verify_location:"Verify location",
+    reject_location:"Reject", reject_location_confirm:"Reject this pin? It'll be cleared and the barber will need to drop a new one.",
     section_approval:"Barber approval", section_payments:"Payments",
     payout_title:"Payout account", payout_sub:"Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.",
     l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
+    section_click:"Click.uz deposit settings", click_sub:"From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.",
+    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
     proofs_title:"Proof of payment", proofs_sub:"Compare the screenshot against the owed amount below it, then mark as paid or reject.",
     empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
     mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview",
@@ -215,9 +228,12 @@ const I18N = {
     approve:"Tasdiqlash", reject:"Rad etish", not_set:"—",
     loc_title:"Joylashuvni tekshirish kutilmoqda", loc_sub:"Ochiq xaritada ko'rsatishdan oldin sartaroshning belgisi haqiqiy do'kon ekanini tasdiqlang.",
     empty_location:"Hozircha tekshirish uchun joylashuvlar yo'q.", view_map:"Xaritada ko'rish ↗", verify_location:"Joylashuvni tasdiqlash",
+    reject_location:"Rad etish", reject_location_confirm:"Bu belgi rad etilsinmi? U tozalanadi va sartarosh yangisini qo'yishi kerak bo'ladi.",
     section_approval:"Sartaroshni tasdiqlash", section_payments:"To'lovlar",
     payout_title:"To'lov kartasi", payout_sub:"Sartaroshlar buni o'zlarining To'lovlar bo'limida ko'rishadi. Istalgan vaqtda o'zgartiring — har bir sartarosh yangisini darhol ko'radi.",
     l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
+    section_click:"Click.uz depozit sozlamalari", click_sub:"Click merchant kabinetingizdan — bu maxfiy emas, shu yerda saqlash xavfsiz. Maxfiy kalit esa click-payment Edge Function sirlariga qo'yiladi.",
+    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
     proofs_title:"To'lov isboti", proofs_sub:"Skrinshotni pastdagi qarz summasi bilan solishtiring, so'ng to'landi deb belgilang yoki rad eting.",
     empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
     mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi",
@@ -233,9 +249,12 @@ const I18N = {
     approve:"Одобрить", reject:"Отклонить", not_set:"—",
     loc_title:"Локации на проверке", loc_sub:"Подтвердите, что метка барбера — реальный, находимый салон, прежде чем она появится на публичной карте.",
     empty_location:"Пока нет локаций, ожидающих проверки.", view_map:"Посмотреть на карте ↗", verify_location:"Подтвердить локацию",
+    reject_location:"Отклонить", reject_location_confirm:"Отклонить эту метку? Она будет очищена, барберу нужно будет поставить новую.",
     section_approval:"Подтверждение барберов", section_payments:"Платежи",
     payout_title:"Карта для выплат", payout_sub:"Барберы видят эту карту на вкладке Платежи. Меняйте в любой момент — каждый барбер сразу увидит новую.",
     l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
+    section_click:"Настройки депозита Click.uz", click_sub:"Из вашего личного кабинета Click — это не секрет, здесь хранить безопасно. Секретный ключ добавляется в секреты Edge Function click-payment.",
+    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
     proofs_title:"Доказательство оплаты", proofs_sub:"Сравните скриншот с суммой долга под ним, затем отметьте оплаченным или отклоните.",
     empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
     mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода",
@@ -352,6 +371,8 @@ async function loadPayoutSettings(){
   if(error){ console.error('Failed to load payout settings:', error); return; }
   document.getElementById('payoutCardNumber').value = data?.payout_card_number || '';
   document.getElementById('payoutCardName').value = data?.payout_card_name || '';
+  document.getElementById('clickMerchantId').value = data?.click_merchant_id || '';
+  document.getElementById('clickServiceId').value = data?.click_service_id || '';
 }
 
 document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
@@ -360,7 +381,9 @@ document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
   btn.disabled = true;
   const { error } = await supabaseClient.from('platform_settings').update({
     payout_card_number: document.getElementById('payoutCardNumber').value.trim(),
-    payout_card_name: document.getElementById('payoutCardName').value.trim()
+    payout_card_name: document.getElementById('payoutCardName').value.trim(),
+    click_merchant_id: document.getElementById('clickMerchantId').value.trim() || null,
+    click_service_id: document.getElementById('clickServiceId').value.trim() || null
   }).eq('id', 1);
   btn.disabled = false;
   if(error){
@@ -547,6 +570,7 @@ async function loadPending(){
     .from('barbers')
     .select('*')
     .eq('is_approved', false)
+    .eq('is_rejected', false)
     .order('created_at', { ascending:true });
 
   if(error || !data || data.length === 0){
@@ -573,14 +597,16 @@ async function loadPending(){
   area.querySelectorAll('[data-approve]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('barbers').update({ is_approved: true }).eq('id', btn.dataset.approve);
+      const { error } = await supabaseClient.from('barbers').update({ is_approved: true, is_rejected: false }).eq('id', btn.dataset.approve);
+      if(error) console.error('Approve failed:', error);
       loadPending();
     });
   });
   area.querySelectorAll('[data-reject]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('barbers').update({ is_published: false }).eq('id', btn.dataset.reject);
+      const { error } = await supabaseClient.from('barbers').update({ is_rejected: true, is_published: false }).eq('id', btn.dataset.reject);
+      if(error) console.error('Reject failed:', error);
       loadPending();
     });
   });
@@ -609,6 +635,7 @@ async function loadPendingLocations(){
         <div class="review-meta"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--brass); font-weight:600;">${t('view_map')}</a></div>
         <div class="review-actions">
           <button class="btn btn-approve" data-verify="${b.id}">${t('verify_location')}</button>
+          <button class="btn btn-reject" data-reject-location="${b.id}">${t('reject_location')}</button>
         </div>
       </div>
     `;
@@ -617,7 +644,21 @@ async function loadPendingLocations(){
   area.querySelectorAll('[data-verify]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('barbers').update({ is_location_verified: true }).eq('id', btn.dataset.verify);
+      const { error } = await supabaseClient.from('barbers').update({ is_location_verified: true }).eq('id', btn.dataset.verify);
+      if(error) console.error('Verify location failed:', error);
+      loadPendingLocations();
+    });
+  });
+  area.querySelectorAll('[data-reject-location]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm(t('reject_location_confirm'))) return;
+      btn.disabled = true;
+      // clearing the pin removes it from this queue and from the public map;
+      // the barber sees their pin is gone and can drop a new, accurate one
+      const { error } = await supabaseClient.from('barbers').update({
+        latitude: null, longitude: null, is_location_verified: false
+      }).eq('id', btn.dataset.rejectLocation);
+      if(error) console.error('Reject location failed:', error);
       loadPendingLocations();
     });
   });
