@@ -203,6 +203,7 @@ const I18N = {
     approve:"Approve", reject:"Reject", not_set:"—",
     loc_title:"Pending location verification", loc_sub:"Confirm a barber's pin is a real, findable shop before it appears on the public map.",
     empty_location:"No locations waiting for verification.", view_map:"View on map ↗", verify_location:"Verify location",
+    reject_location:"Reject", reject_location_confirm:"Reject this pin? It'll be cleared and the barber will need to drop a new one.",
     section_approval:"Barber approval", section_payments:"Payments",
     payout_title:"Payout account", payout_sub:"Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.",
     l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
@@ -221,6 +222,7 @@ const I18N = {
     approve:"Tasdiqlash", reject:"Rad etish", not_set:"—",
     loc_title:"Joylashuvni tekshirish kutilmoqda", loc_sub:"Ochiq xaritada ko'rsatishdan oldin sartaroshning belgisi haqiqiy do'kon ekanini tasdiqlang.",
     empty_location:"Hozircha tekshirish uchun joylashuvlar yo'q.", view_map:"Xaritada ko'rish ↗", verify_location:"Joylashuvni tasdiqlash",
+    reject_location:"Rad etish", reject_location_confirm:"Bu belgi rad etilsinmi? U tozalanadi va sartarosh yangisini qo'yishi kerak bo'ladi.",
     section_approval:"Sartaroshni tasdiqlash", section_payments:"To'lovlar",
     payout_title:"To'lov kartasi", payout_sub:"Sartaroshlar buni o'zlarining To'lovlar bo'limida ko'rishadi. Istalgan vaqtda o'zgartiring — har bir sartarosh yangisini darhol ko'radi.",
     l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
@@ -239,6 +241,7 @@ const I18N = {
     approve:"Одобрить", reject:"Отклонить", not_set:"—",
     loc_title:"Локации на проверке", loc_sub:"Подтвердите, что метка барбера — реальный, находимый салон, прежде чем она появится на публичной карте.",
     empty_location:"Пока нет локаций, ожидающих проверки.", view_map:"Посмотреть на карте ↗", verify_location:"Подтвердить локацию",
+    reject_location:"Отклонить", reject_location_confirm:"Отклонить эту метку? Она будет очищена, барберу нужно будет поставить новую.",
     section_approval:"Подтверждение барберов", section_payments:"Платежи",
     payout_title:"Карта для выплат", payout_sub:"Барберы видят эту карту на вкладке Платежи. Меняйте в любой момент — каждый барбер сразу увидит новую.",
     l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
@@ -528,6 +531,7 @@ async function loadPending(){
     .from('barbers')
     .select('*')
     .eq('is_approved', false)
+    .eq('is_rejected', false)
     .order('created_at', { ascending:true });
 
   if(error || !data || data.length === 0){
@@ -554,14 +558,16 @@ async function loadPending(){
   area.querySelectorAll('[data-approve]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('barbers').update({ is_approved: true }).eq('id', btn.dataset.approve);
+      const { error } = await supabaseClient.from('barbers').update({ is_approved: true, is_rejected: false }).eq('id', btn.dataset.approve);
+      if(error) console.error('Approve failed:', error);
       loadPending();
     });
   });
   area.querySelectorAll('[data-reject]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('barbers').update({ is_published: false }).eq('id', btn.dataset.reject);
+      const { error } = await supabaseClient.from('barbers').update({ is_rejected: true, is_published: false }).eq('id', btn.dataset.reject);
+      if(error) console.error('Reject failed:', error);
       loadPending();
     });
   });
@@ -590,6 +596,7 @@ async function loadPendingLocations(){
         <div class="review-meta"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--brass); font-weight:600;">${t('view_map')}</a></div>
         <div class="review-actions">
           <button class="btn btn-approve" data-verify="${b.id}">${t('verify_location')}</button>
+          <button class="btn btn-reject" data-reject-location="${b.id}">${t('reject_location')}</button>
         </div>
       </div>
     `;
@@ -598,7 +605,21 @@ async function loadPendingLocations(){
   area.querySelectorAll('[data-verify]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
-      await supabaseClient.from('barbers').update({ is_location_verified: true }).eq('id', btn.dataset.verify);
+      const { error } = await supabaseClient.from('barbers').update({ is_location_verified: true }).eq('id', btn.dataset.verify);
+      if(error) console.error('Verify location failed:', error);
+      loadPendingLocations();
+    });
+  });
+  area.querySelectorAll('[data-reject-location]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm(t('reject_location_confirm'))) return;
+      btn.disabled = true;
+      // clearing the pin removes it from this queue and from the public map;
+      // the barber sees their pin is gone and can drop a new, accurate one
+      const { error } = await supabaseClient.from('barbers').update({
+        latitude: null, longitude: null, is_location_verified: false
+      }).eq('id', btn.dataset.rejectLocation);
+      if(error) console.error('Reject location failed:', error);
       loadPendingLocations();
     });
   });
