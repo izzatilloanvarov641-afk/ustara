@@ -100,6 +100,7 @@
     <div class="role-toggle" id="roleToggle">
       <button type="button" class="active" data-role="client" data-i18n="role_client">I'm a client</button>
       <button type="button" data-role="barber" data-i18n="role_barber">I'm a barber</button>
+      <button type="button" data-role="owner" data-i18n="role_owner">I'm a shop owner</button>
     </div>
     <p class="barber-note" id="barberNote" data-i18n="barber_note">Barber profiles are reviewed before going live — usually within a day.</p>
     <form id="signupForm">
@@ -107,6 +108,7 @@
         <div class="field-group"><label data-i18n="l_first_name">Legal first name</label><input type="text" id="signupFirstName" required></div>
         <div class="field-group"><label data-i18n="l_last_name">Legal surname</label><input type="text" id="signupLastName" required></div>
       </div>
+      <div class="field-group" id="shopNameGroup" style="display:none;"><label data-i18n="l_shop_name">Shop name</label><input type="text" id="signupShopName"></div>
       <div class="field-group"><label data-i18n="l_phone">Phone number</label><input type="tel" id="signupPhone" placeholder="+998 90 123 45 67" required></div>
       <div class="field-group"><label data-i18n="l_telegram"><span data-i18n="l_telegram_label">Telegram profile</span> <span class="optional" data-i18n="l_optional">(optional)</span></label><input type="text" id="signupTelegram" placeholder="@username"></div>
       <div class="field-group"><label data-i18n="l_email">Email</label><input type="email" id="signupEmail" required></div>
@@ -145,8 +147,8 @@ const I18N = {
   en:{ tab_login:"Log in", tab_signup:"Sign up",
     login_title:"Welcome back", signup_title:"Create your account",
     l_email:"Email", l_password:"Password", l_first_name:"Legal first name", l_last_name:"Legal surname",
-    l_phone:"Phone number", l_telegram_label:"Telegram profile", l_optional:"(optional)",
-    role_client:"I'm a client", role_barber:"I'm a barber",
+    l_phone:"Phone number", l_telegram_label:"Telegram profile", l_optional:"(optional)", l_shop_name:"Shop name",
+    role_client:"I'm a client", role_barber:"I'm a barber", role_owner:"I'm a shop owner",
     barber_note:"Barber profiles are reviewed before going live — usually within a day.",
     err_login:"Incorrect email or password.", err_signup:"Something went wrong. Try again.",
     err_pending:"Your barber profile hasn't been approved yet. We'll notify you by email once it's ready.",
@@ -159,8 +161,8 @@ const I18N = {
   uz:{ tab_login:"Kirish", tab_signup:"Ro'yxatdan o'tish",
     login_title:"Xush kelibsiz", signup_title:"Hisob yarating",
     l_email:"Email", l_password:"Parol", l_first_name:"Ismingiz (hujjatdagidek)", l_last_name:"Familiyangiz (hujjatdagidek)",
-    l_phone:"Telefon raqami", l_telegram_label:"Telegram profili", l_optional:"(ixtiyoriy)",
-    role_client:"Men mijozman", role_barber:"Men sartaroshman",
+    l_phone:"Telefon raqami", l_telegram_label:"Telegram profili", l_optional:"(ixtiyoriy)", l_shop_name:"Do'kon nomi",
+    role_client:"Men mijozman", role_barber:"Men sartaroshman", role_owner:"Men do'kon egasiman",
     barber_note:"Sartarosh profillari faollashtirishdan oldin ko'rib chiqiladi — odatda bir kun ichida.",
     err_login:"Email yoki parol noto'g'ri.", err_signup:"Xatolik yuz berdi. Qayta urinib ko'ring.",
     err_pending:"Sartarosh profilingiz hali tasdiqlanmagan. Tayyor bo'lganda sizga email orqali xabar beramiz.",
@@ -173,8 +175,8 @@ const I18N = {
   ru:{ tab_login:"Войти", tab_signup:"Регистрация",
     login_title:"С возвращением", signup_title:"Создайте аккаунт",
     l_email:"Email", l_password:"Пароль", l_first_name:"Имя (как в документе)", l_last_name:"Фамилия (как в документе)",
-    l_phone:"Номер телефона", l_telegram_label:"Профиль Telegram", l_optional:"(необязательно)",
-    role_client:"Я клиент", role_barber:"Я барбер",
+    l_phone:"Номер телефона", l_telegram_label:"Профиль Telegram", l_optional:"(необязательно)", l_shop_name:"Название салона",
+    role_client:"Я клиент", role_barber:"Я барбер", role_owner:"Я владелец салона",
     barber_note:"Профили барберов проверяются перед публикацией — обычно в течение дня.",
     err_login:"Неверный email или пароль.", err_signup:"Что-то пошло не так. Попробуйте снова.",
     err_pending:"Ваш профиль барбера ещё не подтверждён. Мы сообщим по email, когда всё будет готово.",
@@ -190,7 +192,7 @@ const params = new URLSearchParams(window.location.search);
 const storedLang = localStorage.getItem('ustara_lang');
 const browserLang = (navigator.language || 'en').slice(0,2);
 const currentLang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
-let signupRole = params.get('role') === 'barber' ? 'barber' : 'client';
+let signupRole = ['barber','owner'].includes(params.get('role')) ? params.get('role') : 'client';
 const refCode = params.get('ref');
 if(refCode) localStorage.setItem('ustara_pending_ref', refCode);
 
@@ -221,6 +223,7 @@ function setRole(role){
   signupRole = role;
   document.querySelectorAll('#roleToggle button').forEach(b=> b.classList.toggle('active', b.dataset.role === role));
   document.getElementById('barberNote').classList.toggle('active', role === 'barber');
+  document.getElementById('shopNameGroup').style.display = role === 'owner' ? 'block' : 'none';
 }
 document.querySelectorAll('#roleToggle button').forEach(btn=>{
   btn.addEventListener('click', ()=> setRole(btn.dataset.role));
@@ -238,6 +241,10 @@ async function redirectByRole(userId, { silent } = {}){
     if(!silent) document.getElementById('pendingError').style.display = 'block';
     return;
   }
+
+  const { data: owner } = await supabaseClient.from('owners').select('id').eq('id', userId).single();
+  if(owner){ window.location.replace('owner-dashboard.html'); return; }
+
   await supabaseClient.auth.signOut();
   if(!silent){
     document.getElementById('loginError').style.display = 'block';
@@ -285,10 +292,14 @@ document.getElementById('signupForm').addEventListener('submit', async function(
   const fullName = `${firstName} ${lastName}`.trim();
   const phone = document.getElementById('signupPhone').value.trim();
   const telegram = document.getElementById('signupTelegram').value.trim();
+  const shopName = document.getElementById('signupShopName').value.trim();
 
   const { data: authData, error: authError } = await supabaseClient.auth.signUp({
     email, password,
-    options: { data: { role: signupRole, full_name: fullName, phone: phone, telegram_username: telegram || null } }
+    options: { data: {
+      role: signupRole, full_name: fullName, phone: phone, telegram_username: telegram || null,
+      shop_name: signupRole === 'owner' ? (shopName || null) : undefined
+    } }
   });
   btn.disabled = false; btn.textContent = orig;
   if(authError){
@@ -306,6 +317,8 @@ document.getElementById('signupForm').addEventListener('submit', async function(
           localStorage.removeItem('ustara_pending_ref');
         }
         window.location.href = 'client-dashboard.html';
+      } else if(signupRole === 'owner'){
+        window.location.href = 'owner-dashboard.html';
       } else {
         await supabaseClient.auth.signOut();
         showPanel('postlang');
@@ -314,7 +327,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     } else {
       showPanel('postlang');
       document.getElementById('signupInfo').textContent =
-        signupRole === 'client' ? t('check_email_client') : t('check_email_barber');
+        signupRole === 'barber' ? t('check_email_barber') : t('check_email_client');
     }
   };
   showPanel('lang');
