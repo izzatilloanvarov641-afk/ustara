@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Ustara — Owner dashboard</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#12151C">
@@ -13,89 +13,258 @@
 <style>
   :root{
     --bg:#F6F1E4; --surface:#ECE5D2; --surface-alt:#E3DAC4; --line:#D8CFB8;
-    --ink:#1C1A14; --ink-dim:#6B6455; --brass:#A9DB3A; --brass-soft:#CDFF5E;
+    --ink:#1C1A14; --ink-dim:#6B6455;
+    --dark-bg:#12151C; --dark-surface:#1B1F29; --dark-surface-2:#232838; --dark-line:#2B3140;
+    --on-dark:#F3EFE2; --on-dark-dim:#9AA0AD;
+    --gold:#A9DB3A; --gold-soft:#CDFF5E;
     --coral:#FF6A4D; --sky:#5B8DEF; --sun:#FFB84D;
-    --err:#FF6A4D; --ok:#3D9E2F;
+    --success:#3D9E2F; --success-bg:#E4F5EE; --warning:#FFB84D; --warning-bg:#FBF1DF; --danger:#FF6A4D; --danger-bg:#FCEAEA;
+    --r-card:16px; --r-btn:999px; --r-input:12px;
+    --sh-soft:0 20px 50px rgba(28,26,20,0.06), 0 4px 12px rgba(28,26,20,0.04);
+    --sh-dark:0 24px 60px rgba(0,0,0,0.45);
   }
-  *{ margin:0; padding:0; box-sizing:border-box; }
-  body{ background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html{ scroll-behavior:smooth; background:var(--bg); }
+  body{
+    color:var(--ink); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(96px + env(safe-area-inset-bottom)); max-width:560px; margin:0 auto; min-height:100vh; position:relative;
+  }
   a{ color:inherit; text-decoration:none; }
   .mono{ font-family:'IBM Plex Mono', monospace; }
-  .wrap{ max-width:760px; margin:0 auto; padding:0 20px; }
+  button{ font-family:'IBM Plex Sans', sans-serif; }
+  button:active{ transform:scale(0.96); }
+  button, .tap{ transition:transform .12s cubic-bezier(.3,1.5,.5,1), opacity .15s ease, background .15s ease, border-color .15s ease; }
 
-  header{ border-bottom:1px solid var(--line); padding:18px 0; }
-  header .wrap{ display:flex; align-items:center; justify-content:space-between; }
-  .logo{ font-family:'Space Grotesk', sans-serif; font-size:19px; }
-  .logo em{ font-style:italic; color:var(--brass); }
-  .header-right{ display:flex; align-items:center; gap:10px; }
-  .lang-row{ display:flex; gap:4px; }
-  .lang-btn{ background:none; border:1px solid var(--line); color:var(--ink-dim); font-size:11.5px; font-weight:700; padding:6px 9px; border-radius:999px; cursor:pointer; }
-  .lang-btn.active{ background:var(--brass); color:var(--ink); border-color:var(--brass); }
-  .logout-btn{ font-size:12.5px; color:var(--ink-dim); background:none; border:1px solid var(--line); padding:8px 14px; border-radius:999px; cursor:pointer; }
-  .logout-btn:hover{ border-color:var(--coral); color:var(--coral); }
+  .view{ display:none; }
+  .view.active{ display:block; position:relative; z-index:1; animation:fadein .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes fadein{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+  .wrap{ padding:0 20px; }
+  .reveal{ opacity:0; transform:translateY(10px); transition:opacity .5s cubic-bezier(.2,.8,.2,1), transform .5s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce){ .reveal{ opacity:1 !important; transform:none !important; transition:none !important; } }
+  .letter{ display:inline-block; filter:blur(6px); opacity:0; transform:scale(1.15); transition:filter .4s ease, opacity .4s ease, transform .4s ease; }
+  .letter.in{ filter:blur(0); opacity:1; transform:scale(1); }
 
-  main{ padding:36px 0 90px; }
-  h1{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:clamp(24px,4vw,30px); margin-bottom:4px; }
-  .sub{ color:var(--ink-dim); font-size:14px; margin-bottom:28px; }
-  .section-title{ font-family:'Space Grotesk', sans-serif; font-size:17px; font-weight:600; margin:40px 0 14px; }
+  /* ================= HOME (dark hero) ================= */
+  .home-dark{ background:var(--dark-bg); color:var(--on-dark); padding:22px 20px 30px; border-radius:0 0 36px 36px; margin-bottom:-20px; }
+  .home-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:22px; }
+  .home-greeting{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:26px; line-height:1.15; }
+  .eyebrow-gold{ font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold-soft); font-weight:700; margin-bottom:10px; }
 
-  .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; }
+  .dark-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .dark-tile{ background:var(--dark-surface); border:1px solid var(--dark-line); border-radius:20px; padding:16px; }
+  .tile-emoji{ width:30px; height:30px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:14px; margin-bottom:8px; }
+  .chipD-gold{ background:rgba(205,255,94,0.18); } .chipD-blue{ background:rgba(91,141,239,0.22); }
+  .chipD-teal{ background:rgba(255,184,77,0.2); } .chipD-terracotta{ background:rgba(255,106,77,0.2); }
+  .stat-dark-num{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:21px; color:var(--gold-soft); }
+  .stat-dark-label{ font-size:11px; color:var(--on-dark-dim); font-weight:600; margin-top:2px; }
+
+  .board-card{ background:var(--dark-surface); border:1px solid var(--dark-line); border-radius:20px; padding:16px; margin-bottom:14px; }
+  .board-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .board-row{ display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--dark-line); }
+  .board-row:first-child{ border-top:none; }
+  .board-rank{ width:22px; text-align:center; font-size:14px; flex-shrink:0; }
+  .board-avatar{
+    width:32px; height:32px; border-radius:50%; background:var(--dark-surface-2); flex-shrink:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk', sans-serif; font-weight:600; color:var(--gold-soft); font-size:12px;
+  }
+  .board-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .board-name{ flex:1; font-size:12.5px; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .board-value{ font-size:12px; color:var(--gold-soft); font-weight:700; font-family:'IBM Plex Mono', monospace; flex-shrink:0; }
+
+  .chart-bars{ display:flex; align-items:flex-end; gap:6px; height:74px; margin-top:6px; }
+  .chart-bar-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end; }
+  .chart-bar{ width:100%; max-width:22px; background:linear-gradient(180deg, var(--gold-soft), var(--gold)); border-radius:6px 6px 2px 2px; min-height:3px; transition:height .5s cubic-bezier(.2,.8,.2,1); }
+  .chart-bar-label{ font-size:9px; color:var(--on-dark-dim); }
+
+  .schedule-preview-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--dark-line); }
+  .schedule-preview-row:first-child{ border-top:none; }
+  .sp-time{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--gold-soft); font-weight:600; width:44px; flex-shrink:0; }
+  .sp-info{ flex:1; min-width:0; }
+  .sp-name{ font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sp-sub{ font-size:11px; color:var(--on-dark-dim); }
+
+  /* ================= LIGHT SECTIONS ================= */
+  section{ padding:26px 0 4px; }
+  .section-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:19px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .st-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .see-all{ font-size:12px; color:var(--gold); font-weight:700; cursor:pointer; }
+  .title-chip{ display:inline-flex; width:32px; height:32px; border-radius:999px; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+  .chip-gold{ background:var(--gold-soft); color:var(--ink); }
+  .chip-blue{ background:var(--sky); color:#fff; }
+  .chip-terracotta{ background:var(--coral); color:#fff; }
+  .chip-teal{ background:var(--sun); color:var(--ink); }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:20px; box-shadow:var(--sh-soft); margin-bottom:16px; }
   .field-row{ display:flex; gap:10px; }
-  input{ flex:1; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:12px 14px; border-radius:12px; font-size:14px; font-family:'IBM Plex Mono', monospace; letter-spacing:1px; text-transform:uppercase; }
-  input:focus{ outline:none; border-color:var(--brass); }
-  .btn{ padding:12px 18px; border-radius:12px; font-size:13.5px; font-weight:700; cursor:pointer; border:none; background:var(--brass); color:var(--ink); white-space:nowrap; font-family:'IBM Plex Sans', sans-serif; }
+  input{ flex:1; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:12px 14px; border-radius:var(--r-input); font-size:14px; font-family:'IBM Plex Mono', monospace; letter-spacing:1px; text-transform:uppercase; }
+  input:focus{ outline:none; border-color:var(--gold); }
+  .btn{ padding:12px 18px; border-radius:var(--r-btn); font-size:13px; font-weight:700; cursor:pointer; border:none; background:var(--gold-soft); color:var(--ink); white-space:nowrap; }
   .btn:disabled{ opacity:0.5; cursor:not-allowed; }
   .btn-ghost{ background:none; border:1px solid var(--line); color:var(--ink-dim); }
-  .btn-ghost:hover{ border-color:var(--coral); color:var(--coral); }
+  .btn-ghost:hover{ border-color:var(--danger); color:var(--danger); }
   .link-msg{ font-size:12.5px; margin-top:10px; display:none; }
-  .link-msg.ok{ color:var(--ok); display:block; }
-  .link-msg.err{ color:var(--err); display:block; }
+  .link-msg.ok{ color:var(--success); display:block; }
+  .link-msg.err{ color:var(--danger); display:block; }
 
-  .stat-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:8px; }
-  @media (max-width:640px){ .stat-row{ grid-template-columns:1fr 1fr; } }
-  .stat-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; }
-  .stat-num{ font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:700; color:var(--brass); }
-  .stat-label{ font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
-
-  .barber-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:12px; display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; }
-  .barber-avatar{ width:48px; height:48px; border-radius:50%; background:var(--surface-alt); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk', sans-serif; font-weight:600; color:var(--ink-dim); font-size:16px; }
+  .barber-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:16px; margin-bottom:12px;
+    box-shadow:var(--sh-soft); display:flex; gap:12px; align-items:center; cursor:pointer;
+  }
+  .barber-avatar{
+    width:48px; height:48px; border-radius:50%; background:var(--surface-alt); flex-shrink:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk', sans-serif; font-weight:600; color:var(--gold); font-size:16px;
+  }
   .barber-avatar img{ width:100%; height:100%; object-fit:cover; }
-  .barber-info{ flex:1; min-width:180px; }
-  .barber-name{ font-weight:700; font-size:15px; }
-  .barber-status{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; display:inline-block; margin-top:4px; }
-  .barber-status.free{ background:rgba(61,158,47,0.15); color:var(--ok); }
-  .barber-status.busy{ background:rgba(255,106,77,0.15); color:var(--coral); }
-  .barber-mini-stats{ display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
-  .mini-stat{ font-size:12px; color:var(--ink-dim); }
-  .mini-stat strong{ display:block; font-family:'Space Grotesk', sans-serif; font-size:15px; color:var(--ink); font-weight:700; }
+  .barber-info{ flex:1; min-width:0; }
+  .barber-name{ font-weight:700; font-size:14.5px; }
+  .barber-status{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; display:inline-block; margin-top:4px; }
+  .barber-status.free{ background:var(--success-bg); color:var(--success); }
+  .barber-status.busy{ background:var(--danger-bg); color:var(--danger); }
+  .barber-mini-stats{ display:flex; gap:14px; margin-top:8px; flex-wrap:wrap; }
+  .mini-stat{ font-size:11px; color:var(--ink-dim); }
+  .mini-stat strong{ display:block; font-family:'IBM Plex Mono', monospace; font-size:13.5px; color:var(--ink); font-weight:600; }
+  .barber-arrow{ color:var(--ink-dim); font-size:18px; flex-shrink:0; }
 
-  .empty-state{ text-align:center; padding:48px 20px; border:1px dashed var(--line); border-radius:16px; color:var(--ink-dim); font-size:13.5px; }
+  .status-badge{ font-size:10px; padding:5px 11px; border-radius:20px; text-transform:capitalize; font-weight:700; }
+  .status-badge.confirmed{ background:var(--success-bg); color:var(--success); }
+  .status-badge.pending{ background:var(--warning-bg); color:var(--warning); }
+  .status-badge.cancelled{ background:var(--danger-bg); color:var(--danger); }
+  .status-badge.completed{ background:var(--surface-alt); color:var(--ink-dim); }
+  .status-badge.no_show{ background:var(--danger-bg); color:var(--danger); }
+
+  .schedule-row{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:14px 16px; margin-bottom:10px;
+    box-shadow:var(--sh-soft); display:flex; align-items:center; gap:12px;
+  }
+  .sr-time{ font-family:'IBM Plex Mono', monospace; font-size:13px; font-weight:700; color:var(--gold); width:52px; flex-shrink:0; }
+  .sr-info{ flex:1; min-width:0; }
+  .sr-barber{ font-size:12.5px; font-weight:700; }
+  .sr-client{ font-size:12px; color:var(--ink-dim); margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .info-card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:4px 20px; box-shadow:var(--sh-soft); margin-bottom:16px; }
+  .info-row{ display:flex; justify-content:space-between; align-items:center; padding:17px 0; border-bottom:1px solid var(--line); font-size:14px; gap:12px; }
+  .info-row:last-child{ border-bottom:none; }
+  .info-row .k{ color:var(--ink-dim); font-weight:500; flex-shrink:0; }
+  .info-row .v{ font-weight:700; }
+  .info-row input{ text-align:right; text-transform:none; letter-spacing:normal; font-family:'IBM Plex Sans', sans-serif; padding:8px 10px; }
+
+  .lang-row{ display:flex; gap:8px; margin-top:16px; }
+  .lang-btn{ flex:1; padding:13px; border-radius:var(--r-input); border:1px solid var(--line); background:var(--surface); color:var(--ink-dim); font-size:13px; font-weight:700; cursor:pointer; }
+  .lang-btn.active{ background:var(--gold-soft); border-color:var(--gold-soft); color:var(--ink); }
+  .logout-btn{ width:100%; margin-top:24px; font-size:13.5px; color:var(--danger); background:var(--surface); border:1px solid var(--line); padding:16px; border-radius:var(--r-input); cursor:pointer; font-weight:700; }
+  .logout-btn:hover{ background:var(--danger-bg); }
+
+  .empty-state{ text-align:center; padding:40px 24px; border:1.5px dashed var(--line); border-radius:var(--r-card); color:var(--ink-dim); font-size:13.5px; }
+  .empty-state .icon{ font-size:26px; margin:0 auto 14px; width:52px; height:52px; border-radius:50%; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; }
+  .empty-state strong{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:17px; color:var(--ink); display:block; margin-bottom:4px; }
+
+  /* ================= BARBER DETAIL MODAL ================= */
+  .details-modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; display:none;
+    align-items:flex-end; justify-content:center; backdrop-filter:blur(4px);
+  }
+  .details-modal-overlay.open{ display:flex; }
+  .details-modal{
+    background:var(--bg); border-radius:24px 24px 0 0; padding:24px 20px calc(28px + env(safe-area-inset-bottom));
+    max-width:560px; width:100%; max-height:88vh; overflow-y:auto; position:relative; box-shadow:0 -20px 60px rgba(0,0,0,0.3);
+  }
+  .details-modal-close{
+    position:absolute; top:14px; right:14px; background:var(--surface-alt); border:none; width:30px; height:30px;
+    border-radius:50%; font-size:16px; color:var(--ink-dim); cursor:pointer; z-index:1;
+  }
+  .dm-head{ display:flex; align-items:center; gap:14px; margin-bottom:18px; padding-right:36px; }
+  .dm-avatar{
+    width:56px; height:56px; border-radius:50%; background:var(--surface-alt); flex-shrink:0; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk', sans-serif; font-weight:600; color:var(--gold); font-size:19px;
+  }
+  .dm-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .dm-name{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:18px; }
+  .dm-status{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; display:inline-block; margin-top:4px; }
+  .dm-status.free{ background:var(--success-bg); color:var(--success); }
+  .dm-status.busy{ background:var(--danger-bg); color:var(--danger); }
+  .dm-stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:18px; }
+  .dm-stat{ background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 8px; text-align:center; }
+  .dm-stat-num{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:14px; color:var(--gold); }
+  .dm-stat-label{ font-size:9.5px; color:var(--ink-dim); margin-top:2px; }
+  .dm-section-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px; margin:18px 0 10px; }
+  .dm-chart-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:4px; }
+  .dm-chart-bars{ display:flex; align-items:flex-end; gap:6px; height:64px; margin-top:6px; }
+  .dm-chart-bar-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; height:100%; justify-content:flex-end; }
+  .dm-chart-bar{ width:100%; max-width:20px; background:linear-gradient(180deg, var(--gold-soft), var(--gold)); border-radius:5px 5px 2px 2px; min-height:3px; }
+  .dm-chart-bar-label{ font-size:8.5px; color:var(--ink-dim); }
+  .dm-booking-row, .dm-review-row{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:8px; font-size:12.5px;
+  }
+  .dm-booking-row .r1{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .dm-review-stars{ color:var(--gold); font-weight:700; }
+  .dm-review-comment{ margin-top:4px; color:var(--ink-dim); font-style:italic; }
+  .dm-unlink-btn{ width:100%; margin-top:8px; }
+
+  /* ================= FLOATING BOTTOM NAV ================= */
+  .bottom-nav{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    width:calc(100% - 32px); max-width:400px; background:rgba(20,20,20,0.85); backdrop-filter:blur(20px) saturate(1.6);
+    border:1px solid rgba(255,255,255,0.08); border-radius:28px; display:flex; padding:10px 8px; z-index:50; box-shadow:0 20px 50px rgba(0,0,0,0.35);
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px;
+    background:none; border:none; color:rgba(245,243,239,0.45); font-size:10px; font-weight:700; cursor:pointer; border-radius:16px;
+  }
+  .nav-btn.active{ color:var(--gold-soft); }
+  .nav-btn svg{ width:20px; height:20px; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <div class="logo">Ustara<em> · Owner</em></div>
-    <div class="header-right">
-      <div class="lang-row" id="langSwitch">
-        <button type="button" class="lang-btn" data-lang="en">EN</button>
-        <button type="button" class="lang-btn" data-lang="uz">UZ</button>
-        <button type="button" class="lang-btn" data-lang="ru">RU</button>
+<!-- ============ HOME ============ -->
+<div class="view active" data-view="home">
+  <div class="home-dark">
+    <div class="home-head">
+      <div>
+        <div class="eyebrow-gold">Ustara · Owner</div>
+        <div class="home-greeting" id="greeting">Your shop</div>
       </div>
-      <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
+    </div>
+
+    <div class="dark-grid" id="statTiles"></div>
+
+    <div class="board-card">
+      <div class="board-title">🏆 <span data-i18n="leaderboard_title">This month's leaderboard</span></div>
+      <div id="leaderboardArea"></div>
+    </div>
+
+    <div class="board-card">
+      <div class="board-title">📈 <span data-i18n="trend_title">Revenue, last 8 weeks</span></div>
+      <div class="chart-bars" id="trendChart"></div>
+    </div>
+
+    <div class="board-card">
+      <div class="board-title" style="justify-content:space-between;">
+        <span>🗓️ <span data-i18n="today_title">Today</span></span>
+        <span class="see-all" data-nav="schedule" data-i18n="see_all" style="color:var(--gold-soft);">See all</span>
+      </div>
+      <div id="todayPreview"></div>
     </div>
   </div>
-</header>
+</div>
 
-<main>
-  <div class="wrap">
-    <h1 id="greeting" data-i18n="greeting">Your shop</h1>
-    <p class="sub" data-i18n="sub">Link your barbers with their code and see how the shop is doing.</p>
+<!-- ============ SCHEDULE ============ -->
+<div class="view" data-view="schedule">
+  <div class="wrap" style="padding-top:24px;">
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">🗓️</span><span data-i18n="schedule_title">Today's schedule</span></span></div>
+    <div id="scheduleArea"></div>
+  </div>
+</div>
+
+<!-- ============ ROSTER ============ -->
+<div class="view" data-view="roster">
+  <div class="wrap" style="padding-top:24px;">
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-terracotta">💈</span><span data-i18n="roster_title">Your barbers</span></span></div>
 
     <div class="card">
-      <div class="section-title" style="margin:0 0 4px;" data-i18n="link_title">Add a barber</div>
-      <p class="sub" style="margin-bottom:14px;" data-i18n="link_sub">Ask your barber for their code (in their dashboard's Profile tab, "Shop owner code").</p>
+      <div style="font-weight:700; font-size:14px; margin-bottom:4px;" data-i18n="link_title">Add a barber</div>
+      <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:12px;" data-i18n="link_sub">Ask your barber for their code (Profile tab, "Shop owner code").</p>
       <div class="field-row">
         <input type="text" id="codeInput" maxlength="8" placeholder="ABCD1234">
         <button class="btn" id="linkBtn" data-i18n="link_btn">Link</button>
@@ -103,13 +272,64 @@
       <div class="link-msg" id="linkMsg"></div>
     </div>
 
-    <div class="section-title" data-i18n="overview_title">Overview</div>
-    <div class="stat-row" id="statRow"></div>
-
-    <div class="section-title" data-i18n="roster_title">Your barbers</div>
     <div id="rosterArea"></div>
   </div>
-</main>
+</div>
+
+<!-- ============ ACCOUNT ============ -->
+<div class="view" data-view="account">
+  <div class="wrap" style="padding-top:24px;">
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">👤</span><span data-i18n="account_title">Account</span></span></div>
+    <div class="info-card">
+      <div class="info-row"><span class="k" data-i18n="l_owner_name">Name</span><span class="v" id="ownerNameView"></span></div>
+      <div class="info-row">
+        <span class="k" data-i18n="l_shop_name">Shop name</span>
+        <input type="text" id="shopNameInput" style="max-width:160px;">
+      </div>
+      <div class="info-row"><span class="v" id="saveShopMsg" style="color:var(--success); font-weight:600; font-size:12px; display:none;"></span>
+        <button class="btn" id="saveShopBtn" data-i18n="save_btn" style="margin-left:auto;">Save</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-blue">🌐</span><span data-i18n="language_title">Language</span></span></div>
+    <div class="info-card" style="padding:18px 20px;">
+      <div class="lang-row" id="langSwitch">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="uz">UZ</button>
+        <button type="button" class="lang-btn" data-lang="ru">RU</button>
+      </div>
+    </div>
+
+    <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
+  </div>
+</div>
+
+<!-- ============ BARBER DETAIL MODAL ============ -->
+<div class="details-modal-overlay" id="barberModalOverlay">
+  <div class="details-modal">
+    <button class="details-modal-close">&times;</button>
+    <div id="barberModalBody"></div>
+  </div>
+</div>
+
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-btn active" data-view="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <span data-i18n="nav_home">Home</span>
+  </button>
+  <button class="nav-btn" data-view="schedule">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+    <span data-i18n="nav_schedule">Schedule</span>
+  </button>
+  <button class="nav-btn" data-view="roster">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    <span data-i18n="nav_roster">Barbers</span>
+  </button>
+  <button class="nav-btn" data-view="account">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+    <span data-i18n="nav_account">Account</span>
+  </button>
+</nav>
 
 <script>
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
@@ -118,56 +338,99 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 
 const I18N = {
   en:{
-    logout:"Log out", greeting:"Your shop", sub:"Link your barbers with their code and see how the shop is doing.",
-    link_title:"Add a barber", link_sub:'Ask your barber for their code (in their dashboard\'s Profile tab, "Shop owner code").',
+    leaderboard_title:"This month's leaderboard", trend_title:"Revenue, last 8 weeks", today_title:"Today", see_all:"See all",
+    schedule_title:"Today's schedule", roster_title:"Your barbers",
+    link_title:"Add a barber", link_sub:'Ask your barber for their code (Profile tab, "Shop owner code").',
     link_btn:"Link", link_ok:"Linked! They now show up below.",
     link_not_found:"No barber has that code — double-check it with them.",
-    link_already:"That barber is already linked to a different shop owner.",
-    link_error:"Something went wrong — try again.",
-    overview_title:"Overview", roster_title:"Your barbers",
+    link_already:"That barber is already linked to a different shop owner.", link_error:"Something went wrong — try again.",
+    account_title:"Account", l_owner_name:"Name", l_shop_name:"Shop name", save_btn:"Save", saved:"Saved!",
+    language_title:"Language", logout:"Log out",
+    nav_home:"Home", nav_schedule:"Schedule", nav_roster:"Barbers", nav_account:"Account",
     stat_barbers:"Barbers", stat_revenue:"Revenue (all-time)", stat_cuts:"Cuts completed", stat_rating:"Avg. rating",
     status_free:"Free right now", status_busy:"With a client",
-    mini_today:"Today", mini_cuts:"Completed", mini_revenue:"Revenue", mini_rating:"Rating",
-    unlink_btn:"Remove", unlink_confirm:"Remove this barber from your shop? They'll keep their own account and history.",
-    empty_roster:"No barbers linked yet — add one with their code above."
+    mini_today:"Today", mini_cuts:"Cuts", mini_revenue:"Revenue", mini_rating:"Rating",
+    unlink_btn:"Remove from shop", unlink_confirm:"Remove this barber from your shop? They'll keep their own account and history.",
+    empty_roster:"No barbers linked yet — add one with their code above.",
+    empty_schedule:"Nothing booked today across your barbers yet.",
+    empty_leaderboard:"No completed cuts this month yet.",
+    dm_bookings_title:"Recent bookings", dm_reviews_title:"Recent reviews", dm_trend_title:"Revenue, last 8 weeks",
+    empty_dm_bookings:"No bookings yet.", empty_dm_reviews:"No reviews yet.",
+    no_comment:"(no comment)"
   },
   uz:{
-    logout:"Chiqish", greeting:"Sizning do'koningiz", sub:"Sartaroshlaringizni kod orqali ulang va do'koningiz qanday ishlayotganini ko'ring.",
-    link_title:"Sartarosh qo'shish", link_sub:"Sartaroshingizdan kodini so'rang (uning boshqaruv panelidagi Profil bo'limida, \"Do'kon egasi kodi\").",
+    leaderboard_title:"Shu oyning reytingi", trend_title:"Daromad, so'nggi 8 hafta", today_title:"Bugun", see_all:"Barchasi",
+    schedule_title:"Bugungi jadval", roster_title:"Sartaroshlaringiz",
+    link_title:"Sartarosh qo'shish", link_sub:'Sartaroshingizdan kodini so\'rang (Profil bo\'limida, "Do\'kon egasi kodi").',
     link_btn:"Ulash", link_ok:"Ulandi! Endi u pastda ko'rinadi.",
     link_not_found:"Bunday kodli sartarosh topilmadi — u bilan tekshiring.",
-    link_already:"Bu sartarosh allaqachon boshqa do'kon egasiga ulangan.",
-    link_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
-    overview_title:"Umumiy ko'rinish", roster_title:"Sartaroshlaringiz",
+    link_already:"Bu sartarosh allaqachon boshqa do'kon egasiga ulangan.", link_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
+    account_title:"Hisob", l_owner_name:"Ism", l_shop_name:"Do'kon nomi", save_btn:"Saqlash", saved:"Saqlandi!",
+    language_title:"Til", logout:"Chiqish",
+    nav_home:"Bosh sahifa", nav_schedule:"Jadval", nav_roster:"Sartaroshlar", nav_account:"Hisob",
     stat_barbers:"Sartaroshlar", stat_revenue:"Daromad (jami)", stat_cuts:"Bajarilgan", stat_rating:"O'rtacha baho",
     status_free:"Hozir bo'sh", status_busy:"Mijoz bilan",
     mini_today:"Bugun", mini_cuts:"Bajarilgan", mini_revenue:"Daromad", mini_rating:"Baho",
-    unlink_btn:"O'chirish", unlink_confirm:"Bu sartaroshni do'koningizdan olib tashlaysizmi? Uning hisobi va tarixi saqlanib qoladi.",
-    empty_roster:"Hali sartarosh ulanmagan — yuqorida kod orqali qo'shing."
+    unlink_btn:"Do'kondan olib tashlash", unlink_confirm:"Bu sartaroshni do'koningizdan olib tashlaysizmi? Uning hisobi va tarixi saqlanib qoladi.",
+    empty_roster:"Hali sartarosh ulanmagan — yuqorida kod orqali qo'shing.",
+    empty_schedule:"Bugun sartaroshlaringizda hali band yo'q.",
+    empty_leaderboard:"Bu oy hali bajarilgan ish yo'q.",
+    dm_bookings_title:"So'nggi bandlar", dm_reviews_title:"So'nggi sharhlar", dm_trend_title:"Daromad, so'nggi 8 hafta",
+    empty_dm_bookings:"Hali bandlar yo'q.", empty_dm_reviews:"Hali sharhlar yo'q.",
+    no_comment:"(sharh yo'q)"
   },
   ru:{
-    logout:"Выйти", greeting:"Ваш салон", sub:"Привяжите барберов по коду и следите за тем, как идут дела в салоне.",
-    link_title:"Добавить барбера", link_sub:'Спросите у барбера его код (в его панели, на вкладке Профиль, "Код владельца салона").',
+    leaderboard_title:"Рейтинг за этот месяц", trend_title:"Доход за 8 недель", today_title:"Сегодня", see_all:"Все",
+    schedule_title:"Расписание на сегодня", roster_title:"Ваши барберы",
+    link_title:"Добавить барбера", link_sub:'Спросите у барбера его код (вкладка Профиль, "Код владельца салона").',
     link_btn:"Привязать", link_ok:"Привязан! Теперь он отображается ниже.",
     link_not_found:"Барбер с таким кодом не найден — уточните код у него.",
-    link_already:"Этот барбер уже привязан к другому владельцу.",
-    link_error:"Что-то пошло не так — попробуйте снова.",
-    overview_title:"Обзор", roster_title:"Ваши барберы",
-    stat_barbers:"Барберы", stat_revenue:"Доход (за всё время)", stat_cuts:"Выполнено стрижек", stat_rating:"Средний рейтинг",
+    link_already:"Этот барбер уже привязан к другому владельцу.", link_error:"Что-то пошло не так — попробуйте снова.",
+    account_title:"Аккаунт", l_owner_name:"Имя", l_shop_name:"Название салона", save_btn:"Сохранить", saved:"Сохранено!",
+    language_title:"Язык", logout:"Выйти",
+    nav_home:"Главная", nav_schedule:"Расписание", nav_roster:"Барберы", nav_account:"Аккаунт",
+    stat_barbers:"Барберы", stat_revenue:"Доход (всего)", stat_cuts:"Выполнено стрижек", stat_rating:"Рейтинг",
     status_free:"Сейчас свободен", status_busy:"С клиентом",
-    mini_today:"Сегодня", mini_cuts:"Выполнено", mini_revenue:"Доход", mini_rating:"Рейтинг",
-    unlink_btn:"Убрать", unlink_confirm:"Убрать этого барбера из вашего салона? Его аккаунт и история сохранятся.",
-    empty_roster:"Пока нет привязанных барберов — добавьте по коду выше."
+    mini_today:"Сегодня", mini_cuts:"Стрижки", mini_revenue:"Доход", mini_rating:"Рейтинг",
+    unlink_btn:"Убрать из салона", unlink_confirm:"Убрать этого барбера из вашего салона? Его аккаунт и история сохранятся.",
+    empty_roster:"Пока нет привязанных барберов — добавьте по коду выше.",
+    empty_schedule:"Пока нет записей на сегодня у ваших барберов.",
+    empty_leaderboard:"В этом месяце пока нет выполненных стрижек.",
+    dm_bookings_title:"Последние записи", dm_reviews_title:"Последние отзывы", dm_trend_title:"Доход за 8 недель",
+    empty_dm_bookings:"Пока нет записей.", empty_dm_reviews:"Пока нет отзывов.",
+    no_comment:"(без комментария)"
   }
 };
 
 let currentLang = I18N[localStorage.getItem('ustara_lang')] ? localStorage.getItem('ustara_lang') : 'en';
 function t(key){ return I18N[currentLang][key]; }
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
-function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '—'; }
+function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '0 UZS'; }
 function avatarFor(b){
   const initials = (b.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   return b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials;
+}
+
+function letterReveal(el, text, startDelay){
+  if(!el) return;
+  startDelay = startDelay || 0;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){ el.textContent = text; return; }
+  el.innerHTML = '';
+  [...text].forEach((ch, i)=>{
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = ch === ' ' ? ' ' : ch;
+    span.style.animationDelay = (startDelay + i * 22) + 'ms';
+    el.appendChild(span);
+  });
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    el.querySelectorAll('.letter').forEach(s => s.classList.add('in'));
+  }));
+}
+function revealNow(container){
+  (container ? container.querySelectorAll('.reveal') : document.querySelectorAll('.reveal')).forEach((el, i)=>{
+    setTimeout(()=> el.classList.add('in'), i * 60);
+  });
 }
 
 function applyLang(lang){
@@ -182,6 +445,21 @@ function applyLang(lang){
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
   const btn = e.target.closest('.lang-btn');
   if(btn){ localStorage.setItem('ustara_lang', btn.dataset.lang); applyLang(btn.dataset.lang); }
+});
+
+function goToView(name){
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.dataset.view === name));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  window.scrollTo({ top:0, behavior:'smooth' });
+  const view = document.querySelector(`.view[data-view="${name}"]`);
+  requestAnimationFrame(()=> requestAnimationFrame(()=> revealNow(view)));
+}
+document.getElementById('bottomNav').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.nav-btn');
+  if(btn) goToView(btn.dataset.view);
+});
+document.querySelectorAll('[data-nav]').forEach(el=>{
+  el.addEventListener('click', ()=> goToView(el.dataset.nav));
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
@@ -208,6 +486,7 @@ async function init(){
 
   applyLang(currentLang);
   await loadRoster();
+  revealNow();
 }
 
 async function loadRoster(){
@@ -217,7 +496,7 @@ async function loadRoster(){
 
   const barberIds = barbersData.map(b => b.id);
   const { data: bookings } = await supabaseClient.from('bookings').select('*').in('barber_id', barberIds);
-  const { data: reviews } = await supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', barberIds);
+  const { data: reviews } = await supabaseClient.from('reviews').select('*').in('barber_id', barberIds);
 
   bookingsByBarber = {};
   (bookings || []).forEach(b => { (bookingsByBarber[b.barber_id] = bookingsByBarber[b.barber_id] || []).push(b); });
@@ -242,14 +521,47 @@ function barberStats(barberId){
   });
   const todayCount = bookings.filter(b => {
     if(b.status === 'cancelled') return false;
-    const d = new Date(b.start_time);
-    return d.toDateString() === now.toDateString();
+    return new Date(b.start_time).toDateString() === now.toDateString();
   }).length;
-  return { completedCount: completed.length, revenue, rating, isBusy, todayCount };
+  const monthRevenue = completed
+    .filter(b => { const d = new Date(b.completed_at || b.start_time); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); })
+    .reduce((s,b) => s + (b.service_price || 0), 0);
+  return { completedCount: completed.length, revenue, rating, isBusy, todayCount, monthRevenue };
+}
+
+// rolling 7-day buckets, oldest first, for a barber (or all linked barbers combined if barberId is null)
+function weeklyRevenueTrend(barberId){
+  const now = new Date();
+  const bookings = barberId
+    ? (bookingsByBarber[barberId] || [])
+    : Object.values(bookingsByBarber).flat();
+  const completed = bookings.filter(b => b.status === 'completed');
+  const buckets = [];
+  for(let i = 7; i >= 0; i--){
+    const end = new Date(now.getTime() - i * 7 * 86400000);
+    const start = new Date(end.getTime() - 7 * 86400000);
+    const value = completed
+      .filter(b => { const d = new Date(b.completed_at || b.start_time); return d > start && d <= end; })
+      .reduce((s,b) => s + (b.service_price || 0), 0);
+    buckets.push({ label: `${end.getMonth()+1}/${end.getDate()}`, value });
+  }
+  return buckets;
+}
+
+function renderChart(buckets, containerId, barClass, labelClass){
+  const max = Math.max(...buckets.map(b => b.value), 1);
+  document.getElementById(containerId).innerHTML = buckets.map(b => `
+    <div class="${containerId === 'trendChart' ? 'chart-bar-wrap' : 'dm-chart-bar-wrap'}">
+      <div class="${barClass}" style="height:${Math.max((b.value / max) * 100, 3)}%" title="${formatPrice(b.value)}"></div>
+      <div class="${labelClass}">${b.label}</div>
+    </div>
+  `).join('');
 }
 
 function render(){
-  document.getElementById('greeting').textContent = ownerData.shop_name || t('greeting');
+  document.getElementById('greeting').textContent = ownerData.shop_name || t('account_title');
+  document.getElementById('ownerNameView').textContent = ownerData.full_name || '—';
+  document.getElementById('shopNameInput').value = ownerData.shop_name || '';
 
   const perBarber = barbersData.map(b => ({ barber: b, stats: barberStats(b.id) }));
   const totalRevenue = perBarber.reduce((s,x) => s + x.stats.revenue, 0);
@@ -257,45 +569,156 @@ function render(){
   const ratedOnes = perBarber.filter(x => x.stats.rating !== null);
   const avgRating = ratedOnes.length ? (ratedOnes.reduce((s,x) => s + x.stats.rating, 0) / ratedOnes.length) : null;
 
-  document.getElementById('statRow').innerHTML = `
-    <div class="stat-card"><div class="stat-num">${barbersData.length}</div><div class="stat-label">${t('stat_barbers')}</div></div>
-    <div class="stat-card"><div class="stat-num">${formatPrice(totalRevenue)}</div><div class="stat-label">${t('stat_revenue')}</div></div>
-    <div class="stat-card"><div class="stat-num">${totalCuts}</div><div class="stat-label">${t('stat_cuts')}</div></div>
-    <div class="stat-card"><div class="stat-num">${avgRating !== null ? avgRating.toFixed(1) + ' ★' : '—'}</div><div class="stat-label">${t('stat_rating')}</div></div>
+  document.getElementById('statTiles').innerHTML = `
+    <div class="dark-tile"><div class="tile-emoji chipD-blue">💈</div><div class="stat-dark-num">${barbersData.length}</div><div class="stat-dark-label">${t('stat_barbers')}</div></div>
+    <div class="dark-tile"><div class="tile-emoji chipD-gold">💰</div><div class="stat-dark-num">${formatPrice(totalRevenue)}</div><div class="stat-dark-label">${t('stat_revenue')}</div></div>
+    <div class="dark-tile"><div class="tile-emoji chipD-teal">✂️</div><div class="stat-dark-num">${totalCuts}</div><div class="stat-dark-label">${t('stat_cuts')}</div></div>
+    <div class="dark-tile"><div class="tile-emoji chipD-terracotta">⭐</div><div class="stat-dark-num">${avgRating !== null ? avgRating.toFixed(1) : '—'}</div><div class="stat-dark-label">${t('stat_rating')}</div></div>
   `;
 
-  const area = document.getElementById('rosterArea');
-  if(perBarber.length === 0){
-    area.innerHTML = `<div class="empty-state">${t('empty_roster')}</div>`;
-    return;
-  }
-  area.innerHTML = perBarber.map(({ barber: b, stats: s }) => `
-    <div class="barber-card">
-      <div class="barber-avatar">${avatarFor(b)}</div>
-      <div class="barber-info">
-        <div class="barber-name">${escapeHtml(b.full_name)}</div>
-        <span class="barber-status ${s.isBusy ? 'busy' : 'free'}">${s.isBusy ? t('status_busy') : t('status_free')}</span>
-        <div class="barber-mini-stats">
-          <div class="mini-stat"><strong>${s.todayCount}</strong>${t('mini_today')}</div>
-          <div class="mini-stat"><strong>${s.completedCount}</strong>${t('mini_cuts')}</div>
-          <div class="mini-stat"><strong>${formatPrice(s.revenue)}</strong>${t('mini_revenue')}</div>
-          <div class="mini-stat"><strong>${s.rating !== null ? s.rating.toFixed(1) + ' ★' : '—'}</strong>${t('mini_rating')}</div>
-        </div>
+  // ---------- leaderboard (this month's revenue) ----------
+  const ranked = [...perBarber].sort((a,b) => b.stats.monthRevenue - a.stats.monthRevenue).filter(x => x.stats.monthRevenue > 0);
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('leaderboardArea').innerHTML = ranked.length === 0
+    ? `<div style="font-size:12px; color:var(--on-dark-dim);">${t('empty_leaderboard')}</div>`
+    : ranked.slice(0,5).map((x,i) => `
+      <div class="board-row">
+        <div class="board-rank">${medals[i] || (i+1)}</div>
+        <div class="board-avatar">${avatarFor(x.barber)}</div>
+        <div class="board-name">${escapeHtml(x.barber.full_name)}</div>
+        <div class="board-value">${formatPrice(x.stats.monthRevenue)}</div>
       </div>
-      <button class="btn btn-ghost" data-unlink="${b.id}">${t('unlink_btn')}</button>
-    </div>
-  `).join('');
+    `).join('');
 
-  area.querySelectorAll('[data-unlink]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if(!confirm(t('unlink_confirm'))) return;
-      btn.disabled = true;
-      const { error } = await supabaseClient.rpc('unlink_barber_from_owner', { p_barber_id: btn.dataset.unlink });
-      if(error) console.error('Unlink failed:', error);
-      await loadRoster();
+  // ---------- shop-wide revenue trend ----------
+  renderChart(weeklyRevenueTrend(null), 'trendChart', 'chart-bar', 'chart-bar-label');
+
+  // ---------- today preview (home) ----------
+  const now = new Date();
+  const todayAll = Object.values(bookingsByBarber).flat()
+    .filter(b => b.status !== 'cancelled' && new Date(b.start_time).toDateString() === now.toDateString())
+    .sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+  document.getElementById('todayPreview').innerHTML = todayAll.length === 0
+    ? `<div style="font-size:12px; color:var(--on-dark-dim);">${t('empty_schedule')}</div>`
+    : todayAll.slice(0,3).map(b => {
+      const barber = barbersData.find(x => x.id === b.barber_id);
+      return `
+        <div class="schedule-preview-row">
+          <div class="sp-time">${new Date(b.start_time).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</div>
+          <div class="sp-info">
+            <div class="sp-name">${escapeHtml(b.client_name || '—')}</div>
+            <div class="sp-sub">${escapeHtml(barber ? barber.full_name : '')}${b.service_label ? ' · ' + escapeHtml(b.service_label) : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+  // ---------- schedule tab (full today's agenda) ----------
+  const scheduleArea = document.getElementById('scheduleArea');
+  if(todayAll.length === 0){
+    scheduleArea.innerHTML = `<div class="empty-state"><div class="icon">🗓️</div><strong>${t('empty_schedule')}</strong></div>`;
+  } else {
+    scheduleArea.innerHTML = todayAll.map(b => {
+      const barber = barbersData.find(x => x.id === b.barber_id);
+      return `
+        <div class="schedule-row">
+          <div class="sr-time">${new Date(b.start_time).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</div>
+          <div class="sr-info">
+            <div class="sr-barber">${escapeHtml(barber ? barber.full_name : '—')}</div>
+            <div class="sr-client">${escapeHtml(b.client_name || '—')}${b.service_label ? ' · ' + escapeHtml(b.service_label) : ''}</div>
+          </div>
+          <span class="status-badge ${b.status}">${b.status}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ---------- roster tab ----------
+  const rosterArea = document.getElementById('rosterArea');
+  if(perBarber.length === 0){
+    rosterArea.innerHTML = `<div class="empty-state"><div class="icon">💈</div><strong>${t('empty_roster')}</strong></div>`;
+  } else {
+    rosterArea.innerHTML = perBarber.map(({ barber: b, stats: s }) => `
+      <div class="barber-card" data-open-barber="${b.id}">
+        <div class="barber-avatar">${avatarFor(b)}</div>
+        <div class="barber-info">
+          <div class="barber-name">${escapeHtml(b.full_name)}</div>
+          <span class="barber-status ${s.isBusy ? 'busy' : 'free'}">${s.isBusy ? t('status_busy') : t('status_free')}</span>
+          <div class="barber-mini-stats">
+            <div class="mini-stat"><strong>${s.todayCount}</strong>${t('mini_today')}</div>
+            <div class="mini-stat"><strong>${s.completedCount}</strong>${t('mini_cuts')}</div>
+            <div class="mini-stat"><strong>${s.rating !== null ? s.rating.toFixed(1) + ' ★' : '—'}</strong>${t('mini_rating')}</div>
+          </div>
+        </div>
+        <span class="barber-arrow">›</span>
+      </div>
+    `).join('');
+    rosterArea.querySelectorAll('[data-open-barber]').forEach(card=>{
+      card.addEventListener('click', ()=> openBarberDetail(card.dataset.openBarber));
     });
-  });
+  }
 }
+
+function openBarberDetail(barberId){
+  const barber = barbersData.find(b => b.id === barberId);
+  if(!barber) return;
+  const s = barberStats(barberId);
+  const bookings = (bookingsByBarber[barberId] || []).slice().sort((a,b) => new Date(b.start_time) - new Date(a.start_time));
+  const reviews = (reviewsByBarber[barberId] || []).slice().sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+  document.getElementById('barberModalBody').innerHTML = `
+    <div class="dm-head">
+      <div class="dm-avatar">${avatarFor(barber)}</div>
+      <div>
+        <div class="dm-name">${escapeHtml(barber.full_name)}</div>
+        <span class="dm-status ${s.isBusy ? 'busy' : 'free'}">${s.isBusy ? t('status_busy') : t('status_free')}</span>
+      </div>
+    </div>
+    <div class="dm-stat-row">
+      <div class="dm-stat"><div class="dm-stat-num">${s.todayCount}</div><div class="dm-stat-label">${t('mini_today')}</div></div>
+      <div class="dm-stat"><div class="dm-stat-num">${s.completedCount}</div><div class="dm-stat-label">${t('mini_cuts')}</div></div>
+      <div class="dm-stat"><div class="dm-stat-num">${formatPrice(s.revenue)}</div><div class="dm-stat-label">${t('mini_revenue')}</div></div>
+      <div class="dm-stat"><div class="dm-stat-num">${s.rating !== null ? s.rating.toFixed(1) + ' ★' : '—'}</div><div class="dm-stat-label">${t('mini_rating')}</div></div>
+    </div>
+
+    <div class="dm-section-title">📈 ${t('dm_trend_title')}</div>
+    <div class="dm-chart-card"><div class="dm-chart-bars" id="dmChart"></div></div>
+
+    <div class="dm-section-title">🗓️ ${t('dm_bookings_title')}</div>
+    ${bookings.length === 0 ? `<div style="font-size:12px; color:var(--ink-dim);">${t('empty_dm_bookings')}</div>` : bookings.slice(0,6).map(b => `
+      <div class="dm-booking-row">
+        <div class="r1">
+          <span>${escapeHtml(b.client_name || '—')}${b.service_label ? ' · ' + escapeHtml(b.service_label) : ''}</span>
+          <span class="status-badge ${b.status}">${b.status}</span>
+        </div>
+        <div style="color:var(--ink-dim); margin-top:3px;">${new Date(b.start_time).toLocaleString()}</div>
+      </div>
+    `).join('')}
+
+    <div class="dm-section-title">⭐ ${t('dm_reviews_title')}</div>
+    ${reviews.length === 0 ? `<div style="font-size:12px; color:var(--ink-dim);">${t('empty_dm_reviews')}</div>` : reviews.slice(0,6).map(r => `
+      <div class="dm-review-row">
+        <span class="dm-review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span>
+        <div class="dm-review-comment">${r.comment ? escapeHtml(r.comment) : t('no_comment')}</div>
+      </div>
+    `).join('')}
+
+    <button class="btn btn-ghost dm-unlink-btn" id="dmUnlinkBtn" data-id="${barber.id}">${t('unlink_btn')}</button>
+  `;
+  renderChart(weeklyRevenueTrend(barberId), 'dmChart', 'dm-chart-bar', 'dm-chart-bar-label');
+  document.getElementById('dmUnlinkBtn').addEventListener('click', async (e)=>{
+    if(!confirm(t('unlink_confirm'))) return;
+    e.target.disabled = true;
+    const { error } = await supabaseClient.rpc('unlink_barber_from_owner', { p_barber_id: barberId });
+    if(error) console.error('Unlink failed:', error);
+    closeBarberDetail();
+    await loadRoster();
+  });
+  document.getElementById('barberModalOverlay').classList.add('open');
+}
+function closeBarberDetail(){ document.getElementById('barberModalOverlay').classList.remove('open'); }
+document.querySelector('#barberModalOverlay .details-modal-close').addEventListener('click', closeBarberDetail);
+document.getElementById('barberModalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'barberModalOverlay') closeBarberDetail();
+});
 
 document.getElementById('linkBtn').addEventListener('click', async ()=>{
   const input = document.getElementById('codeInput');
@@ -307,10 +730,7 @@ document.getElementById('linkBtn').addEventListener('click', async ()=>{
   btn.disabled = true;
   const { data, error } = await supabaseClient.rpc('link_barber_to_owner', { p_code: code });
   btn.disabled = false;
-  if(error){
-    msg.className = 'link-msg err'; msg.textContent = t('link_error');
-    return;
-  }
+  if(error){ msg.className = 'link-msg err'; msg.textContent = t('link_error'); return; }
   if(data === 'ok'){
     msg.className = 'link-msg ok'; msg.textContent = t('link_ok');
     input.value = '';
@@ -320,6 +740,21 @@ document.getElementById('linkBtn').addEventListener('click', async ()=>{
   } else if(data === 'already_linked'){
     msg.className = 'link-msg err'; msg.textContent = t('link_already');
   }
+});
+
+document.getElementById('saveShopBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveShopBtn');
+  const msg = document.getElementById('saveShopMsg');
+  btn.disabled = true;
+  const shopName = document.getElementById('shopNameInput').value.trim();
+  const { error } = await supabaseClient.from('owners').update({ shop_name: shopName || null }).eq('id', ownerData.id);
+  btn.disabled = false;
+  if(error){ console.error('Failed to save shop name:', error); return; }
+  ownerData.shop_name = shopName;
+  document.getElementById('greeting').textContent = shopName || t('account_title');
+  msg.style.display = 'inline';
+  msg.textContent = t('saved');
+  setTimeout(()=> msg.style.display = 'none', 1800);
 });
 
 init();
