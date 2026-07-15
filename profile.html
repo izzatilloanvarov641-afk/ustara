@@ -16,7 +16,7 @@
   :root{
     --bg:#12151C; --surface:#1B1F29; --surface-2:#232838; --line:rgba(255,255,255,0.09);
     --ink:#F3EFE2; --ink-dim:#9AA0AD; --gold:#A9DB3A; --gold-soft:#CDFF5E;
-    --success:#3D9E2F; --r-card:26px;
+    --success:#3D9E2F; --coral:#FF6A4D; --sun:#FFB84D; --r-card:26px;
   }
   *{ margin:0; padding:0; box-sizing:border-box; }
   body{ background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; padding-bottom:100px; }
@@ -69,6 +69,75 @@
   .trust-item{ text-align:center; }
   .trust-num{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:19px; color:var(--gold-soft); }
   .trust-label{ font-size:10px; color:var(--ink-dim); font-weight:600; margin-top:2px; text-transform:uppercase; letter-spacing:0.04em; }
+
+  .open-pill{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:800; padding:5px 13px;
+    border-radius:20px; margin-top:10px;
+  }
+  .open-pill.open{ background:rgba(61,158,47,0.18); color:#7ED06F; }
+  .open-pill.closed{ background:rgba(255,106,77,0.16); color:var(--coral); }
+
+  .action-row{ display:flex; gap:10px; margin:18px auto 0; max-width:420px; }
+  .action-btn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:8px; padding:14px;
+    border-radius:18px; font-size:13.5px; font-weight:800; cursor:pointer; border:none;
+    font-family:'IBM Plex Sans', sans-serif;
+  }
+  .action-btn.call{ background:var(--gold); color:#12151C; }
+  .action-btn.call:hover{ background:var(--gold-soft); }
+  .action-btn.map-btn{ background:var(--sun); color:#12151C; }
+  .action-btn.map-btn:hover{ opacity:0.9; }
+
+  .hours-card{ background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:6px 18px; }
+  .hours-row{ display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .hours-row:last-child{ border-bottom:none; }
+  .hours-row .day{ color:var(--ink-dim); }
+  .hours-row .time{ font-weight:700; }
+  .hours-row.today .day, .hours-row.today .time{ color:var(--gold-soft); font-weight:800; }
+  .hours-row .dayoff{ color:var(--coral); font-weight:700; }
+
+  .review-summary{
+    display:flex; gap:20px; align-items:center; background:var(--surface); border:1px solid var(--line);
+    border-radius:20px; padding:18px 20px; margin-bottom:12px;
+  }
+  .rs-left{ text-align:center; flex-shrink:0; }
+  .rs-big{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:38px; line-height:1; }
+  .rs-stars{ color:var(--gold); font-size:13px; margin-top:4px; letter-spacing:1px; }
+  .rs-count{ font-size:11px; color:var(--ink-dim); margin-top:3px; }
+  .rs-bars{ flex:1; display:flex; flex-direction:column; gap:5px; }
+  .rs-bar-row{ display:flex; align-items:center; gap:8px; font-size:11px; color:var(--ink-dim); }
+  .rs-bar-track{ flex:1; height:6px; border-radius:4px; background:var(--surface-2); overflow:hidden; }
+  .rs-bar-fill{ height:100%; border-radius:4px; background:linear-gradient(90deg, var(--gold), var(--gold-soft)); }
+  .rs-bar-n{ width:10px; text-align:right; }
+  .rs-bar-c{ width:18px; }
+
+  .contacts-card{ background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:6px 18px; }
+  .contact-row{ display:flex; align-items:center; gap:13px; padding:13px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .contact-row:last-child{ border-bottom:none; }
+  .contact-icon{
+    width:36px; height:36px; border-radius:12px; background:var(--surface-2); display:flex;
+    align-items:center; justify-content:center; font-size:15px; flex-shrink:0;
+  }
+  .contact-label{ font-size:10.5px; color:var(--ink-dim); }
+  .contact-value{ font-weight:700; color:var(--gold-soft); }
+
+  .share-btn-profile{
+    position:absolute; top:16px; right:64px; width:38px; height:38px; border-radius:50%;
+    background:rgba(20,20,20,0.5); border:1px solid rgba(255,255,255,0.2); cursor:pointer; font-size:15px;
+    color:#fff; display:flex; align-items:center; justify-content:center; z-index:3; backdrop-filter:blur(6px);
+  }
+
+  .svc-duration-chip{
+    display:inline-block; font-size:10.5px; color:var(--ink-dim); background:var(--surface-2);
+    padding:3px 9px; border-radius:10px; margin-top:5px;
+  }
+  .svc-book-chip{
+    background:var(--gold); color:#12151C; font-size:11.5px; font-weight:800; padding:8px 16px;
+    border-radius:14px; flex-shrink:0; margin-left:10px;
+  }
+  .service-option .svc-main{ flex:1; min-width:0; }
+  .service-option .svc-name{ font-weight:700; }
+  .service-option .svc-right{ display:flex; align-items:center; }
 
   .tags{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:16px; }
   .tag{ font-size:11.5px; border:1px solid var(--line); color:var(--ink-dim); padding:6px 13px; border-radius:20px; background:var(--surface); }
@@ -186,6 +255,11 @@ const T = {
        back:"Back", location:"Location", min:"min",
        trust_clients:"Clients", trust_years:"Years exp.", trust_verified:"Verified", sticky_book:"Book with {name}",
        reviews_word:"reviews", reviews_title:"Reviews", new_barber:"New to Ustara",
+       call_btn:"Call", map_btn:"On the map", open_now:"Open now", closed_now:"Closed",
+       hours_title:"Working hours", day_off:"Day off", today_word:"(today)",
+       contacts_title:"Contacts", contact_phone:"Phone", contact_telegram:"Telegram",
+       book_chip:"Book", link_copied:"Link copied!",
+       day_names:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
        foot_terms:"Terms", foot_privacy:"Privacy" },
   uz:{ not_found:"Bu sartarosh profili mavjud emas yoki hozircha ochiq emas.", years:"yil",
        portfolio:"Ishlari", book_title:"Uchrashuvni band qiling", choose_service:"Xizmatni tanlang",
@@ -197,6 +271,11 @@ const T = {
        back:"Orqaga", location:"Joylashuv", min:"daq",
        trust_clients:"Mijozlar", trust_years:"Tajriba", trust_verified:"Tasdiqlangan", sticky_book:"{name} bilan band qilish",
        reviews_word:"sharh", reviews_title:"Sharhlar", new_barber:"Ustara'da yangi",
+       call_btn:"Qo'ng'iroq", map_btn:"Xaritada", open_now:"Hozir ochiq", closed_now:"Yopiq",
+       hours_title:"Ish vaqti", day_off:"Dam olish", today_word:"(bugun)",
+       contacts_title:"Kontaktlar", contact_phone:"Telefon", contact_telegram:"Telegram",
+       book_chip:"Yozilish", link_copied:"Havola nusxalandi!",
+       day_names:["Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba","Yakshanba"],
        foot_terms:"Shartlar", foot_privacy:"Maxfiylik" },
   ru:{ not_found:"Этот профиль барбера не существует или сейчас недоступен.", years:"лет",
        portfolio:"Их работы", book_title:"Записаться на приём", choose_service:"Выберите услугу",
@@ -208,6 +287,11 @@ const T = {
        back:"Назад", location:"Локация", min:"мин",
        trust_clients:"Клиентов", trust_years:"Опыт", trust_verified:"Проверен", sticky_book:"Записаться к {name}",
        reviews_word:"отзывов", reviews_title:"Отзывы", new_barber:"Новичок на Ustara",
+       call_btn:"Позвонить", map_btn:"На карте", open_now:"Сейчас открыто", closed_now:"Закрыто",
+       hours_title:"Часы работы", day_off:"Выходной", today_word:"(сегодня)",
+       contacts_title:"Контакты", contact_phone:"Телефон", contact_telegram:"Telegram",
+       book_chip:"Записаться", link_copied:"Ссылка скопирована!",
+       day_names:["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
        foot_terms:"Условия", foot_privacy:"Конфиденциальность" }
 };
 const storedLang = localStorage.getItem('ustara_lang');
@@ -275,6 +359,65 @@ async function init(){
   render(portfolioPhotos, completedCount || 0, reviewsData);
 }
 
+function isOpenNow(){
+  const now = new Date();
+  const blocks = blocksForDay(JS_DAY_TO_KEY[now.getDay()]);
+  const mins = now.getHours() * 60 + now.getMinutes();
+  return blocks.some(bl => {
+    const [sh, sm] = bl.start.split(':').map(Number);
+    const [eh, em] = bl.end.split(':').map(Number);
+    return mins >= sh * 60 + sm && mins < eh * 60 + em;
+  });
+}
+
+function hoursListHtml(){
+  // Monday-first display order; JS_DAY_TO_KEY is Sunday-first
+  const order = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayKey = JS_DAY_TO_KEY[new Date().getDay()];
+  const hasAnyHours = order.some(k => blocksForDay(k).length > 0);
+  if(!hasAnyHours) return '';
+  return `
+    <div class="section-title">🕐 ${t('hours_title')}</div>
+    <div class="hours-card">
+      ${order.map((key, i) => {
+        const blocks = blocksForDay(key);
+        const isToday = key === todayKey;
+        const timeStr = blocks.length > 0
+          ? blocks.map(bl => `${bl.start} – ${bl.end}`).join(', ')
+          : `<span class="dayoff">${t('day_off')}</span>`;
+        return `
+          <div class="hours-row ${isToday ? 'today' : ''}">
+            <span class="day">${t('day_names')[i]}${isToday ? ' ' + t('today_word') : ''}</span>
+            <span class="time">${timeStr}</span>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function reviewSummaryHtml(reviewsData, avgRating){
+  if(reviewsData.length === 0) return '';
+  const counts = [0,0,0,0,0];
+  reviewsData.forEach(r => { if(r.rating >= 1 && r.rating <= 5) counts[r.rating - 1]++; });
+  const max = Math.max(...counts, 1);
+  const rounded = Math.round(parseFloat(avgRating));
+  return `
+    <div class="review-summary">
+      <div class="rs-left">
+        <div class="rs-big">${avgRating}</div>
+        <div class="rs-stars">${'★'.repeat(rounded)}${'☆'.repeat(5 - rounded)}</div>
+        <div class="rs-count">${reviewsData.length} ${t('reviews_word')}</div>
+      </div>
+      <div class="rs-bars">
+        ${[5,4,3,2,1].map(n => `
+          <div class="rs-bar-row">
+            <span class="rs-bar-n">${n}</span>
+            <div class="rs-bar-track"><div class="rs-bar-fill" style="width:${(counts[n-1] / max) * 100}%"></div></div>
+            <span class="rs-bar-c">${counts[n-1]}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
 function render(portfolioPhotos, completedCount, reviewsData){
   const b = barberData;
   const specs = (b.specialties || []).map(s => `<span class="tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
@@ -287,6 +430,9 @@ function render(portfolioPhotos, completedCount, reviewsData){
     ? (reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewsData.length).toFixed(1)
     : null;
   const recentReviews = reviewsData.slice(0, 3);
+  const open = isOpenNow();
+  const mapUrl = b.latitude && b.longitude ? `https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}` : null;
+  const tgUsername = (b.telegram_username || '').replace(/^@/, '');
 
   document.title = `${b.full_name} — Ustara`;
 
@@ -294,6 +440,7 @@ function render(portfolioPhotos, completedCount, reviewsData){
     <div class="hero-photo">
       ${heroPhoto}
       <button class="back-btn" onclick="if(history.length > 1){ history.back(); } else { window.location.href='client-dashboard.html'; }">←</button>
+      <button class="share-btn-profile" id="shareBtnProfile">↗</button>
       <button class="fav-btn-profile" id="favBtnProfile">${favoriteIds.has(b.id) ? '♥' : '♡'}</button>
     </div>
 
@@ -305,6 +452,14 @@ function render(portfolioPhotos, completedCount, reviewsData){
       <h1>${escapeHtml(b.full_name)}</h1>
       <div class="meta">${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
       ${avgRating ? `<div class="rating-line">★ ${avgRating} <span>(${reviewsData.length} ${t('reviews_word')})</span></div>` : `<div class="rating-line new-badge">${t('new_barber')}</div>`}
+      <div><span class="open-pill ${open ? 'open' : 'closed'}">${open ? '🟢 ' + t('open_now') : '🔴 ' + t('closed_now')}</span></div>
+
+      ${b.phone || mapUrl ? `
+        <div class="action-row">
+          ${b.phone ? `<a class="action-btn call" href="tel:${escapeHtml(b.phone)}">📞 ${t('call_btn')}</a>` : ''}
+          ${mapUrl ? `<a class="action-btn map-btn" href="${mapUrl}" target="_blank" rel="noopener">📍 ${t('map_btn')}</a>` : ''}
+        </div>
+      ` : ''}
 
       <div class="trust-row">
         <div class="trust-item"><div class="trust-num">${completedCount}+</div><div class="trust-label">${t('trust_clients')}</div></div>
@@ -317,13 +472,19 @@ function render(portfolioPhotos, completedCount, reviewsData){
     </div>
 
     <div class="wrap">
+      <div class="section-title" id="bookingSectionTitle">✂️ ${t('book_title')}</div>
+      <div id="bookingArea"></div>
+
+      ${hoursListHtml()}
+
       ${portfolioPhotos.length > 0 ? `
-        <div class="section-title">${t('portfolio')}</div>
+        <div class="section-title">📸 ${t('portfolio')}</div>
         <div class="portfolio-grid">${portfolioPhotos.map(p => `<img src="${escapeHtml(portfolioPublicUrl(p.image_path))}" alt="">`).join('')}</div>
       ` : ''}
 
-      ${recentReviews.length > 0 ? `
-        <div class="section-title">${t('reviews_title')}</div>
+      ${reviewsData.length > 0 ? `
+        <div class="section-title">⭐ ${t('reviews_title')}</div>
+        ${reviewSummaryHtml(reviewsData, avgRating)}
         <div class="reviews-list">
           ${recentReviews.map(r => `
             <div class="review-card">
@@ -336,12 +497,25 @@ function render(portfolioPhotos, completedCount, reviewsData){
       ` : ''}
 
       ${b.latitude && b.longitude && b.is_location_verified ? `
-        <div class="section-title">${t('location')}</div>
+        <div class="section-title">📍 ${t('location')}</div>
         <div id="locationMapEl"></div>
       ` : ''}
 
-      <div class="section-title" id="bookingSectionTitle">${t('book_title')}</div>
-      <div id="bookingArea"></div>
+      ${b.phone || tgUsername ? `
+        <div class="section-title">💬 ${t('contacts_title')}</div>
+        <div class="contacts-card">
+          ${b.phone ? `
+            <a class="contact-row" href="tel:${escapeHtml(b.phone)}">
+              <div class="contact-icon">📞</div>
+              <div><div class="contact-label">${t('contact_phone')}</div><div class="contact-value">${escapeHtml(b.phone)}</div></div>
+            </a>` : ''}
+          ${tgUsername ? `
+            <a class="contact-row" href="https://t.me/${escapeHtml(tgUsername)}" target="_blank" rel="noopener">
+              <div class="contact-icon">✈️</div>
+              <div><div class="contact-label">${t('contact_telegram')}</div><div class="contact-value">@${escapeHtml(tgUsername)}</div></div>
+            </a>` : ''}
+        </div>
+      ` : ''}
     </div>
 
     <div class="sticky-book-bar">
@@ -359,6 +533,17 @@ function render(portfolioPhotos, completedCount, reviewsData){
 
   renderServiceChoices();
   document.getElementById('favBtnProfile').addEventListener('click', ()=> toggleFavorite(b.id));
+  document.getElementById('shareBtnProfile').addEventListener('click', async ()=>{
+    const url = window.location.href;
+    if(navigator.share){
+      navigator.share({ title: `${b.full_name} — Ustara`, url }).catch(()=>{});
+    } else {
+      await navigator.clipboard.writeText(url).catch(()=>{});
+      const btn = document.getElementById('shareBtnProfile');
+      btn.textContent = '✓';
+      setTimeout(()=> btn.textContent = '↗', 1500);
+    }
+  });
 }
 
 function renderServiceChoices(){
@@ -369,8 +554,14 @@ function renderServiceChoices(){
   }
   area.innerHTML = servicesData.map(s => `
     <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
-      <span>${s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
-      <span class="svc-price">${formatPrice(s.price)}</span>
+      <div class="svc-main">
+        <div class="svc-name">${s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key}</div>
+        <span class="svc-duration-chip">⏱ ${s.duration_minutes} ${t('min')}</span>
+      </div>
+      <div class="svc-right">
+        <span class="svc-price">${formatPrice(s.price)}</span>
+        <span class="svc-book-chip">${t('book_chip')}</span>
+      </div>
     </div>
   `).join('');
   area.querySelectorAll('.service-option').forEach(opt=>{
