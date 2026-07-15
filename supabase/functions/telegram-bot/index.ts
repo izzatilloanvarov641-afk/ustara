@@ -2,30 +2,47 @@
 //
 // Deploy this once via Supabase Dashboard → Edge Functions → New Function
 // (name it exactly "telegram-bot") → paste this file's contents → Deploy.
-// Then set three function secrets (Edge Functions → telegram-bot → Secrets):
-//   TELEGRAM_BOT_TOKEN   — from @BotFather
-//   GEMINI_API_KEY       — from Google AI Studio (free tier)
-//   CRON_SECRET          — any random string; must exactly match the
-//                          literal used in sql/29-telegram-bot-auth.sql's
-//                          tg_invoke() function (see that file's header
-//                          for why this exists and how to rotate it)
+// Then set four function secrets (Edge Functions → telegram-bot → Secrets):
+//   TELEGRAM_BOT_TOKEN     — from @BotFather
+//   GEMINI_API_KEY         — from Google AI Studio (free tier)
+//   CRON_SECRET            — any random string; must exactly match the
+//                            literal used in sql/29-telegram-bot-auth.sql's
+//                            tg_invoke() function (see that file's header
+//                            for why this exists and how to rotate it)
+//   TELEGRAM_WEBHOOK_SECRET — any different random string. After deploying,
+//                            register it with Telegram ONCE by opening this
+//                            URL in a browser (fill in your own bot token
+//                            and the same secret you just set):
+//   https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=https://gbvfesorkmsxugpvcuqy.supabase.co/functions/v1/telegram-bot&secret_token=<TELEGRAM_WEBHOOK_SECRET>
+//                            Telegram then pushes messages to this function
+//                            instantly instead of us polling every minute —
+//                            that polling delay was the "why is the bot so
+//                            slow to reply" issue. tg-poll-updates (cron)
+//                            is left running as a harmless fallback; once a
+//                            webhook is registered Telegram stops feeding it
+//                            anything via getUpdates.
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically by
 // Supabase into every Edge Function — nothing to set for those.
 //
 // Postgres never talks to Telegram/Gemini directly; it just calls this
 // function with a small JSON body (see sql/15-telegram-bot.sql and
 // sql/22-daily-reminders-and-cancel-notify.sql):
-//   { action: "poll_updates" }                    — every ~1 min, cron
+//   { action: "poll_updates" }                    — every ~1 min, cron (fallback only, see above)
 //   { action: "send_reminders" }                  — every 10 min, cron (3h-before, client + barber)
 //   { action: "daily_reminders" }                 — once a day, cron (client only)
 //   { action: "broadcast_review", review_id }      — trigger, on new review (everyone)
 //   { action: "notify_cancellation", booking_id }  — trigger, when a client cancels (that barber only)
+// Telegram itself also calls this same URL directly (no {action}, just the
+// raw Update object) once the webhook above is registered.
 //
 // This endpoint is reachable by anyone with the public anon key (that's
 // how every Supabase Edge Function works — the platform-level JWT check
 // accepts the anon key same as any other caller). Nothing here is
 // specific to a signed-in user, so Postgres-level RLS/RPC grants can't
-// protect it. The x-cron-secret header below is the actual gate.
+// protect it. The x-cron-secret header (for our own Postgres calls) and
+// the x-telegram-bot-api-secret-token header (for Telegram's own webhook
+// calls) are the actual gates — two independent checks for two different
+// caller types.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -35,6 +52,7 @@ const SITE_URL = "https://ustara.org";
 const BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
+const TELEGRAM_WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") ?? "";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -146,7 +164,28 @@ async function generateInviteLine(
   }
 }
 
+// ---------- shared: handle one Telegram update, whichever way it arrived ----------
+async function processUpdate(update: any) {
+  const text: string | undefined = update?.message?.text;
+  const chatId: number | undefined = update?.message?.chat?.id;
+  if (!text || !chatId) return;
+
+  const startMatch = text.match(/^\/start\s+(\S+)/);
+  if (startMatch) {
+    await handleStartWithCode(chatId, startMatch[1].toUpperCase());
+    return;
+  }
+  if (text.startsWith("/")) return; // no other commands yet
+
+  await handlePossibleNameReply(chatId, text);
+}
+
 // ---------- action: poll_updates ----------
+// Legacy fallback only — once the webhook (see the bottom of this file
+// and README-ish comment up top) is registered with Telegram, they stop
+// delivering to getUpdates entirely, so this naturally becomes a no-op.
+// Left in place / still on its cron schedule as a safety net in case the
+// webhook registration is ever lost, rather than something to rely on.
 async function pollUpdates() {
   if (!BOT_TOKEN) return;
   const { data: state } = await supabase
@@ -169,18 +208,7 @@ async function pollUpdates() {
   let maxUpdateId = offset - 1;
   for (const update of updates) {
     maxUpdateId = Math.max(maxUpdateId, update.update_id);
-    const text: string | undefined = update?.message?.text;
-    const chatId: number | undefined = update?.message?.chat?.id;
-    if (!text || !chatId) continue;
-
-    const startMatch = text.match(/^\/start\s+(\S+)/);
-    if (startMatch) {
-      await handleStartWithCode(chatId, startMatch[1].toUpperCase());
-      continue;
-    }
-    if (text.startsWith("/")) continue; // no other commands yet
-
-    await handlePossibleNameReply(chatId, text);
+    await processUpdate(update);
   }
 
   await supabase
@@ -396,6 +424,17 @@ function escapeHtml(s: string) {
 
 Deno.serve(async (req) => {
   try {
+    // Telegram's own webhook push — instant delivery, verified via the
+    // secret_token Telegram echoes back in this header (set once via
+    // setWebhook, see the file header). Completely separate check from
+    // x-cron-secret below, which gates our own Postgres-originated calls.
+    const tgSecret = req.headers.get("x-telegram-bot-api-secret-token");
+    if (TELEGRAM_WEBHOOK_SECRET && tgSecret === TELEGRAM_WEBHOOK_SECRET) {
+      const update = await req.json().catch(() => null);
+      if (update) await processUpdate(update);
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+
     if (!CRON_SECRET || req.headers.get("x-cron-secret") !== CRON_SECRET) {
       return new Response(JSON.stringify({ ok: false, error: "unauthorized" }), { status: 401 });
     }
