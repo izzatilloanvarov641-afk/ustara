@@ -1167,25 +1167,30 @@ async function init(){
   }
   clientData = client;
 
-  const { data: bookings } = await supabaseClient
-    .from('bookings')
-    .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district, phone)')
-    .eq('client_id', user.id)
-    .order('start_time', { ascending:true });
+  // these five are all independent of each other — fire them together
+  // instead of awaiting one at a time, which was serializing ~7s of
+  // sequential network round-trips into the dashboard's first paint
+  const [
+    { data: bookings },
+    { data: favs },
+    { data: notifs },
+    { data: myReviews },
+    { data: settings },
+  ] = await Promise.all([
+    supabaseClient
+      .from('bookings')
+      .select('*, barbers(full_name, avatar_url, shop_name, latitude, longitude, is_location_verified, district, phone)')
+      .eq('client_id', user.id)
+      .order('start_time', { ascending:true }),
+    supabaseClient.from('favorites').select('*, barbers(id, full_name, avatar_url)').eq('client_id', user.id),
+    supabaseClient.from('notifications').select('*').eq('client_id', user.id).order('created_at', { ascending:false }),
+    supabaseClient.from('reviews').select('booking_id').eq('client_id', user.id),
+    supabaseClient.from('platform_settings').select('click_merchant_id, click_service_id').eq('id', 1).maybeSingle(),
+  ]);
   bookingsData = bookings || [];
-
-  const { data: favs } = await supabaseClient
-    .from('favorites').select('*, barbers(id, full_name, avatar_url)').eq('client_id', user.id);
   favoritesData = favs || [];
-
-  const { data: notifs } = await supabaseClient
-    .from('notifications').select('*').eq('client_id', user.id).order('created_at', { ascending:false });
   notificationsData = notifs || [];
-
-  const { data: myReviews } = await supabaseClient.from('reviews').select('booking_id').eq('client_id', user.id);
   reviewedBookingIds = new Set((myReviews || []).map(r => r.booking_id));
-
-  const { data: settings } = await supabaseClient.from('platform_settings').select('click_merchant_id, click_service_id').eq('id', 1).maybeSingle();
   clickSettings = settings || null;
 
   const pendingRef = localStorage.getItem('ustara_pending_ref');
@@ -1194,16 +1199,27 @@ async function init(){
     localStorage.removeItem('ustara_pending_ref');
   }
 
-  applyLang(currentLang);
+  applyLang(currentLang); // already calls setupTelegramConnect() + renderReferralCard() internally
   setupClientMap();
   renderNotifBadge();
   renderRebookNudge();
   checkForReviewPrompt();
   setupStyleProfile();
-  setupTelegramConnect();
-  renderReferralCard();
   loadHomeBarbers();
+  subscribeToOwnBookingChanges(user.id);
   await checkInIfNeeded();
+}
+
+// Live-updates a barber confirming/cancelling (or anything else changing
+// this client's bookings) without needing a manual reload. Requires
+// `bookings` to be in the supabase_realtime publication — see
+// sql/30-realtime-bookings.sql.
+function subscribeToOwnBookingChanges(clientId){
+  supabaseClient
+    .channel('client-bookings-' + clientId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `client_id=eq.${clientId}` },
+      () => { refreshBookingsAfterNewBooking(); })
+    .subscribe();
 }
 
 /* ---------- home: nearby / top barbers ---------- */
@@ -1240,33 +1256,50 @@ function wireHbCards(container){
   });
 }
 
+// loadHomeBarbers() and setupClientMap() both need the full published-
+// barbers list plus their photos/reviews — cache the fetch behind one
+// promise so whichever runs first does the network work and the other
+// just reuses the result, instead of two duplicate round-trips.
+let publishedBarbersPromise = null;
+function loadPublishedBarbersOnce(){
+  if(!publishedBarbersPromise){
+    publishedBarbersPromise = (async () => {
+      const { data: barbers, error } = await supabaseClient.from('barbers').select('*')
+        .eq('is_published', true).eq('is_approved', true)
+        .order('created_at', { ascending:false });
+      if(error || !barbers) return { barbers: [], photosByBarber: {}, reviewsByBarber: {}, avgRatingByBarber: {} };
+      const ids = barbers.map(b => b.id);
+      const [photosRes, reviewsRes] = await Promise.all([
+        supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
+        supabaseClient.from('reviews').select('*').in('barber_id', ids).order('created_at', { ascending:false }).then(r=>r).catch(()=>({ data: [] })),
+      ]);
+      const photosByBarber = {};
+      (photosRes.data || []).forEach(p => { (photosByBarber[p.barber_id] = photosByBarber[p.barber_id] || []).push(p); });
+      const reviewsByBarber = {};
+      (reviewsRes.data || []).forEach(r => { (reviewsByBarber[r.barber_id] = reviewsByBarber[r.barber_id] || []).push(r); });
+      const avgRatingByBarber = {};
+      Object.entries(reviewsByBarber).forEach(([id, revs]) => {
+        avgRatingByBarber[id] = revs.reduce((s,r) => s + r.rating, 0) / revs.length;
+      });
+      return { barbers, photosByBarber, reviewsByBarber, avgRatingByBarber };
+    })();
+  }
+  return publishedBarbersPromise;
+}
+
 async function loadHomeBarbers(){
   const nearbyEl = document.getElementById('homeNearbyRow');
   const topEl = document.getElementById('homeTopGrid');
   try {
-    const { data: barbers, error } = await supabaseClient.from('barbers').select('*')
-      .eq('is_published', true).eq('is_approved', true)
-      .order('created_at', { ascending:false });
-    if(error || !barbers || !barbers.length){
+    const { barbers, photosByBarber, avgRatingByBarber } = await loadPublishedBarbersOnce();
+    if(!barbers.length){
       nearbyEl.innerHTML = `<div class="home-section-empty">${t('no_barbers_yet')}</div>`;
       topEl.innerHTML = `<div class="home-section-empty">${t('no_barbers_yet')}</div>`;
       return;
     }
-    const ids = barbers.map(b => b.id);
-    const [{ data: photos }, { data: reviews }] = await Promise.all([
-      supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
-      supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] }))
-    ]);
-    const photosByBarber = {};
-    (photos || []).forEach(p => { (photosByBarber[p.barber_id] = photosByBarber[p.barber_id] || []).push(p); });
-    const ratingSums = {};
-    (reviews || []).forEach(r => {
-      const e = ratingSums[r.barber_id] || (ratingSums[r.barber_id] = { sum:0, count:0 });
-      e.sum += r.rating; e.count += 1;
-    });
     barbers.forEach(b => {
       b._photos = photosByBarber[b.id] || [];
-      b._avgRating = ratingSums[b.id] ? ratingSums[b.id].sum / ratingSums[b.id].count : null;
+      b._avgRating = avgRatingByBarber[b.id] ?? null;
     });
 
     // Top rated: highest average rating first, unrated barbers pushed to the end
@@ -2516,38 +2549,25 @@ async function refreshBookingsAfterNewBooking(){
 
 /* ---------- initial load ---------- */
 async function setupClientMap(){
-  const { data: barbers, error } = await supabaseClient.from('barbers').select('*')
-    .eq('is_published', true).eq('is_approved', true)
-    .order('created_at', { ascending:false });
-  if(error){
-    console.error('Failed to load barbers for map tab:', error);
+  const { barbers, photosByBarber, reviewsByBarber, avgRatingByBarber } = await loadPublishedBarbersOnce();
+  mapAllBarbers = barbers;
+  if(!mapAllBarbers.length){
     mapDataLoaded = true;
-    document.getElementById('mapResultsArea').innerHTML = `<div class="empty-state"><div class="icon">📍</div>Could not load barbers.</div>`;
+    document.getElementById('mapResultsArea').innerHTML = `<div class="empty-state"><div class="icon">📍</div>${t('no_barbers_yet')}</div>`;
     return;
   }
-  mapAllBarbers = barbers || [];
 
   if(mapAllBarbers.length){
     const ids = mapAllBarbers.map(b => b.id);
-    const [{ data: services }, photosRes, reviewsRes, favsRes] = await Promise.all([
+    const [{ data: services }, favsRes] = await Promise.all([
       supabaseClient.from('services').select('*').in('barber_id', ids),
-      supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
-      supabaseClient.from('reviews').select('*').in('barber_id', ids).order('created_at', { ascending:false }).then(r=>r).catch(()=>({ data: [] })),
       supabaseClient.from('favorites').select('barber_id').eq('client_id', clientData.id).then(r=>r).catch(()=>({ data: [] }))
     ]);
     mapServicesByBarber = {};
     (services||[]).forEach(s=>{ (mapServicesByBarber[s.barber_id] = mapServicesByBarber[s.barber_id] || []).push(s); });
-    mapPhotosByBarber = {};
-    ((photosRes && photosRes.data) || []).forEach(p=>{ (mapPhotosByBarber[p.barber_id] = mapPhotosByBarber[p.barber_id] || []).push(p); });
-    mapReviewsByBarber = {};
-    ((reviewsRes && reviewsRes.data) || []).forEach(r=>{ (mapReviewsByBarber[r.barber_id] = mapReviewsByBarber[r.barber_id] || []).push(r); });
-    const ratingSums = {};
-    ((reviewsRes && reviewsRes.data) || []).forEach(r=>{
-      const e = ratingSums[r.barber_id] || (ratingSums[r.barber_id] = { sum:0, count:0 });
-      e.sum += r.rating; e.count += 1;
-    });
-    mapAvgRatingByBarber = {};
-    Object.entries(ratingSums).forEach(([id, e])=>{ mapAvgRatingByBarber[id] = e.sum / e.count; });
+    mapPhotosByBarber = photosByBarber;
+    mapReviewsByBarber = reviewsByBarber;
+    mapAvgRatingByBarber = avgRatingByBarber;
     mapFavoriteIds = new Set(((favsRes && favsRes.data) || []).map(f => f.barber_id));
   }
 

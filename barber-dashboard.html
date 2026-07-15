@@ -1428,12 +1428,24 @@ async function initInner(){
   setupTelegramConnect();
   renderAutoReminders();
 
-  const { data: services } = await supabaseClient.from('services').select('*').eq('barber_id', userId);
+  // these four are all independent barber_id-scoped fetches — fire them
+  // together instead of one at a time, which was serializing several
+  // seconds of network round-trips before the dashboard finished loading
+  const [
+    { data: services },
+    { data: bookings },
+    { data: photos },
+    reviewsRes,
+  ] = await Promise.all([
+    supabaseClient.from('services').select('*').eq('barber_id', userId),
+    supabaseClient.from('bookings').select('*').eq('barber_id', userId).order('start_time', { ascending:true }),
+    supabaseClient.from('portfolio_photos').select('*').eq('barber_id', userId).order('position', { ascending:true }),
+    supabaseClient.from('reviews').select('rating').eq('barber_id', userId).then(r=>r).catch(()=>({ data: [] })),
+  ]);
   servicesData = services || [];
   renderServices();
   renderOnboardingChecklist();
 
-  const { data: bookings } = await supabaseClient.from('bookings').select('*').eq('barber_id', userId).order('start_time', { ascending:true });
   bookingsData = bookings || [];
   renderOverviewStats();
   renderOverviewBookings();
@@ -1441,13 +1453,24 @@ async function initInner(){
   renderCancellationAlert();
   renderClientsList();
 
-  const { data: photos } = await supabaseClient.from('portfolio_photos').select('*').eq('barber_id', userId).order('position', { ascending:true });
   renderPortfolio(photos || []);
 
-  const { data: reviews } = await supabaseClient.from('reviews').select('rating').eq('barber_id', userId).then(r=>r).catch(()=>({ data: [] }));
-  reviewsData = reviews || [];
+  reviewsData = reviewsRes.data || [];
+
+  subscribeToOwnBookingChanges(userId);
 
   revealNow(document.querySelector('.view[data-view="overview"]'));
+}
+
+// Live-updates when a client books/cancels (or anything else changes this
+// barber's bookings) without needing a manual reload. Requires `bookings`
+// to be in the supabase_realtime publication — see sql/30-realtime-bookings.sql.
+function subscribeToOwnBookingChanges(barberId){
+  supabaseClient
+    .channel('barber-bookings-' + barberId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `barber_id=eq.${barberId}` },
+      () => { refreshBookings(); })
+    .subscribe();
 }
 
 /* ---------- overview ---------- */
