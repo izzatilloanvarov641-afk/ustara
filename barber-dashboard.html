@@ -781,6 +781,16 @@
             <label data-i18n="l_bio">Short bio</label>
             <textarea id="editBio"></textarea>
           </div>
+          <div class="row2">
+            <div class="field-group">
+              <label data-i18n="l_phone">Phone number</label>
+              <input type="tel" id="editPhone" placeholder="+998 90 123 45 67">
+            </div>
+            <div class="field-group">
+              <label data-i18n="l_telegram">Telegram username</label>
+              <input type="text" id="editTelegram" placeholder="@username">
+            </div>
+          </div>
           <div class="btn-row">
             <button class="btn btn-primary" id="saveProfileBtn" data-i18n="save">Save changes</button>
             <button class="btn btn-secondary" id="cancelProfileBtn" data-i18n="cancel">Cancel</button>
@@ -1029,6 +1039,7 @@ const I18N = {
     profile_sub:"This is what clients see when they find you.",
     edit:"Edit", l_district:"District", l_experience:"Years of experience", l_specialties:"Specialties",
     l_bio:"Short bio", save:"Save changes", cancel:"Cancel", saved:"Saved.",
+    l_phone:"Phone number", l_telegram:"Telegram username",
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"years",
     hours_sub:"Which days and times you're open. Each service's own length controls how slots are spaced.",
     hours_sub_v2:"Set one or more time blocks per day — add a second block to carve out a lunch break or time off.",
@@ -1126,6 +1137,7 @@ const I18N = {
     profile_sub:"Mijozlar sizni topganda shuni ko'radi.",
     edit:"Tahrirlash", l_district:"Tuman", l_experience:"Tajriba (yil)", l_specialties:"Mutaxassisliklar",
     l_bio:"Qisqa bio", save:"Saqlash", cancel:"Bekor qilish", saved:"Saqlandi.",
+    l_phone:"Telefon raqami", l_telegram:"Telegram username",
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
     hours_sub:"Qaysi kunlari va soatlarda ochiqsiz. Har bir xizmatning davomiyligi bo'sh joylarni belgilaydi.",
     hours_sub_v2:"Har kun uchun bitta yoki bir nechta vaqt oralig'ini belgilang — tushlik yoki dam olish uchun ikkinchi oraliq qo'shing.",
@@ -1223,6 +1235,7 @@ const I18N = {
     profile_sub:"Это видят клиенты, когда находят вас.",
     edit:"Изменить", l_district:"Район", l_experience:"Опыт (лет)", l_specialties:"Специализации",
     l_bio:"Краткое био", save:"Сохранить", cancel:"Отмена", saved:"Сохранено.",
+    l_phone:"Номер телефона", l_telegram:"Имя пользователя Telegram",
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
     hours_sub:"В какие дни и часы вы открыты. Длительность каждой услуги определяет интервалы записи.",
     hours_sub_v2:"Задайте один или несколько временных блоков на день — добавьте второй блок для обеда или перерыва.",
@@ -1840,6 +1853,8 @@ document.getElementById('editProfileLink').addEventListener('click', ()=>{
   document.getElementById('editDistrict').value = barberData.district || 'Chorsu';
   document.getElementById('editExperience').value = barberData.years_experience || '';
   document.getElementById('editBio').value = barberData.bio || '';
+  document.getElementById('editPhone').value = barberData.phone || '';
+  document.getElementById('editTelegram').value = barberData.telegram_username || '';
   renderEditChips();
   document.getElementById('profileView').classList.add('hidden');
   document.getElementById('profileEdit').classList.add('active');
@@ -1855,7 +1870,9 @@ document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
     district: document.getElementById('editDistrict').value,
     years_experience: parseInt(document.getElementById('editExperience').value) || null,
     bio: document.getElementById('editBio').value.trim(),
-    specialties: selectedSpecialties.map(i => SPECIALTIES_EN[i])
+    specialties: selectedSpecialties.map(i => SPECIALTIES_EN[i]),
+    phone: document.getElementById('editPhone').value.trim() || null,
+    telegram_username: document.getElementById('editTelegram').value.trim() || null
   };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
