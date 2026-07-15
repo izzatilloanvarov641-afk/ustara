@@ -499,7 +499,7 @@
   }
   .profile-pop-overlay.open{ display:flex; }
   .profile-pop{
-    background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:560px; max-height:88vh;
+    background:var(--surface); border-radius:24px 24px 0 0; width:100%; max-width:560px; max-height:80vh;
     overflow-y:auto; box-shadow:0 -20px 60px rgba(17,17,17,0.25); position:relative;
   }
   .pop-gallery{ position:relative; aspect-ratio:4/3.1; background:var(--surface-alt); }
@@ -520,6 +520,42 @@
   .pop-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:12px 0; }
   .pop-tag{ font-size:10.5px; border:1px solid var(--line); color:var(--ink-dim); padding:4px 9px; border-radius:20px; }
   .pop-section-t{ font-family:'Space Grotesk', sans-serif; font-style:normal; font-weight:600; font-size:16px; font-weight:400; margin:16px 0 10px; }
+
+  .pop-open-pill{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:800; padding:5px 12px; border-radius:20px; margin-top:6px; }
+  .pop-open-pill.open{ background:var(--success-bg); color:var(--success); }
+  .pop-open-pill.closed{ background:var(--danger-bg); color:var(--danger); }
+  .pop-action-row{ display:flex; gap:8px; margin:12px 0 4px; }
+  .pop-action-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:11px; border-radius:14px; font-size:12.5px; font-weight:800; cursor:pointer; border:none; font-family:'IBM Plex Sans', sans-serif; }
+  .pop-action-btn.call{ background:var(--gold); color:#12151C; }
+  .pop-action-btn.call:hover{ background:var(--gold-soft); }
+  .pop-action-btn.mapbtn{ background:var(--sun); color:#12151C; }
+  .pop-hours-card{ background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:2px 16px; }
+  .pop-hours-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
+  .pop-hours-row:last-child{ border-bottom:none; }
+  .pop-hours-row .day{ color:var(--ink-dim); }
+  .pop-hours-row .time{ font-weight:700; }
+  .pop-hours-row.today .day, .pop-hours-row.today .time{ color:var(--gold); font-weight:800; }
+  .pop-hours-row .dayoff{ color:var(--danger); font-weight:700; }
+  .pop-review-summary{ display:flex; gap:16px; align-items:center; background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:10px; }
+  .pop-rs-left{ text-align:center; flex-shrink:0; }
+  .pop-rs-big{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:30px; line-height:1; }
+  .pop-rs-stars{ color:var(--gold); font-size:11px; margin-top:3px; }
+  .pop-rs-count{ font-size:10px; color:var(--ink-dim); margin-top:2px; }
+  .pop-rs-bars{ flex:1; display:flex; flex-direction:column; gap:4px; }
+  .pop-rs-bar-row{ display:flex; align-items:center; gap:6px; font-size:10px; color:var(--ink-dim); }
+  .pop-rs-bar-track{ flex:1; height:5px; border-radius:4px; background:var(--surface-alt); overflow:hidden; }
+  .pop-rs-bar-fill{ height:100%; border-radius:4px; background:linear-gradient(90deg, var(--gold), var(--gold-soft)); }
+  .pop-review-card{ background:var(--bg); border:1px solid var(--line); border-radius:14px; padding:11px 14px; margin-bottom:8px; }
+  .pop-review-stars{ color:var(--gold); font-size:12.5px; margin-bottom:4px; }
+  .pop-review-comment{ font-size:12px; color:var(--ink); }
+  .pop-review-date{ font-size:10.5px; color:var(--ink-dim); margin-top:4px; }
+  .pop-contacts-card{ background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:2px 16px; }
+  .pop-contact-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); font-size:12.5px; }
+  .pop-contact-row:last-child{ border-bottom:none; }
+  .pop-contact-icon{ width:32px; height:32px; border-radius:11px; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+  .pop-contact-label{ font-size:10px; color:var(--ink-dim); }
+  .pop-contact-value{ font-weight:700; color:var(--gold); }
+  .drag-handle{ width:36px; height:4px; border-radius:4px; background:var(--line); margin:10px auto 0; }
   .service-option{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border:1px solid var(--line); border-radius:14px; margin-bottom:8px; cursor:pointer; font-size:13px; }
   .service-option:hover{ border-color:var(--gold); background:#FBF7EE; }
   .service-option.selected{ border-color:var(--gold); background:#FBF7EE; box-shadow:inset 0 0 0 1px var(--gold); }
@@ -860,6 +896,11 @@ const I18N = {
     guest_home_title:"Find your barber, then sign in to book",
     guest_home_body:"Browse barbers and prices freely — you'll only need an account when you're ready to book.",
     guest_signup:"Create account", guest_signin:"Sign in",
+    call_btn:"Call", map_btn:"On the map", open_now:"Open now", closed_now:"Closed",
+    hours_title:"Working hours", day_off:"Day off", today_word:"(today)",
+    contacts_title:"Contacts", contact_phone:"Phone", contact_telegram:"Telegram",
+    pop_reviews_title:"Reviews", pop_reviews_word:"reviews", pop_no_reviews:"No reviews yet",
+    day_names:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
     day_short:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
   },
   uz:{
@@ -932,6 +973,11 @@ const I18N = {
     guest_home_title:"Sartaroshingizni toping, so'ng band qilish uchun kiring",
     guest_home_body:"Sartaroshlar va narxlarni erkin ko'ring — hisob faqat band qilishga tayyor bo'lganingizda kerak bo'ladi.",
     guest_signup:"Hisob yaratish", guest_signin:"Kirish",
+    call_btn:"Qo'ng'iroq", map_btn:"Xaritada", open_now:"Hozir ochiq", closed_now:"Yopiq",
+    hours_title:"Ish vaqti", day_off:"Dam olish", today_word:"(bugun)",
+    contacts_title:"Kontaktlar", contact_phone:"Telefon", contact_telegram:"Telegram",
+    pop_reviews_title:"Sharhlar", pop_reviews_word:"sharh", pop_no_reviews:"Hali sharh yo'q",
+    day_names:["Dushanba","Seshanba","Chorshanba","Payshanba","Juma","Shanba","Yakshanba"],
     day_short:['Ya','Du','Se','Ch','Pa','Ju','Sh']
   },
   ru:{
@@ -1004,6 +1050,11 @@ const I18N = {
     guest_home_title:"Найдите барбера, затем войдите, чтобы записаться",
     guest_home_body:"Смотрите барберов и цены свободно — аккаунт понадобится только когда будете готовы записаться.",
     guest_signup:"Создать аккаунт", guest_signin:"Войти",
+    call_btn:"Позвонить", map_btn:"На карте", open_now:"Сейчас открыто", closed_now:"Закрыто",
+    hours_title:"Часы работы", day_off:"Выходной", today_word:"(сегодня)",
+    contacts_title:"Контакты", contact_phone:"Телефон", contact_telegram:"Telegram",
+    pop_reviews_title:"Отзывы", pop_reviews_word:"отзывов", pop_no_reviews:"Пока нет отзывов",
+    day_names:["Понедельник","Вторник","Среда","Четверг","Пятница","Суббота","Воскресенье"],
     day_short:['Вс','Пн','Вт','Ср','Чт','Пт','Сб']
   }
 };
@@ -1794,7 +1845,7 @@ const SPECIALTIES_LOCAL = {
 const JS_DAY_TO_KEY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const NEARBY_RADIUS_KM = 5;
 
-let mapAllBarbers = [], mapServicesByBarber = {}, mapPhotosByBarber = {}, mapAvgRatingByBarber = {};
+let mapAllBarbers = [], mapServicesByBarber = {}, mapPhotosByBarber = {}, mapAvgRatingByBarber = {}, mapReviewsByBarber = {};
 let mapSelectedSpecialtyFilters = [];
 let mapFavoriteIds = new Set();
 let mapUserLoc = null, mapNearbyLoc = null, mapNearbyCircle = null;
@@ -1836,6 +1887,81 @@ function isMapOpenNow(b){
     const [eh, em] = block.end.split(':').map(Number);
     return mins >= (sh*60+sm) && mins < (eh*60+em);
   });
+}
+
+function popHoursListHtml(b){
+  const order = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayKey = JS_DAY_TO_KEY[new Date().getDay()];
+  const hasAnyHours = order.some(k => blocksForDay(b, k).length > 0);
+  if(!hasAnyHours) return '';
+  return `
+    <div class="pop-section-t">🕐 ${t('hours_title')}</div>
+    <div class="pop-hours-card">
+      ${order.map((key, i) => {
+        const blocks = blocksForDay(b, key);
+        const isToday = key === todayKey;
+        const timeStr = blocks.length > 0
+          ? blocks.map(bl => `${bl.start} – ${bl.end}`).join(', ')
+          : `<span class="dayoff">${t('day_off')}</span>`;
+        return `
+          <div class="pop-hours-row ${isToday ? 'today' : ''}">
+            <span class="day">${t('day_names')[i]}${isToday ? ' ' + t('today_word') : ''}</span>
+            <span class="time">${timeStr}</span>
+          </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function popReviewsHtml(barberId){
+  const reviews = mapReviewsByBarber[barberId] || [];
+  if(reviews.length === 0) return '';
+  const avg = mapAvgRatingByBarber[barberId];
+  const counts = [0,0,0,0,0];
+  reviews.forEach(r => { if(r.rating >= 1 && r.rating <= 5) counts[r.rating - 1]++; });
+  const max = Math.max(...counts, 1);
+  const rounded = Math.round(avg);
+  return `
+    <div class="pop-section-t">⭐ ${t('pop_reviews_title')}</div>
+    <div class="pop-review-summary">
+      <div class="pop-rs-left">
+        <div class="pop-rs-big">${avg.toFixed(1)}</div>
+        <div class="pop-rs-stars">${'★'.repeat(rounded)}${'☆'.repeat(5-rounded)}</div>
+        <div class="pop-rs-count">${reviews.length} ${t('pop_reviews_word')}</div>
+      </div>
+      <div class="pop-rs-bars">
+        ${[5,4,3,2,1].map(n => `
+          <div class="pop-rs-bar-row">
+            <span style="width:9px; text-align:right;">${n}</span>
+            <div class="pop-rs-bar-track"><div class="pop-rs-bar-fill" style="width:${(counts[n-1]/max)*100}%"></div></div>
+            <span style="width:16px;">${counts[n-1]}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    ${reviews.slice(0,3).map(r => `
+      <div class="pop-review-card">
+        <div class="pop-review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+        ${r.comment ? `<div class="pop-review-comment">${escapeHtml(r.comment)}</div>` : ''}
+        <div class="pop-review-date">${new Date(r.created_at).toLocaleDateString()}</div>
+      </div>`).join('')}`;
+}
+
+function popContactsHtml(b){
+  const tgUsername = (b.telegram_username || '').replace(/^@/, '');
+  if(!b.phone && !tgUsername) return '';
+  return `
+    <div class="pop-section-t">💬 ${t('contacts_title')}</div>
+    <div class="pop-contacts-card">
+      ${b.phone ? `
+        <a class="pop-contact-row" href="tel:${escapeHtml(b.phone)}">
+          <div class="pop-contact-icon">📞</div>
+          <div><div class="pop-contact-label">${t('contact_phone')}</div><div class="pop-contact-value">${escapeHtml(b.phone)}</div></div>
+        </a>` : ''}
+      ${tgUsername ? `
+        <a class="pop-contact-row" href="https://t.me/${escapeHtml(tgUsername)}" target="_blank" rel="noopener">
+          <div class="pop-contact-icon">✈️</div>
+          <div><div class="pop-contact-label">${t('contact_telegram')}</div><div class="pop-contact-value">@${escapeHtml(tgUsername)}</div></div>
+        </a>` : ''}
+    </div>`;
 }
 
 function renderSpecialtyChips(){
@@ -2178,7 +2304,11 @@ async function openMapProfilePop(b, jumpToBooking = false){
   const specs = (b.specialties || []).map(s=>`<span class="pop-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
   const avatar = b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : (b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
+  const open = isMapOpenNow(b);
+  const mapUrl = b.latitude && b.longitude ? `https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}` : null;
+
   pop.innerHTML = `
+    <div class="drag-handle"></div>
     <div class="pop-gallery" id="mapPopGallery">
       ${mapPopPhotos.length ? `<img id="mapPopGalleryImg" src="${escapeHtml(portfolioPublicUrl(mapPopPhotos[0].image_path))}" alt="">` : `<div class="no-photo">${(b.full_name||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>`}
       <button class="pop-close" id="mapPopClose">&times;</button>
@@ -2195,10 +2325,20 @@ async function openMapProfilePop(b, jumpToBooking = false){
           <div class="pop-sub">📍 ${escapeHtml(b.shop_name || '')}${b.shop_name ? ' · ' : ''}${escapeHtml(b.district || '')}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('yrs') : ''}</div>
         </div>
       </div>
+      <span class="pop-open-pill ${open ? 'open' : 'closed'}">${open ? '🟢 ' + t('open_now') : '🔴 ' + t('closed_now')}</span>
+      ${b.phone || mapUrl ? `
+        <div class="pop-action-row">
+          ${b.phone ? `<a class="pop-action-btn call" href="tel:${escapeHtml(b.phone)}">📞 ${t('call_btn')}</a>` : ''}
+          ${mapUrl ? `<a class="pop-action-btn mapbtn" href="${mapUrl}" target="_blank" rel="noopener">📍 ${t('map_btn')}</a>` : ''}
+        </div>
+      ` : ''}
       ${b.bio ? `<div class="pop-bio">${escapeHtml(b.bio)}</div>` : ''}
       <div class="pop-tags">${specs}</div>
-      <div class="pop-section-t">${t('choose_service')}</div>
+      <div class="pop-section-t">✂️ ${t('choose_service')}</div>
       <div id="mapPopServiceList"></div>
+      ${popHoursListHtml(b)}
+      ${popReviewsHtml(b.id)}
+      ${popContactsHtml(b)}
     </div>
   `;
   overlay.classList.add('open');
@@ -2477,7 +2617,7 @@ async function setupClientMap(){
     const [{ data: services }, photosRes, reviewsRes, favsRes] = await Promise.all([
       supabaseClient.from('services').select('*').in('barber_id', ids),
       supabaseClient.from('portfolio_photos').select('*').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
-      supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', ids).then(r=>r).catch(()=>({ data: [] })),
+      supabaseClient.from('reviews').select('*').in('barber_id', ids).order('created_at', { ascending:false }).then(r=>r).catch(()=>({ data: [] })),
       clientData
         ? supabaseClient.from('favorites').select('barber_id').eq('client_id', clientData.id).then(r=>r).catch(()=>({ data: [] }))
         : Promise.resolve({ data: [] })
@@ -2486,6 +2626,8 @@ async function setupClientMap(){
     (services||[]).forEach(s=>{ (mapServicesByBarber[s.barber_id] = mapServicesByBarber[s.barber_id] || []).push(s); });
     mapPhotosByBarber = {};
     ((photosRes && photosRes.data) || []).forEach(p=>{ (mapPhotosByBarber[p.barber_id] = mapPhotosByBarber[p.barber_id] || []).push(p); });
+    mapReviewsByBarber = {};
+    ((reviewsRes && reviewsRes.data) || []).forEach(r=>{ (mapReviewsByBarber[r.barber_id] = mapReviewsByBarber[r.barber_id] || []).push(r); });
     const ratingSums = {};
     ((reviewsRes && reviewsRes.data) || []).forEach(r=>{
       const e = ratingSums[r.barber_id] || (ratingSums[r.barber_id] = { sum:0, count:0 });
