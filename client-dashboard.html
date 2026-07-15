@@ -2382,7 +2382,7 @@ function renderMapPopServices(b){
   if(!active.length){ listEl.innerHTML = `<div class="no-slots-msg">${t('no_slots')}</div>`; return; }
   listEl.innerHTML = active.map(s=>`
     <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
-      <span>✂️ ${s.custom_label || SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+      <span>✂️ ${escapeHtml(s.custom_label || SERVICES_LOCAL[currentLang][s.service_key] || s.service_key)} · ${s.duration_minutes} ${t('min')}</span>
       <span class="svc-price">${formatPrice(s.price)}</span>
     </div>`).join('');
   listEl.querySelectorAll('.service-option').forEach(opt=>{
@@ -2401,7 +2401,7 @@ function showMapAddonPicker(b, mainKey, mainDuration, mainPrice, allActiveServic
     <div class="pop-section-t">${t('addon_title')}</div>
     ${addonOptions.map(s => `
       <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
-        <span>➕ ${s.custom_label || SERVICES_LOCAL[currentLang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span>➕ ${escapeHtml(s.custom_label || SERVICES_LOCAL[currentLang][s.service_key] || s.service_key)} · ${s.duration_minutes} ${t('min')}</span>
         <span class="svc-price">+${formatPrice(s.price)}</span>
       </div>`).join('')}
     <button class="confirm-booking-btn" id="mapContinueWithAddonsBtn">${t('continue_btn')}</button>
@@ -2458,7 +2458,7 @@ async function showMapDayPicker(b, serviceKey, duration, price, addonKeys = []){
   for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(b, JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
 
   const summaryLine = addonKeys.length > 0
-    ? `<div class="booking-summary-line">${mapServiceLabel(b.id, serviceKey)} + ${addonKeys.map(k => mapServiceLabel(b.id, k)).join(', ')} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
+    ? `<div class="booking-summary-line">${escapeHtml(mapServiceLabel(b.id, serviceKey))} + ${escapeHtml(addonKeys.map(k => mapServiceLabel(b.id, k)).join(', '))} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
     : '';
 
   listEl.innerHTML = `

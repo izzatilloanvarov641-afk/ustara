@@ -582,7 +582,7 @@ function renderServiceChoices(){
   area.innerHTML = servicesData.map(s => `
     <div class="service-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
       <div class="svc-main">
-        <div class="svc-name">${s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key}</div>
+        <div class="svc-name">${escapeHtml(s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key)}</div>
         <span class="svc-duration-chip">⏱ ${s.duration_minutes} ${t('min')}</span>
       </div>
       <div class="svc-right">
@@ -611,7 +611,7 @@ function showAddonPicker(mainKey, mainDuration, mainPrice){
     <div class="pop-section-t">${t('addon_title')}</div>
     ${addonOptions.map(s => `
       <div class="service-option addon-option" data-addon-key="${s.service_key}" data-addon-duration="${s.duration_minutes}" data-addon-price="${s.price || 0}">
-        <span>${s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key} · ${s.duration_minutes} ${t('min')}</span>
+        <span>${escapeHtml(s.custom_label || SERVICES_LOCAL[lang][s.service_key] || s.service_key)} · ${s.duration_minutes} ${t('min')}</span>
         <span class="svc-price">+${formatPrice(s.price)}</span>
       </div>`).join('')}
     <button class="confirm-booking-btn" id="continueWithAddonsBtn">${t('continue_btn')}</button>
@@ -679,7 +679,7 @@ async function showDayPicker(serviceKey, duration, price, addonKeys = []){
   for(let i=0;i<7;i++){ const d = new Date(); d.setDate(d.getDate()+i); if(blocksForDay(JS_DAY_TO_KEY[d.getDay()]).length > 0) days.push(d); }
 
   const summaryLine = addonKeys.length > 0
-    ? `<div class="booking-summary-line">${serviceName(serviceKey)} + ${addonKeys.map(k => serviceName(k)).join(', ')} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
+    ? `<div class="booking-summary-line">${escapeHtml(serviceName(serviceKey))} + ${escapeHtml(addonKeys.map(k => serviceName(k)).join(', '))} · ${duration} ${t('min')} · <strong>${formatPrice(price)}</strong></div>`
     : '';
 
   area.innerHTML = `
