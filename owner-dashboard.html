@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ustara — Owner dashboard</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#12151C">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#F6F1E4; --surface:#ECE5D2; --surface-alt:#E3DAC4; --line:#D8CFB8;
+    --ink:#1C1A14; --ink-dim:#6B6455; --brass:#A9DB3A; --brass-soft:#CDFF5E;
+    --coral:#FF6A4D; --sky:#5B8DEF; --sun:#FFB84D;
+    --err:#FF6A4D; --ok:#3D9E2F;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  a{ color:inherit; text-decoration:none; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  .wrap{ max-width:760px; margin:0 auto; padding:0 20px; }
+
+  header{ border-bottom:1px solid var(--line); padding:18px 0; }
+  header .wrap{ display:flex; align-items:center; justify-content:space-between; }
+  .logo{ font-family:'Space Grotesk', sans-serif; font-size:19px; }
+  .logo em{ font-style:italic; color:var(--brass); }
+  .header-right{ display:flex; align-items:center; gap:10px; }
+  .lang-row{ display:flex; gap:4px; }
+  .lang-btn{ background:none; border:1px solid var(--line); color:var(--ink-dim); font-size:11.5px; font-weight:700; padding:6px 9px; border-radius:999px; cursor:pointer; }
+  .lang-btn.active{ background:var(--brass); color:var(--ink); border-color:var(--brass); }
+  .logout-btn{ font-size:12.5px; color:var(--ink-dim); background:none; border:1px solid var(--line); padding:8px 14px; border-radius:999px; cursor:pointer; }
+  .logout-btn:hover{ border-color:var(--coral); color:var(--coral); }
+
+  main{ padding:36px 0 90px; }
+  h1{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:clamp(24px,4vw,30px); margin-bottom:4px; }
+  .sub{ color:var(--ink-dim); font-size:14px; margin-bottom:28px; }
+  .section-title{ font-family:'Space Grotesk', sans-serif; font-size:17px; font-weight:600; margin:40px 0 14px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; }
+  .field-row{ display:flex; gap:10px; }
+  input{ flex:1; background:var(--bg); border:1px solid var(--line); color:var(--ink); padding:12px 14px; border-radius:12px; font-size:14px; font-family:'IBM Plex Mono', monospace; letter-spacing:1px; text-transform:uppercase; }
+  input:focus{ outline:none; border-color:var(--brass); }
+  .btn{ padding:12px 18px; border-radius:12px; font-size:13.5px; font-weight:700; cursor:pointer; border:none; background:var(--brass); color:var(--ink); white-space:nowrap; font-family:'IBM Plex Sans', sans-serif; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-ghost{ background:none; border:1px solid var(--line); color:var(--ink-dim); }
+  .btn-ghost:hover{ border-color:var(--coral); color:var(--coral); }
+  .link-msg{ font-size:12.5px; margin-top:10px; display:none; }
+  .link-msg.ok{ color:var(--ok); display:block; }
+  .link-msg.err{ color:var(--err); display:block; }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:8px; }
+  @media (max-width:640px){ .stat-row{ grid-template-columns:1fr 1fr; } }
+  .stat-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:16px; }
+  .stat-num{ font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:700; color:var(--brass); }
+  .stat-label{ font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
+
+  .barber-card{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:12px; display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+  .barber-avatar{ width:48px; height:48px; border-radius:50%; background:var(--surface-alt); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk', sans-serif; font-weight:600; color:var(--ink-dim); font-size:16px; }
+  .barber-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .barber-info{ flex:1; min-width:180px; }
+  .barber-name{ font-weight:700; font-size:15px; }
+  .barber-status{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; display:inline-block; margin-top:4px; }
+  .barber-status.free{ background:rgba(61,158,47,0.15); color:var(--ok); }
+  .barber-status.busy{ background:rgba(255,106,77,0.15); color:var(--coral); }
+  .barber-mini-stats{ display:flex; gap:16px; margin-top:10px; flex-wrap:wrap; }
+  .mini-stat{ font-size:12px; color:var(--ink-dim); }
+  .mini-stat strong{ display:block; font-family:'Space Grotesk', sans-serif; font-size:15px; color:var(--ink); font-weight:700; }
+
+  .empty-state{ text-align:center; padding:48px 20px; border:1px dashed var(--line); border-radius:16px; color:var(--ink-dim); font-size:13.5px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">Ustara<em> · Owner</em></div>
+    <div class="header-right">
+      <div class="lang-row" id="langSwitch">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="uz">UZ</button>
+        <button type="button" class="lang-btn" data-lang="ru">RU</button>
+      </div>
+      <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1 id="greeting" data-i18n="greeting">Your shop</h1>
+    <p class="sub" data-i18n="sub">Link your barbers with their code and see how the shop is doing.</p>
+
+    <div class="card">
+      <div class="section-title" style="margin:0 0 4px;" data-i18n="link_title">Add a barber</div>
+      <p class="sub" style="margin-bottom:14px;" data-i18n="link_sub">Ask your barber for their code (in their dashboard's Profile tab, "Shop owner code").</p>
+      <div class="field-row">
+        <input type="text" id="codeInput" maxlength="8" placeholder="ABCD1234">
+        <button class="btn" id="linkBtn" data-i18n="link_btn">Link</button>
+      </div>
+      <div class="link-msg" id="linkMsg"></div>
+    </div>
+
+    <div class="section-title" data-i18n="overview_title">Overview</div>
+    <div class="stat-row" id="statRow"></div>
+
+    <div class="section-title" data-i18n="roster_title">Your barbers</div>
+    <div id="rosterArea"></div>
+  </div>
+</main>
+
+<script>
+const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const I18N = {
+  en:{
+    logout:"Log out", greeting:"Your shop", sub:"Link your barbers with their code and see how the shop is doing.",
+    link_title:"Add a barber", link_sub:'Ask your barber for their code (in their dashboard\'s Profile tab, "Shop owner code").',
+    link_btn:"Link", link_ok:"Linked! They now show up below.",
+    link_not_found:"No barber has that code — double-check it with them.",
+    link_already:"That barber is already linked to a different shop owner.",
+    link_error:"Something went wrong — try again.",
+    overview_title:"Overview", roster_title:"Your barbers",
+    stat_barbers:"Barbers", stat_revenue:"Revenue (all-time)", stat_cuts:"Cuts completed", stat_rating:"Avg. rating",
+    status_free:"Free right now", status_busy:"With a client",
+    mini_today:"Today", mini_cuts:"Completed", mini_revenue:"Revenue", mini_rating:"Rating",
+    unlink_btn:"Remove", unlink_confirm:"Remove this barber from your shop? They'll keep their own account and history.",
+    empty_roster:"No barbers linked yet — add one with their code above."
+  },
+  uz:{
+    logout:"Chiqish", greeting:"Sizning do'koningiz", sub:"Sartaroshlaringizni kod orqali ulang va do'koningiz qanday ishlayotganini ko'ring.",
+    link_title:"Sartarosh qo'shish", link_sub:"Sartaroshingizdan kodini so'rang (uning boshqaruv panelidagi Profil bo'limida, \"Do'kon egasi kodi\").",
+    link_btn:"Ulash", link_ok:"Ulandi! Endi u pastda ko'rinadi.",
+    link_not_found:"Bunday kodli sartarosh topilmadi — u bilan tekshiring.",
+    link_already:"Bu sartarosh allaqachon boshqa do'kon egasiga ulangan.",
+    link_error:"Xatolik yuz berdi — qayta urinib ko'ring.",
+    overview_title:"Umumiy ko'rinish", roster_title:"Sartaroshlaringiz",
+    stat_barbers:"Sartaroshlar", stat_revenue:"Daromad (jami)", stat_cuts:"Bajarilgan", stat_rating:"O'rtacha baho",
+    status_free:"Hozir bo'sh", status_busy:"Mijoz bilan",
+    mini_today:"Bugun", mini_cuts:"Bajarilgan", mini_revenue:"Daromad", mini_rating:"Baho",
+    unlink_btn:"O'chirish", unlink_confirm:"Bu sartaroshni do'koningizdan olib tashlaysizmi? Uning hisobi va tarixi saqlanib qoladi.",
+    empty_roster:"Hali sartarosh ulanmagan — yuqorida kod orqali qo'shing."
+  },
+  ru:{
+    logout:"Выйти", greeting:"Ваш салон", sub:"Привяжите барберов по коду и следите за тем, как идут дела в салоне.",
+    link_title:"Добавить барбера", link_sub:'Спросите у барбера его код (в его панели, на вкладке Профиль, "Код владельца салона").',
+    link_btn:"Привязать", link_ok:"Привязан! Теперь он отображается ниже.",
+    link_not_found:"Барбер с таким кодом не найден — уточните код у него.",
+    link_already:"Этот барбер уже привязан к другому владельцу.",
+    link_error:"Что-то пошло не так — попробуйте снова.",
+    overview_title:"Обзор", roster_title:"Ваши барберы",
+    stat_barbers:"Барберы", stat_revenue:"Доход (за всё время)", stat_cuts:"Выполнено стрижек", stat_rating:"Средний рейтинг",
+    status_free:"Сейчас свободен", status_busy:"С клиентом",
+    mini_today:"Сегодня", mini_cuts:"Выполнено", mini_revenue:"Доход", mini_rating:"Рейтинг",
+    unlink_btn:"Убрать", unlink_confirm:"Убрать этого барбера из вашего салона? Его аккаунт и история сохранятся.",
+    empty_roster:"Пока нет привязанных барберов — добавьте по коду выше."
+  }
+};
+
+let currentLang = I18N[localStorage.getItem('ustara_lang')] ? localStorage.getItem('ustara_lang') : 'en';
+function t(key){ return I18N[currentLang][key]; }
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '—'; }
+function avatarFor(b){
+  const initials = (b.full_name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  return b.avatar_url ? `<img src="${escapeHtml(b.avatar_url)}" alt="">` : initials;
+}
+
+function applyLang(lang){
+  currentLang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(I18N[lang][el.dataset.i18n] !== undefined) el.textContent = I18N[lang][el.dataset.i18n];
+  });
+  document.querySelectorAll('#langSwitch .lang-btn').forEach(b=> b.classList.toggle('active', b.dataset.lang === lang));
+  document.getElementById('htmlRoot').lang = lang;
+  if(ownerData) render();
+}
+document.getElementById('langSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.lang-btn');
+  if(btn){ localStorage.setItem('ustara_lang', btn.dataset.lang); applyLang(btn.dataset.lang); }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await supabaseClient.auth.signOut();
+  window.location.href = 'index.html';
+});
+
+let ownerData = null;
+let barbersData = [];
+let bookingsByBarber = {};
+let reviewsByBarber = {};
+
+async function init(){
+  const { data: sessionData } = await supabaseClient.auth.getSession();
+  if(!sessionData.session){ window.location.href = 'auth.html'; return; }
+  const userId = sessionData.session.user.id;
+
+  const { data: owner, error } = await supabaseClient.from('owners').select('*').eq('id', userId).single();
+  if(error || !owner){
+    document.body.innerHTML = '<p style="padding:40px; font-family:sans-serif;">Could not load your account. Please contact support.</p>';
+    return;
+  }
+  ownerData = owner;
+
+  applyLang(currentLang);
+  await loadRoster();
+}
+
+async function loadRoster(){
+  const { data: barbers } = await supabaseClient.from('barbers').select('*').eq('owner_id', ownerData.id).order('created_at', { ascending:true });
+  barbersData = barbers || [];
+  if(barbersData.length === 0){ bookingsByBarber = {}; reviewsByBarber = {}; render(); return; }
+
+  const barberIds = barbersData.map(b => b.id);
+  const { data: bookings } = await supabaseClient.from('bookings').select('*').in('barber_id', barberIds);
+  const { data: reviews } = await supabaseClient.from('reviews').select('barber_id, rating').in('barber_id', barberIds);
+
+  bookingsByBarber = {};
+  (bookings || []).forEach(b => { (bookingsByBarber[b.barber_id] = bookingsByBarber[b.barber_id] || []).push(b); });
+  reviewsByBarber = {};
+  (reviews || []).forEach(r => { (reviewsByBarber[r.barber_id] = reviewsByBarber[r.barber_id] || []).push(r); });
+
+  render();
+}
+
+function barberStats(barberId){
+  const bookings = bookingsByBarber[barberId] || [];
+  const reviews = reviewsByBarber[barberId] || [];
+  const completed = bookings.filter(b => b.status === 'completed');
+  const revenue = completed.reduce((s,b) => s + (b.service_price || 0), 0);
+  const rating = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length) : null;
+  const now = new Date();
+  const isBusy = bookings.some(b => {
+    if(b.status !== 'confirmed') return false;
+    const start = new Date(b.start_time);
+    const end = new Date(start.getTime() + (b.service_duration_minutes || 30) * 60000);
+    return now >= start && now <= end;
+  });
+  const todayCount = bookings.filter(b => {
+    if(b.status === 'cancelled') return false;
+    const d = new Date(b.start_time);
+    return d.toDateString() === now.toDateString();
+  }).length;
+  return { completedCount: completed.length, revenue, rating, isBusy, todayCount };
+}
+
+function render(){
+  document.getElementById('greeting').textContent = ownerData.shop_name || t('greeting');
+
+  const perBarber = barbersData.map(b => ({ barber: b, stats: barberStats(b.id) }));
+  const totalRevenue = perBarber.reduce((s,x) => s + x.stats.revenue, 0);
+  const totalCuts = perBarber.reduce((s,x) => s + x.stats.completedCount, 0);
+  const ratedOnes = perBarber.filter(x => x.stats.rating !== null);
+  const avgRating = ratedOnes.length ? (ratedOnes.reduce((s,x) => s + x.stats.rating, 0) / ratedOnes.length) : null;
+
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${barbersData.length}</div><div class="stat-label">${t('stat_barbers')}</div></div>
+    <div class="stat-card"><div class="stat-num">${formatPrice(totalRevenue)}</div><div class="stat-label">${t('stat_revenue')}</div></div>
+    <div class="stat-card"><div class="stat-num">${totalCuts}</div><div class="stat-label">${t('stat_cuts')}</div></div>
+    <div class="stat-card"><div class="stat-num">${avgRating !== null ? avgRating.toFixed(1) + ' ★' : '—'}</div><div class="stat-label">${t('stat_rating')}</div></div>
+  `;
+
+  const area = document.getElementById('rosterArea');
+  if(perBarber.length === 0){
+    area.innerHTML = `<div class="empty-state">${t('empty_roster')}</div>`;
+    return;
+  }
+  area.innerHTML = perBarber.map(({ barber: b, stats: s }) => `
+    <div class="barber-card">
+      <div class="barber-avatar">${avatarFor(b)}</div>
+      <div class="barber-info">
+        <div class="barber-name">${escapeHtml(b.full_name)}</div>
+        <span class="barber-status ${s.isBusy ? 'busy' : 'free'}">${s.isBusy ? t('status_busy') : t('status_free')}</span>
+        <div class="barber-mini-stats">
+          <div class="mini-stat"><strong>${s.todayCount}</strong>${t('mini_today')}</div>
+          <div class="mini-stat"><strong>${s.completedCount}</strong>${t('mini_cuts')}</div>
+          <div class="mini-stat"><strong>${formatPrice(s.revenue)}</strong>${t('mini_revenue')}</div>
+          <div class="mini-stat"><strong>${s.rating !== null ? s.rating.toFixed(1) + ' ★' : '—'}</strong>${t('mini_rating')}</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost" data-unlink="${b.id}">${t('unlink_btn')}</button>
+    </div>
+  `).join('');
+
+  area.querySelectorAll('[data-unlink]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm(t('unlink_confirm'))) return;
+      btn.disabled = true;
+      const { error } = await supabaseClient.rpc('unlink_barber_from_owner', { p_barber_id: btn.dataset.unlink });
+      if(error) console.error('Unlink failed:', error);
+      await loadRoster();
+    });
+  });
+}
+
+document.getElementById('linkBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('codeInput');
+  const code = input.value.trim();
+  const msg = document.getElementById('linkMsg');
+  msg.className = 'link-msg';
+  if(!code) return;
+  const btn = document.getElementById('linkBtn');
+  btn.disabled = true;
+  const { data, error } = await supabaseClient.rpc('link_barber_to_owner', { p_code: code });
+  btn.disabled = false;
+  if(error){
+    msg.className = 'link-msg err'; msg.textContent = t('link_error');
+    return;
+  }
+  if(data === 'ok'){
+    msg.className = 'link-msg ok'; msg.textContent = t('link_ok');
+    input.value = '';
+    await loadRoster();
+  } else if(data === 'not_found'){
+    msg.className = 'link-msg err'; msg.textContent = t('link_not_found');
+  } else if(data === 'already_linked'){
+    msg.className = 'link-msg err'; msg.textContent = t('link_already');
+  }
+});
+
+init();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(console.warn);
+  });
+}
+</script>
+</body>
+</html>

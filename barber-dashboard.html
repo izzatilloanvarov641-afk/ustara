@@ -730,6 +730,16 @@
         </div>
 
         <div class="chip-row">
+          <div class="chip-row-icon chip-blue">🏪</div>
+          <div class="chip-row-body">
+            <div class="chip-row-title" data-i18n="owner_code_title">Shop owner code</div>
+            <div class="chip-row-sub" id="ownerCodeSub" data-i18n="owner_code_sub">Give this code to your shop owner so they can add you to their dashboard.</div>
+            <div class="mono" id="ownerLinkCode" style="font-size:20px; font-weight:700; letter-spacing:2px; margin-top:10px; background:var(--surface-alt); border:1px solid var(--line); border-radius:12px; padding:10px 14px; display:inline-block;">········</div>
+            <button class="btn" id="copyOwnerCodeBtn" style="margin-top:8px; padding:8px 14px; font-size:12.5px; background:none; border:1px solid var(--line); display:block;" data-i18n="copy_code">Copy code</button>
+          </div>
+        </div>
+
+        <div class="chip-row">
           <div class="chip-row-icon chip-terracotta">🚪</div>
           <div class="chip-row-body">
             <div class="chip-row-title" data-i18n="logout">Log out</div>
@@ -1036,6 +1046,8 @@ const I18N = {
     l_shopname:"Shop name (optional)", location_not_set:"No location set yet — click the map to place a pin.",
     location_placed:"Pin placed. Save to confirm — your location will need a quick check before it shows to clients.",
     profile_link_title:"Your public profile", copy_link:"Copy my profile link", link_copied:"Link copied!",
+    owner_code_title:"Shop owner code", owner_code_sub:"Give this code to your shop owner so they can add you to their dashboard.",
+    owner_code_linked_sub:"Linked to your shop owner's dashboard.", copy_code:"Copy code",
     services_sub:"Turn on what you offer, set your own duration and price for each.",
     add_service:"Add your own service", svc_name_placeholder:"Service name", new_svc_default:"New service",
     photos_sub:"A clear photo of you, plus examples of your work (optional).",
@@ -1133,6 +1145,8 @@ const I18N = {
     l_shopname:"Do'kon nomi (ixtiyoriy)", location_not_set:"Hali joylashuv belgilanmagan — pin qo'yish uchun xaritani bosing.",
     location_placed:"Pin qo'yildi. Tasdiqlash uchun saqlang — joylashuvingiz mijozlarga ko'rsatilishidan oldin tekshiriladi.",
     profile_link_title:"Sizning ochiq profilingiz", copy_link:"Profil havolamni nusxalash", link_copied:"Havola nusxalandi!",
+    owner_code_title:"Do'kon egasi kodi", owner_code_sub:"Bu kodni do'kon egangizga bering — u sizni o'z boshqaruv paneliga qo'sha oladi.",
+    owner_code_linked_sub:"Do'kon egangizning boshqaruv paneliga ulangan.", copy_code:"Kodni nusxalash",
     services_sub:"Nima taklif qilishingizni yoqing, har biriga davomiylik va narx belgilang.",
     add_service:"O'z xizmatingizni qo'shing", svc_name_placeholder:"Xizmat nomi", new_svc_default:"Yangi xizmat",
     photos_sub:"Sizning aniq suratingiz va ishlaringiz namunalari (ixtiyoriy).",
@@ -1230,6 +1244,8 @@ const I18N = {
     l_shopname:"Название салона (необязательно)", location_not_set:"Локация ещё не указана — нажмите на карту, чтобы поставить метку.",
     location_placed:"Метка поставлена. Сохраните для подтверждения — локация будет проверена перед показом клиентам.",
     profile_link_title:"Ваш публичный профиль", copy_link:"Скопировать ссылку на профиль", link_copied:"Ссылка скопирована!",
+    owner_code_title:"Код владельца салона", owner_code_sub:"Дайте этот код владельцу салона — он сможет добавить вас в свою панель.",
+    owner_code_linked_sub:"Привязан к панели владельца салона.", copy_code:"Скопировать код",
     services_sub:"Включите то, что предлагаете, задайте длительность и цену для каждой.",
     add_service:"Добавить свою услугу", svc_name_placeholder:"Название услуги", new_svc_default:"Новая услуга",
     photos_sub:"Ваше чёткое фото и примеры работ (необязательно).",
@@ -1403,6 +1419,7 @@ async function initInner(){
   renderGreeting();
 
   renderStatusBanner();
+  renderOwnerCode();
   renderProfileView();
   renderEditChips();
   renderAvailabilityEditor();
@@ -1466,6 +1483,24 @@ function renderStatusBanner(){
     }
   }
 }
+
+function renderOwnerCode(){
+  const el = document.getElementById('ownerLinkCode');
+  const sub = document.getElementById('ownerCodeSub');
+  el.textContent = barberData.owner_link_code || '········';
+  if(barberData.owner_id){
+    sub.textContent = t('owner_code_linked_sub');
+  }
+}
+document.getElementById('copyOwnerCodeBtn').addEventListener('click', ()=>{
+  if(!barberData.owner_link_code) return;
+  navigator.clipboard.writeText(barberData.owner_link_code).then(()=>{
+    const btn = document.getElementById('copyOwnerCodeBtn');
+    const orig = btn.textContent;
+    btn.textContent = t('link_copied');
+    setTimeout(()=> btn.textContent = orig, 1500);
+  });
+});
 
 function goToBarberView(viewName){
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
