@@ -1258,7 +1258,10 @@ async function init(){
     localStorage.removeItem('ustara_pending_ref');
   }
 
-  await loadActiveBooking();
+  // only read later, inside the booking popup flow (renderMapPopServices) —
+  // not needed for the initial paint, so don't block on it like the other
+  // fire-and-forget loaders below
+  loadActiveBooking();
   applyLang(currentLang); // already calls setupTelegramConnect() + renderReferralCard() internally
   setupClientMap();
   renderNotifBadge();
