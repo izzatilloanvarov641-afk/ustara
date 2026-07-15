@@ -2308,6 +2308,7 @@ function bookingRowHtml(b, withActions = true){
       <div class="booking-body">
         <strong>${escapeHtml(b.client_name)}</strong> ${clientVisitBadge(b.client_id)}${svcName ? ' · ' + escapeHtml(svcName) : ''}${addonNames ? ' + ' + escapeHtml(addonNames) : ''}<br>
         <span style="color:var(--ink-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
+        ${b.client_phone ? `<br><a href="tel:${escapeHtml(b.client_phone)}" style="color:var(--brass); font-size:12.5px; font-weight:600;" onclick="event.stopPropagation()">📞 ${escapeHtml(b.client_phone)}</a>` : ''}
         ${styleNote}
         ${depositBadge}
       </div>
@@ -2653,7 +2654,7 @@ function openWalkinModal(){
       <div id="walkinServiceList">
         ${activeServices.length ? activeServices.map(s => `
           <div class="walkin-svc-option" data-key="${s.service_key}" data-duration="${s.duration_minutes}" data-price="${s.price || 0}">
-            <span>${serviceLabel(s.service_key)} · ${s.duration_minutes} ${t('min')}</span>
+            <span>${escapeHtml(serviceLabel(s.service_key))} · ${s.duration_minutes} ${t('min')}</span>
             <span style="font-weight:800; color:var(--brass);">${formatPrice(s.price)}</span>
           </div>`).join('') : `<div class="empty-state" style="padding:20px;">${t('walkin_no_services')}</div>`}
       </div>
