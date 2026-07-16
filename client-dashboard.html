@@ -2736,18 +2736,19 @@ function showNextAck(){
     <button class="ack-modal-btn" id="ackModalBtn">${t('ack_understand')}</button>
   `;
   overlay.classList.add('open');
-  document.getElementById('ackModalBtn').addEventListener('click', async ()=>{
-    const btn = document.getElementById('ackModalBtn');
-    btn.disabled = true;
-    // race a timeout so a slow/stuck network call can never leave the
-    // client unable to dismiss the popup and use the site
-    await Promise.race([
-      supabaseClient.rpc('acknowledge_booking', { p_booking_id: b.id }).catch(()=>{}),
-      new Promise(resolve => setTimeout(resolve, 4000)),
-    ]);
+  document.getElementById('ackModalBtn').addEventListener('click', function(){
+    this.disabled = true;
+    // dismiss immediately (optimistic) — a slow/failed network call should
+    // never leave the client stuck unable to use the site. The RPC still
+    // runs in the background to persist the acknowledgement server-side;
+    // .then(onFulfilled, onRejected) is used instead of Promise.race()
+    // (which was silently never settling with the Supabase query builder).
     b.client_ack_needed = false;
     ackQueue.shift();
     showNextAck();
+    supabaseClient.rpc('acknowledge_booking', { p_booking_id: b.id }).then(
+      ()=>{}, (err)=> console.warn('acknowledge_booking failed (will re-show next visit):', err)
+    );
   }, { once:true });
 }
 
