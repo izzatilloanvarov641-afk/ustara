@@ -1337,6 +1337,26 @@ function escapeHtml(str){ const d = document.createElement('div'); d.textContent
 function localizeSpecialty(enTag){ const i = SPECIALTIES_EN.indexOf(enTag); return i === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][i]; }
 function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '—'; }
 
+// "2026 16th November, 14:30" — same helper shared with client-dashboard.html
+// so a date reads identically on both sides of a booking.
+function ordinalSuffix(n){
+  const v = n % 100;
+  if(v >= 11 && v <= 13) return n + 'th';
+  switch(n % 10){ case 1: return n + 'st'; case 2: return n + 'nd'; case 3: return n + 'rd'; default: return n + 'th'; }
+}
+function formatFriendlyDate(dateInput){
+  const date = new Date(dateInput);
+  const year = date.getFullYear();
+  const month = date.toLocaleString(currentLang === 'en' ? 'en-US' : currentLang, { month: 'long' });
+  const day = currentLang === 'en' ? ordinalSuffix(date.getDate()) : String(date.getDate());
+  return `${year} ${day} ${month}`;
+}
+function formatFriendlyDateTime(dateInput){
+  const date = new Date(dateInput);
+  const time = date.toLocaleTimeString(currentLang === 'en' ? 'en-US' : currentLang, { hour:'2-digit', minute:'2-digit' });
+  return `${formatFriendlyDate(date)}, ${time}`;
+}
+
 /* ---------- motion helpers ---------- */
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -2345,7 +2365,7 @@ function bookingRowHtml(b, withActions = true){
       ${refPhoto}
       <div class="booking-body">
         <strong>${escapeHtml(b.client_name)}</strong> ${clientVisitBadge(b.client_id)}${svcName ? ' · ' + escapeHtml(svcName) : ''}${addonNames ? ' + ' + escapeHtml(addonNames) : ''}<br>
-        <span style="color:var(--ink-dim); font-size:12.5px;">${new Date(b.start_time).toLocaleString()}</span>
+        <span style="color:var(--ink-dim); font-size:12.5px;">${formatFriendlyDateTime(b.start_time)}</span>
         ${b.client_phone ? `<br><a href="tel:${escapeHtml(b.client_phone)}" style="color:var(--brass); font-size:12.5px; font-weight:600;" onclick="event.stopPropagation()">📞 ${escapeHtml(b.client_phone)}</a>` : ''}
         ${styleNote}
         ${depositBadge}
@@ -2398,8 +2418,8 @@ function renderBookingsList(){
         await supabaseClient.from('notifications').insert([{
           client_id: booking.client_id, type: 'booking_confirmed', related_booking_id: booking.id,
           message: depositAmount > 0
-            ? `${barberData.full_name} confirmed your booking for ${new Date(booking.start_time).toLocaleString()}. Pay a ${formatPrice(depositAmount)} deposit to secure it.`
-            : `${barberData.full_name} confirmed your booking for ${new Date(booking.start_time).toLocaleString()}.`
+            ? `${barberData.full_name} confirmed your booking for ${formatFriendlyDateTime(booking.start_time)}. Pay a ${formatPrice(depositAmount)} deposit to secure it.`
+            : `${barberData.full_name} confirmed your booking for ${formatFriendlyDateTime(booking.start_time)}.`
         }]).then(({error}) => { if(error) console.warn('Notification insert failed (non-critical):', error); });
       }
       await refreshBookings();
@@ -2417,8 +2437,8 @@ function renderBookingsList(){
         await supabaseClient.from('notifications').insert([{
           client_id: booking.client_id, type: 'booking_cancelled_by_barber', related_booking_id: booking.id,
           message: depositUpdate.deposit_status === 'refund_due'
-            ? `${barberData.full_name} had to cancel your booking for ${new Date(booking.start_time).toLocaleString()}. Your deposit will be refunded.`
-            : `${barberData.full_name} had to cancel your booking for ${new Date(booking.start_time).toLocaleString()}.`
+            ? `${barberData.full_name} had to cancel your booking for ${formatFriendlyDateTime(booking.start_time)}. Your deposit will be refunded.`
+            : `${barberData.full_name} had to cancel your booking for ${formatFriendlyDateTime(booking.start_time)}.`
         }]).then(({error}) => { if(error) console.warn('Notification insert failed (non-critical):', error); });
       }
       await refreshBookings();

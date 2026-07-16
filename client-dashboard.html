@@ -381,6 +381,26 @@
   .details-modal-row a{ color:var(--gold); font-weight:700; }
   .details-modal-directions{ display:inline-block; margin-top:16px; color:var(--gold); font-weight:700; font-size:13px; }
 
+  /* ================= BLOCKING BOOKING-UPDATE POPUP (no close/backdrop-dismiss) ================= */
+  .ack-modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; display:none;
+    align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(6px);
+  }
+  .ack-modal-overlay.open{ display:flex; }
+  .ack-modal{
+    background:var(--surface); border-radius:var(--r-card); padding:30px 26px; max-width:360px; width:100%;
+    text-align:center; box-shadow:0 30px 70px rgba(0,0,0,0.4);
+  }
+  .ack-modal-icon{ font-size:38px; margin-bottom:10px; }
+  .ack-modal-title{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:19px; margin-bottom:10px; }
+  .ack-modal-body{ font-size:14px; color:var(--ink-dim); line-height:1.6; margin-bottom:22px; }
+  .ack-modal-body strong{ color:var(--ink); }
+  .ack-modal-btn{
+    width:100%; background:var(--gold); color:var(--ink); border:none; padding:14px;
+    border-radius:var(--r-btn); font-size:14px; font-weight:700; cursor:pointer; font-family:'IBM Plex Sans', sans-serif;
+  }
+  .ack-modal-btn:hover{ background:var(--gold-soft); }
+
   .star-picker{ display:flex; justify-content:center; gap:8px; margin-bottom:16px; }
   .star-picker .star{ font-size:32px; color:var(--surface-alt); cursor:pointer; transition:transform .1s ease, color .15s ease; }
   .star-picker .star:active{ transform:scale(0.9); }
@@ -825,6 +845,26 @@ const SERVICES_LOCAL = {
 };
 function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : ''; }
 
+// "2026 16th November, 14:30" — same helper shared with barber-dashboard.html
+// so a date reads identically on both sides of a booking.
+function ordinalSuffix(n){
+  const v = n % 100;
+  if(v >= 11 && v <= 13) return n + 'th';
+  switch(n % 10){ case 1: return n + 'st'; case 2: return n + 'nd'; case 3: return n + 'rd'; default: return n + 'th'; }
+}
+function formatFriendlyDate(dateInput){
+  const date = new Date(dateInput);
+  const year = date.getFullYear();
+  const month = date.toLocaleString(currentLang === 'en' ? 'en-US' : currentLang, { month: 'long' });
+  const day = currentLang === 'en' ? ordinalSuffix(date.getDate()) : String(date.getDate());
+  return `${year} ${day} ${month}`;
+}
+function formatFriendlyDateTime(dateInput){
+  const date = new Date(dateInput);
+  const time = date.toLocaleTimeString(currentLang === 'en' ? 'en-US' : currentLang, { hour:'2-digit', minute:'2-digit' });
+  return `${formatFriendlyDate(date)}, ${time}`;
+}
+
 const I18N = {
   en:{
     hero_eyebrow:"Ustara", hero_greeting_text:"Good to see you,",
@@ -837,6 +877,9 @@ const I18N = {
     cancel_confirm_refund:"Cancel this booking? You cancelled 24h+ ahead, so your deposit will be refunded.",
     cancel_confirm_forfeit:"Cancel this booking? It's within 24h of your appointment, so your deposit won't be refunded.",
     cancel_confirm_penalty:"⚠️ This barber already confirmed your booking. Cancelling now costs you 500 points.",
+    ack_confirmed_title:"Booking confirmed", ack_confirmed_body:"{name} confirmed your appointment on {date}.",
+    ack_cancelled_title:"Booking cancelled", ack_cancelled_body:"{name} had to cancel your appointment on {date}.",
+    ack_understand:"I understand",
     deposit_pay_prompt:"Pay a {amount} deposit to secure this booking.",
     deposit_pay_click:"Pay with Click", deposit_upload_proof:"I've paid — upload proof",
     deposit_proof_sent:"Proof sent — awaiting barber confirmation", deposit_proof_failed:"Couldn't upload — please try again.",
@@ -915,6 +958,9 @@ const I18N = {
     cancel_confirm_refund:"Bandni bekor qilasizmi? 24 soatdan oldin bekor qilyapsiz, shuning uchun depozitingiz qaytariladi.",
     cancel_confirm_forfeit:"Bandni bekor qilasizmi? Uchrashuvga 24 soatdan kam qoldi, shuning uchun depozit qaytarilmaydi.",
     cancel_confirm_penalty:"⚠️ Sartarosh bandingizni allaqachon tasdiqlagan. Hozir bekor qilsangiz, 500 ball yechiladi.",
+    ack_confirmed_title:"Band tasdiqlandi", ack_confirmed_body:"{name} {date} sanasiga bandingizni tasdiqladi.",
+    ack_cancelled_title:"Band bekor qilindi", ack_cancelled_body:"{name} {date} sanasiga bandingizni bekor qilishga majbur bo'ldi.",
+    ack_understand:"Tushundim",
     deposit_pay_prompt:"Bandni saqlab qolish uchun {amount} depozit to'lang.",
     deposit_pay_click:"Click orqali to'lash", deposit_upload_proof:"To'ladim — chekni yuklash",
     deposit_proof_sent:"Chek yuborildi — sartarosh tasdiqlashini kuting", deposit_proof_failed:"Yuklab bo'lmadi — qayta urinib ko'ring.",
@@ -993,6 +1039,9 @@ const I18N = {
     cancel_confirm_refund:"Отменить запись? Вы отменяете за 24+ часа, депозит будет возвращён.",
     cancel_confirm_forfeit:"Отменить запись? До визита меньше 24 часов, депозит не будет возвращён.",
     cancel_confirm_penalty:"⚠️ Барбер уже подтвердил вашу запись. Отмена сейчас стоит 500 очков.",
+    ack_confirmed_title:"Запись подтверждена", ack_confirmed_body:"{name} подтвердил вашу запись на {date}.",
+    ack_cancelled_title:"Запись отменена", ack_cancelled_body:"{name} был вынужден отменить вашу запись на {date}.",
+    ack_understand:"Понятно",
     deposit_pay_prompt:"Внесите депозит {amount}, чтобы закрепить запись.",
     deposit_pay_click:"Оплатить через Click", deposit_upload_proof:"Я оплатил — загрузить чек",
     deposit_proof_sent:"Чек отправлен — ждём подтверждения барбера", deposit_proof_failed:"Не удалось загрузить — попробуйте снова.",
@@ -1254,6 +1303,7 @@ async function init(){
   notificationsData = notifs || [];
   reviewedBookingIds = new Set((myReviews || []).map(r => r.booking_id));
   clickSettings = settings || null;
+  queueAckNotifications();
 
   const pendingRef = localStorage.getItem('ustara_pending_ref');
   if(pendingRef){
@@ -1418,7 +1468,7 @@ function bigTileHtml(b){
         <div class="appt-avatar">${avatarFor(barber)}</div>
         <div class="appt-info">
           <div class="appt-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-          <div class="appt-meta">🗓️ ${new Date(b.start_time).toLocaleString()}${barber.district ? ' · 📍 ' + escapeHtml(barber.district) : ''}</div>
+          <div class="appt-meta">🗓️ ${formatFriendlyDateTime(b.start_time)}${barber.district ? ' · 📍 ' + escapeHtml(barber.district) : ''}</div>
           ${svcName ? `<div class="appt-svc">✂️ ${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
         </div>
         <div class="appt-qr"><img src="${qrUrl}" alt="QR" loading="lazy"></div>
@@ -1485,7 +1535,7 @@ function bookingCardHtml(b){
       <div class="wallet-avatar">${avatarFor(barber)}</div>
       <div class="wallet-info">
         <div class="wallet-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-        <div class="wallet-meta">🗓️ ${new Date(b.start_time).toLocaleString()}</div>
+        <div class="wallet-meta">🗓️ ${formatFriendlyDateTime(b.start_time)}</div>
       </div>
       <div class="wallet-right">
         <span class="status-badge ${b.status}">${STATUS_EMOJI[b.status] || ''} ${t(b.status) || b.status}</span>
@@ -1511,7 +1561,7 @@ function bookingListRowHtml(b){
       <div class="wallet-avatar">${avatarFor(barber)}</div>
       <div class="wallet-info">
         <div class="wallet-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-        <div class="wallet-meta">🗓️ ${new Date(b.start_time).toLocaleString()}</div>
+        <div class="wallet-meta">🗓️ ${formatFriendlyDateTime(b.start_time)}</div>
         ${svcName ? `<div class="wallet-svc">✂️ ${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
       </div>
       <div class="wallet-right">
@@ -1650,6 +1700,7 @@ async function refreshBookings(){
   renderDashboardTiles();
   renderAllBookings();
   renderRebookNudge();
+  queueAckNotifications();
 }
 
 function renderHomeBookings(){
@@ -2640,6 +2691,64 @@ async function refreshBookingsAfterNewBooking(){
   renderDashboardTiles();
   renderAllBookings();
   renderRebookNudge();
+  queueAckNotifications();
+}
+
+// ---------- blocking "your booking was confirmed/cancelled" popup ----------
+// Fires when a barber confirms a booking, or cancels one themselves (not
+// the client cancelling their own — see sql/32's trigger for the exact
+// rule). Deliberately not dismissable except via the button — the request
+// was that the client can't keep using the site until they've acknowledged.
+let ackQueue = [];
+function getAckModalOverlay(){
+  let overlay = document.getElementById('ackModalOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'ackModalOverlay';
+    overlay.className = 'ack-modal-overlay';
+    overlay.innerHTML = '<div class="ack-modal" id="ackModal"></div>';
+    document.body.appendChild(overlay);
+  }
+  return overlay;
+}
+function queueAckNotifications(){
+  const needsAck = bookingsData.filter(b => b.client_ack_needed);
+  if(needsAck.length === 0) return;
+  ackQueue = needsAck;
+  showNextAck();
+}
+function showNextAck(){
+  if(ackQueue.length === 0){
+    const overlay = document.getElementById('ackModalOverlay');
+    if(overlay) overlay.classList.remove('open');
+    return;
+  }
+  const b = ackQueue[0];
+  const overlay = getAckModalOverlay();
+  const barberName = escapeHtml((b.barbers && b.barbers.full_name) || '');
+  const dateStr = formatFriendlyDateTime(b.start_time);
+  const isConfirmed = b.status === 'confirmed';
+  document.getElementById('ackModal').innerHTML = `
+    <div class="ack-modal-icon">${isConfirmed ? '✅' : '❌'}</div>
+    <div class="ack-modal-title">${isConfirmed ? t('ack_confirmed_title') : t('ack_cancelled_title')}</div>
+    <div class="ack-modal-body">${(isConfirmed ? t('ack_confirmed_body') : t('ack_cancelled_body'))
+      .replace('{name}', `<strong>${barberName}</strong>`).replace('{date}', `<strong>${escapeHtml(dateStr)}</strong>`)}</div>
+    <button class="ack-modal-btn" id="ackModalBtn">${t('ack_understand')}</button>
+  `;
+  overlay.classList.add('open');
+  document.getElementById('ackModalBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('ackModalBtn');
+    btn.disabled = true;
+    // race a timeout so a slow/stuck network call can never leave the
+    // client unable to dismiss the popup and use the site
+    await Promise.race([
+      supabaseClient.rpc('acknowledge_booking', { p_booking_id: b.id }).catch(()=>{}),
+      new Promise(resolve => setTimeout(resolve, 4000)),
+    ]);
+    b.client_ack_needed = false;
+    ackQueue.shift();
+    showNextAck();
+  }, { once:true });
 }
 
 /* ---------- initial load ---------- */
@@ -2809,7 +2918,7 @@ function showBookingDetailsModal(b){
       <button class="details-modal-close">&times;</button>
       <div class="details-modal-avatar">${avatarFor(barber)}</div>
       <div class="details-modal-name">${escapeHtml(barber.full_name || 'Barber')}</div>
-      <div class="details-modal-row"><span>📅</span> ${new Date(b.start_time).toLocaleString()}</div>
+      <div class="details-modal-row"><span>📅</span> ${formatFriendlyDateTime(b.start_time)}</div>
       ${svcName ? `<div class="details-modal-row"><span>✂️</span> ${escapeHtml(svcName)}${svcPrice ? ' · ' + svcPrice : ''}</div>` : ''}
       ${barber.phone ? `<div class="details-modal-row"><span>📞</span> <a href="tel:${escapeHtml(barber.phone)}">${escapeHtml(barber.phone)}</a></div>` : ''}
       <div class="details-modal-row"><span>📍</span> ${escapeHtml(barber.shop_name || '')}${barber.shop_name && barber.district ? ' · ' : ''}${escapeHtml(barber.district || '')}</div>
