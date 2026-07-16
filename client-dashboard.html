@@ -836,6 +836,7 @@ const I18N = {
     cancel_booking:"Cancel", cancel_confirm:"Cancel this booking? Your barber will be notified.", remove_booking:"Remove",
     cancel_confirm_refund:"Cancel this booking? You cancelled 24h+ ahead, so your deposit will be refunded.",
     cancel_confirm_forfeit:"Cancel this booking? It's within 24h of your appointment, so your deposit won't be refunded.",
+    cancel_confirm_penalty:"⚠️ This barber already confirmed your booking. Cancelling now costs you 500 points.",
     deposit_pay_prompt:"Pay a {amount} deposit to secure this booking.",
     deposit_pay_click:"Pay with Click", deposit_upload_proof:"I've paid — upload proof",
     deposit_proof_sent:"Proof sent — awaiting barber confirmation", deposit_proof_failed:"Couldn't upload — please try again.",
@@ -913,6 +914,7 @@ const I18N = {
     cancel_booking:"Bekor qilish", cancel_confirm:"Bandni bekor qilasizmi? Sartaroshingizga xabar beriladi.", remove_booking:"O'chirish",
     cancel_confirm_refund:"Bandni bekor qilasizmi? 24 soatdan oldin bekor qilyapsiz, shuning uchun depozitingiz qaytariladi.",
     cancel_confirm_forfeit:"Bandni bekor qilasizmi? Uchrashuvga 24 soatdan kam qoldi, shuning uchun depozit qaytarilmaydi.",
+    cancel_confirm_penalty:"⚠️ Sartarosh bandingizni allaqachon tasdiqlagan. Hozir bekor qilsangiz, 500 ball yechiladi.",
     deposit_pay_prompt:"Bandni saqlab qolish uchun {amount} depozit to'lang.",
     deposit_pay_click:"Click orqali to'lash", deposit_upload_proof:"To'ladim — chekni yuklash",
     deposit_proof_sent:"Chek yuborildi — sartarosh tasdiqlashini kuting", deposit_proof_failed:"Yuklab bo'lmadi — qayta urinib ko'ring.",
@@ -990,6 +992,7 @@ const I18N = {
     cancel_booking:"Отменить", cancel_confirm:"Отменить эту запись? Барбер получит уведомление.", remove_booking:"Удалить",
     cancel_confirm_refund:"Отменить запись? Вы отменяете за 24+ часа, депозит будет возвращён.",
     cancel_confirm_forfeit:"Отменить запись? До визита меньше 24 часов, депозит не будет возвращён.",
+    cancel_confirm_penalty:"⚠️ Барбер уже подтвердил вашу запись. Отмена сейчас стоит 500 очков.",
     deposit_pay_prompt:"Внесите депозит {amount}, чтобы закрепить запись.",
     deposit_pay_click:"Оплатить через Click", deposit_upload_proof:"Я оплатил — загрузить чек",
     deposit_proof_sent:"Чек отправлен — ждём подтверждения барбера", deposit_proof_failed:"Не удалось загрузить — попробуйте снова.",
@@ -1578,9 +1581,13 @@ function attachCancelHandlers(container){
       const booking = bookingsData.find(b => b.id === btn.dataset.cancelId);
       const hoursUntil = booking ? (new Date(booking.start_time) - new Date()) / 3600000 : Infinity;
       const depositWasPaid = booking && booking.deposit_status === 'paid';
-      const confirmMsg = depositWasPaid
+      const isConfirmed = booking && booking.status === 'confirmed';
+      // cancelling a confirmed slot costs 500 points (enforced server-side in
+      // sql/31); pending bookings are free to drop
+      let confirmMsg = depositWasPaid
         ? (hoursUntil >= 24 ? t('cancel_confirm_refund') : t('cancel_confirm_forfeit'))
         : t('cancel_confirm');
+      if(isConfirmed) confirmMsg = t('cancel_confirm_penalty') + '\n\n' + confirmMsg;
       if(!confirm(confirmMsg)) return;
       const original = btn.textContent;
       btn.style.pointerEvents = 'none';
