@@ -1330,13 +1330,33 @@ async function init(){
 // this client's bookings) without needing a manual reload. Requires
 // `bookings` to be in the supabase_realtime publication — see
 // sql/30-realtime-bookings.sql.
+//
+// The websocket underneath this drops silently on mobile far more than on
+// desktop (carrier NAT timeouts, tower handoffs, the phone briefly losing
+// signal) with no visible error — the app just goes quiet until something
+// re-establishes it. Two safety nets on top of the realtime push itself:
+// re-subscribe if the channel reports an error/timeout, and refetch
+// whenever the tab becomes visible/focused again (covers the case where
+// the socket died and never told us).
+let clientBookingChannel = null;
 function subscribeToOwnBookingChanges(clientId){
-  supabaseClient
+  if(clientBookingChannel) supabaseClient.removeChannel(clientBookingChannel);
+  clientBookingChannel = supabaseClient
     .channel('client-bookings-' + clientId)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings', filter: `client_id=eq.${clientId}` },
       () => { refreshBookingsAfterNewBooking(); })
-    .subscribe();
+    .subscribe((status)=>{
+      if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED'){
+        setTimeout(()=> subscribeToOwnBookingChanges(clientId), 3000);
+      }
+    });
 }
+document.addEventListener('visibilitychange', ()=>{
+  if(!document.hidden && clientData && !isGuest) refreshBookingsAfterNewBooking();
+});
+window.addEventListener('focus', ()=>{
+  if(clientData && !isGuest) refreshBookingsAfterNewBooking();
+});
 
 /* ---------- home: nearby / top barbers ---------- */
 function portfolioPublicUrl(imagePath){
