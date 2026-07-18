@@ -89,6 +89,7 @@ h3{ font-size:1.25rem; font-weight:600; }
 @media (max-width:900px){ .nav__links{ display:none; } }
 @media (max-width:560px){ .nav__login .client-login{ display:none; } .nav__login .sep{ display:none; } }
 @media (max-width:420px){ .nav__login{ display:none; } }
+@media (max-width:480px){ .nav__cta{ display:none; } }
 .hero{ position:relative; min-height:92vh; display:flex; align-items:center; padding:120px 0; overflow:hidden; color:var(--text-on-ink); }
 .hero__video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
 .hero__scrim{ position:absolute; inset:0; z-index:1; background:linear-gradient(rgba(18,21,28,.72),rgba(18,21,28,.55) 45%,rgba(18,21,28,.85)); }
@@ -98,11 +99,16 @@ h3{ font-size:1.25rem; font-weight:600; }
 .hero__content>p{ margin-top:24px; font-size:1.15rem; color:var(--text-on-ink); opacity:.85; max-width:52ch; }
 .hero__ctas{ display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; align-items:center; }
 #installAppBtn{ background:none; border:none; font-family:var(--font-mono); font-size:.8rem; font-weight:600; letter-spacing:.03em; text-transform:uppercase; color:var(--text-on-ink-muted); cursor:pointer; }
+.hero__pills{ display:contents; }
 .hero__pill{ position:absolute; z-index:2; display:none; align-items:center; gap:8px; background:rgba(18,21,28,.65); backdrop-filter:blur(8px); border:1px solid var(--line-on-ink); border-radius:999px; padding:10px 18px; font-family:var(--font-mono); font-size:.8rem; font-weight:600; color:var(--text-on-ink); animation:bob 5s ease-in-out infinite; }
 .hero__pill .dot{ width:9px; height:9px; border-radius:50%; }
 @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
 @media (min-width:1000px){ .hero__pill{ display:inline-flex; } }
 @media (prefers-reduced-motion:reduce){ .hero__pill{ animation:none; } }
+.hero__pills-mobile{ display:none; flex-wrap:wrap; gap:8px 8px; margin-top:24px; }
+.hero__pill-m{ display:inline-flex; align-items:center; gap:6px; background:rgba(18,21,28,.55); backdrop-filter:blur(6px); border:1px solid var(--line-on-ink); border-radius:999px; padding:7px 12px; font-family:var(--font-mono); font-size:.7rem; font-weight:600; color:var(--text-on-ink); white-space:nowrap; }
+.hero__pill-m .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+@media (max-width:999px){ .hero__pills-mobile{ display:flex; } }
 .cards-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
 .concept-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:32px 28px; }
 .concept-card .icon-chip{ margin-bottom:20px; }
@@ -227,7 +233,7 @@ h3{ font-size:1.25rem; font-weight:600; }
         <button type="button" data-lang="uz">UZ</button>
         <button type="button" data-lang="ru">RU</button>
       </div>
-      <a href="auth.html" class="btn btn--ink btn--sm" data-i18n="nav_cta">Book a chair</a>
+      <a href="auth.html" class="btn btn--ink btn--sm nav__cta" data-i18n="nav_cta">Book a chair</a>
     </div>
   </div>
 </nav>
@@ -235,10 +241,12 @@ h3{ font-size:1.25rem; font-weight:600; }
 <header class="hero" id="heroFrame">
   <video class="hero__video" id="heroVideo" src="https://videos.pexels.com/video-files/7686555/7686555-hd_1920_1080_24fps.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
   <div class="hero__scrim" aria-hidden="true"></div>
-  <span class="hero__pill" style="top:22%;right:12%;" data-i18n="hero_pill1"><span class="dot dot--lime"></span>No waiting line</span>
-  <span class="hero__pill" style="top:38%;right:6%;animation-delay:1.2s;" data-i18n="hero_pill2"><span class="dot dot--coral"></span>4.9★ rated masters</span>
-  <span class="hero__pill" style="top:58%;right:14%;animation-delay:2.4s;" data-i18n="hero_pill3"><span class="dot dot--sky"></span>Open now near you</span>
-  <span class="hero__pill" style="top:74%;right:8%;animation-delay:3.6s;" data-i18n="hero_pill4"><span class="dot dot--sun"></span>Free to book</span>
+  <div class="hero__pills">
+    <span class="hero__pill" style="top:22%;right:12%;" data-i18n="hero_pill1"><span class="dot dot--lime"></span>No waiting line</span>
+    <span class="hero__pill" style="top:38%;right:6%;animation-delay:1.2s;" data-i18n="hero_pill2"><span class="dot dot--coral"></span>4.9★ rated masters</span>
+    <span class="hero__pill" style="top:58%;right:14%;animation-delay:2.4s;" data-i18n="hero_pill3"><span class="dot dot--sky"></span>Open now near you</span>
+    <span class="hero__pill" style="top:74%;right:8%;animation-delay:3.6s;" data-i18n="hero_pill4"><span class="dot dot--sun"></span>Free to book</span>
+  </div>
   <div class="container">
     <div class="hero__content">
       <span class="hero__kicker reveal reveal--left" data-i18n="hero_kicker">Barber booking · Uzbekistan</span>
@@ -248,6 +256,12 @@ h3{ font-size:1.25rem; font-weight:600; }
         <a href="auth.html" class="btn btn--primary" data-i18n="hero_cta_client">Find your barber</a>
         <a href="auth.html?role=barber" class="btn btn--ghost" data-i18n="hero_cta_barber">I'm a barber</a>
         <button type="button" id="installAppBtn" style="display:none;" data-i18n="install_btn">📲 Install app</button>
+      </div>
+      <div class="hero__pills-mobile reveal reveal--left" style="transition-delay:300ms">
+        <span class="hero__pill-m" data-i18n="hero_pill1"><span class="dot dot--lime"></span>No waiting line</span>
+        <span class="hero__pill-m" data-i18n="hero_pill2"><span class="dot dot--coral"></span>4.9★ rated masters</span>
+        <span class="hero__pill-m" data-i18n="hero_pill3"><span class="dot dot--sky"></span>Open now near you</span>
+        <span class="hero__pill-m" data-i18n="hero_pill4"><span class="dot dot--sun"></span>Free to book</span>
       </div>
     </div>
   </div>
@@ -837,12 +851,10 @@ const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Phones get the minimal "app" entry (no landing page, just Create
-// account / Sign in) — desktop always sees the full landing page below
-// and must tap Sign in themselves, even if a session already exists.
-if(window.innerWidth <= 640){
-  window.location.replace('app-entry.html');
-}
+// Phones now see the same scrollable landing page as desktop (the
+// minimal "app" entry at app-entry.html is still used as the installed
+// PWA's launch screen, via manifest start_url, just not for a normal
+// browser visit anymore).
 
 let currentLang = 'en';
 function applyLang(lang){

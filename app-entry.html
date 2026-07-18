@@ -55,14 +55,27 @@
   .hero-card__title em{ font-style:italic; color:var(--brass-soft); }
   .hero-card__lede{ font-size:13px; color:var(--on-dark-dim); line-height:1.55; max-width:34ch; }
 
-  /* ---- short value-prop row: pill-shaped, oval mini-cards ---- */
-  .props-row{ display:flex; gap:10px; }
-  .prop-pill{
-    flex:1; background:var(--surface); border:1px solid var(--line); border-radius:22px;
-    padding:14px 10px; text-align:center;
+  /* ---- floating circular badges on the hero card, same idea as the
+     desktop hero's pills, just two, small, and anchored so they never
+     spill past the rounded card edges on a narrow screen ---- */
+  .hero-card__badge{
+    position:absolute; z-index:1; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(18,21,28,.55); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.14);
+    border-radius:999px; padding:6px 12px; font-size:10.5px; font-weight:700; color:var(--on-dark);
+    white-space:nowrap;
   }
-  .prop-pill .emoji{ font-size:20px; display:block; margin-bottom:6px; }
-  .prop-pill .label{ font-size:11px; font-weight:600; color:var(--ink-dim); line-height:1.3; }
+  .hero-card__badge .dot{ width:6px; height:6px; border-radius:50%; background:var(--brass); flex-shrink:0; }
+  .hero-card__badge--1{ top:16px; right:18px; }
+  .hero-card__badge--2{ top:52px; right:18px; }
+
+  /* ---- value props as small circular icon badges, minimal, no boxes ---- */
+  .props-row{ display:flex; justify-content:space-between; gap:4px; padding:2px 4px; }
+  .prop-pill{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+  .prop-pill .emoji{
+    width:46px; height:46px; border-radius:50%; background:var(--surface); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+  }
+  .prop-pill .label{ font-size:10.5px; font-weight:600; color:var(--ink-dim); line-height:1.3; max-width:9ch; }
 
   /* ---- CTAs ---- */
   .choices{ display:flex; flex-direction:column; gap:10px; }
@@ -95,6 +108,8 @@
 
 <div class="hero-card">
   <div class="hero-card__img"></div>
+  <span class="hero-card__badge hero-card__badge--1"><span class="dot"></span><span id="badge1">4.9★ rated</span></span>
+  <span class="hero-card__badge hero-card__badge--2"><span class="dot"></span><span id="badge2">No waiting line</span></span>
   <div class="hero-card__content">
     <div class="hero-card__title" id="heroTitle">Find your <em>barber.</em><br>Not just a shop.</div>
     <p class="hero-card__lede" id="heroLede">A barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them.</p>
@@ -129,16 +144,19 @@ const I18N = {
   en:{ launch:"Now live in Tashkent",
     heroTitle:'Find your <em>barber.</em><br>Not just a shop.',
     heroLede:"A barber's reputation belongs to the barber — portfolio, clients, and bookings that follow them.",
+    badge1:"4.9★ rated", badge2:"No waiting line",
     prop1:"Browse real portfolios", prop2:"Book in seconds", prop3:"Rebook your favorite",
     signup:"Create account", login:"Sign in", guest:"Continue as a guest", terms:"Terms", privacy:"Privacy", install:"Install app" },
   uz:{ launch:"Toshkentda ishga tushdi",
     heroTitle:'<em>Sartaroshingizni</em> toping.<br>Shunchaki do\'kon emas.',
     heroLede:"Sartaroshning obro'si sartaroshning o'ziga tegishli — portfolio, mijozlar va bandlovlar u bilan boradi.",
+    badge1:"4.9★ baholangan", badge2:"Navbatsiz",
     prop1:"Haqiqiy portfoliolarni ko'ring", prop2:"Soniyalarda band qiling", prop3:"Sevimlingizni qayta band qiling",
     signup:"Hisob yaratish", login:"Kirish", guest:"Mehmon sifatida davom etish", terms:"Shartlar", privacy:"Maxfiylik", install:"Ilovani o'rnatish" },
   ru:{ launch:"Уже работает в Ташкенте",
     heroTitle:'Найдите своего <em>барбера.</em><br>Не просто салон.',
     heroLede:"Репутация барбера принадлежит барберу — портфолио, клиенты и записи следуют за ним.",
+    badge1:"4.9★ рейтинг", badge2:"Без очереди",
     prop1:"Смотрите реальные портфолио", prop2:"Бронируйте за секунды", prop3:"Повторяйте у любимого барбера",
     signup:"Создать аккаунт", login:"Войти", guest:"Продолжить как гость", terms:"Условия", privacy:"Конфиденциальность", install:"Установить приложение" }
 };
@@ -150,6 +168,8 @@ const dict = I18N[lang];
 document.getElementById('launchPillText').textContent = dict.launch;
 document.getElementById('heroTitle').innerHTML = dict.heroTitle;
 document.getElementById('heroLede').textContent = dict.heroLede;
+document.getElementById('badge1').textContent = dict.badge1;
+document.getElementById('badge2').textContent = dict.badge2;
 document.getElementById('prop1').textContent = dict.prop1;
 document.getElementById('prop2').textContent = dict.prop2;
 document.getElementById('prop3').textContent = dict.prop3;
