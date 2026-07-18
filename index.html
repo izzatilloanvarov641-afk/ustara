@@ -851,10 +851,23 @@ const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Phones now see the same scrollable landing page as desktop (the
-// minimal "app" entry at app-entry.html is still used as the installed
-// PWA's launch screen, via manifest start_url, just not for a normal
-// browser visit anymore).
+// Phones now see the same scrollable landing page as desktop, and the
+// installed PWA launches here too (manifest start_url). Installed-app
+// users who are already logged in skip straight to their dashboard, same
+// as the old app-entry.html did — feels instant on reopen. Regular
+// browser visits (phone or desktop) never auto-redirect; you tap Sign in
+// yourself, same as before.
+(async function checkExistingSessionStandalone(){
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if(!isStandalone) return;
+  const { data } = await supabaseClient.auth.getSession();
+  if(!data.session) return;
+  const userId = data.session.user.id;
+  const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
+  if(client){ window.location.replace('client-dashboard.html'); return; }
+  const { data: barber } = await supabaseClient.from('barbers').select('id').eq('id', userId).single();
+  if(barber){ window.location.replace('barber-dashboard.html'); return; }
+})();
 
 let currentLang = 'en';
 function applyLang(lang){

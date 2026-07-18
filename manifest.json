@@ -2,7 +2,7 @@
   "name": "Ustara — Find your barber",
   "short_name": "Ustara",
   "description": "Find, book, and manage your barber appointments in Tashkent.",
-  "start_url": "/app-entry.html",
+  "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
