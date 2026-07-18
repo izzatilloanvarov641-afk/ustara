@@ -902,6 +902,7 @@ const I18N = {
     telegram_title:"Telegram alerts", telegram_sub:"Get booking confirmations and reminders straight to Telegram.",
     telegram_connect_btn:"Connect Telegram", telegram_connected:"Connected", telegram_checking:"Checking…",
     telegram_waiting:"Opening Telegram… come back here once you've tapped Start.",
+    telegram_coming_soon:"Telegram alerts are coming soon",
     referral_title:"Invite friends", referral_sub:"Share your code — when a friend completes their first booking, you both get 200 points.",
     referral_copy:"Copy link", referral_copied:"Copied!", referral_share:"Share invite",
     referral_share_text:"Book your next haircut on Ustara — use my link and we both get bonus points!",
@@ -983,6 +984,7 @@ const I18N = {
     telegram_title:"Telegram xabarnomalari", telegram_sub:"Bandlash tasdiqlari va eslatmalarni to'g'ridan-to'g'ri Telegramda oling.",
     telegram_connect_btn:"Telegramni ulash", telegram_connected:"Ulangan", telegram_checking:"Tekshirilmoqda…",
     telegram_waiting:"Telegram ochilmoqda… Start tugmasini bosgach shu yerga qayting.",
+    telegram_coming_soon:"Telegram xabarnomalari tez orada",
     referral_title:"Do'stlarni taklif qiling", referral_sub:"Kodingizni ulashing — do'stingiz birinchi bandlovni yakunlasa, ikkalangiz ham 200 ball olasiz.",
     referral_copy:"Havolani nusxalash", referral_copied:"Nusxalandi!", referral_share:"Taklifni ulashish",
     referral_share_text:"Ustara orqali sartaroshga yoziling — havolamdan foydalaning, ikkalamiz ham bonus ball olamiz!",
@@ -1064,6 +1066,7 @@ const I18N = {
     telegram_title:"Уведомления в Telegram", telegram_sub:"Получайте подтверждения и напоминания о записи прямо в Telegram.",
     telegram_connect_btn:"Подключить Telegram", telegram_connected:"Подключено", telegram_checking:"Проверка…",
     telegram_waiting:"Открываем Telegram… вернитесь сюда после нажатия Start.",
+    telegram_coming_soon:"Уведомления в Telegram скоро появятся",
     referral_title:"Пригласить друзей", referral_sub:"Поделитесь кодом — когда друг завершит первую запись, вы оба получите 200 баллов.",
     referral_copy:"Скопировать ссылку", referral_copied:"Скопировано!", referral_share:"Поделиться",
     referral_share_text:"Запишись к барберу через Ustara по моей ссылке — мы оба получим бонусные баллы!",
@@ -1885,8 +1888,15 @@ function renderInfoCard(){
 }
 
 /* ---------- telegram connect ---------- */
+// Flip back to true to re-enable — the RPCs/edge function behind this are
+// untouched, this just hides the connect UI while the bot is off.
+const TELEGRAM_FEATURE_ENABLED = false;
 async function setupTelegramConnect(){
   const box = document.getElementById('telegramStatus');
+  if(!TELEGRAM_FEATURE_ENABLED){
+    box.innerHTML = `<div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); background:var(--bg-alt); border-radius:var(--r-btn); padding:13px;">✈️ ${t('telegram_coming_soon')}</div>`;
+    return;
+  }
   box.innerHTML = `<span style="font-size:12.5px; color:var(--ink-dim);">${t('telegram_checking')}</span>`;
   const { data: connected } = await supabaseClient.rpc('get_telegram_status');
   if(connected){

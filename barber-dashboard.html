@@ -995,6 +995,7 @@ const I18N = {
     telegram_title:"Telegram alerts", telegram_sub_barber:"Get a Telegram message the moment a client books, cancels, or a reminder is due.",
     telegram_connect_btn:"Connect Telegram", telegram_connected:"Connected", telegram_checking:"Checking…",
     telegram_waiting:"Opening Telegram… come back here once you've tapped Start.",
+    telegram_coming_soon:"Telegram alerts are coming soon",
     language_title:"Language",
     add_walkin:"+ Add walk-in", walkin_title:"Walk-in client",
     walkin_phone:"Phone number", walkin_name:"Client name (optional)", walkin_name_ph:"e.g. Aziz",
@@ -1095,6 +1096,7 @@ const I18N = {
     telegram_title:"Telegram xabarnomalari", telegram_sub_barber:"Mijoz band qilganda, bekor qilganda yoki eslatma vaqti kelganda Telegramda xabar oling.",
     telegram_connect_btn:"Telegramni ulash", telegram_connected:"Ulangan", telegram_checking:"Tekshirilmoqda…",
     telegram_waiting:"Telegram ochilmoqda… Start tugmasini bosgach shu yerga qayting.",
+    telegram_coming_soon:"Telegram xabarnomalari tez orada",
     language_title:"Til",
     add_walkin:"+ Mijoz qo'shish", walkin_title:"Yangi mijoz",
     walkin_phone:"Telefon raqami", walkin_name:"Mijoz ismi (ixtiyoriy)", walkin_name_ph:"masalan, Aziz",
@@ -1195,6 +1197,7 @@ const I18N = {
     telegram_title:"Уведомления в Telegram", telegram_sub_barber:"Получайте сообщение в Telegram, как только клиент забронирует, отменит запись или наступит время напоминания.",
     telegram_connect_btn:"Подключить Telegram", telegram_connected:"Подключено", telegram_checking:"Проверка…",
     telegram_waiting:"Открываем Telegram… вернитесь сюда после нажатия Start.",
+    telegram_coming_soon:"Уведомления в Telegram скоро появятся",
     language_title:"Язык",
     add_walkin:"+ Добавить клиента", walkin_title:"Новый клиент",
     walkin_phone:"Номер телефона", walkin_name:"Имя клиента (необязательно)", walkin_name_ph:"например, Азиз",
@@ -1688,8 +1691,15 @@ document.getElementById('autoReminderDaysInput').addEventListener('change', asyn
 });
 
 /* ---------- telegram connect ---------- */
+// Flip back to true to re-enable — the RPCs/edge function behind this are
+// untouched, this just hides the connect UI while the bot is off.
+const TELEGRAM_FEATURE_ENABLED = false;
 async function setupTelegramConnect(){
   const box = document.getElementById('telegramStatus');
+  if(!TELEGRAM_FEATURE_ENABLED){
+    box.innerHTML = `<div style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-dim); background:var(--bg-alt); border-radius:var(--r-btn); padding:13px;">✈️ ${t('telegram_coming_soon')}</div>`;
+    return;
+  }
   box.innerHTML = `<span style="font-size:12.5px; color:var(--ink-dim);">${t('telegram_checking')}</span>`;
   const { data: connected } = await supabaseClient.rpc('get_telegram_status');
   if(connected){
