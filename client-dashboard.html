@@ -925,6 +925,7 @@ const I18N = {
     search_ph:"Search barbers or services", loc_ph:"Enter your location",
     filter_nearby:"Nearby", filter_open:"Open now", filter_rating:"Rating 4.5+",
     area_empty_h:"No barbers in this area yet", area_empty_p:"We're adding more barbers here soon — try a wider search.",
+    discount_banner_title:"Launch promo — {pct}% off every price shown", discount_banner_sub:"Prices below already include the discount. On us, not the barber.",
     loc_denied:"Couldn't get your location — check your browser permissions.",
     results_one:"result", results_many:"results",
     search_empty_h:"No barbers yet", search_noresults_h:"No matches", search_noresults_p:"Try a different search or clear your filters.",
@@ -1007,6 +1008,7 @@ const I18N = {
     search_ph:"Sartarosh yoki xizmat qidiring", loc_ph:"Joylashuvingizni kiriting",
     filter_nearby:"Yaqin atrofda", filter_open:"Hozir ochiq", filter_rating:"Reyting 4.5+",
     area_empty_h:"Bu hududda hozircha sartaroshlar yo'q", area_empty_p:"Tez orada bu yerga ham sartaroshlar qo'shamiz — kengroq hududni sinab ko'ring.",
+    discount_banner_title:"Ochilish aksiyasi — barcha narxlarga {pct}% chegirma", discount_banner_sub:"Quyidagi narxlarga chegirma allaqachon qo'shilgan. Xarajatni biz qoplaymiz, sartarosh emas.",
     loc_denied:"Joylashuvingizni aniqlab bo'lmadi — brauzer ruxsatlarini tekshiring.",
     results_one:"natija", results_many:"natija",
     search_empty_h:"Hozircha sartaroshlar yo'q", search_noresults_h:"Mos natija topilmadi", search_noresults_p:"Boshqa qidiruvni sinab ko'ring yoki filtrlarni tozalang.",
@@ -1089,6 +1091,7 @@ const I18N = {
     search_ph:"Поиск барберов или услуг", loc_ph:"Введите ваше местоположение",
     filter_nearby:"Рядом", filter_open:"Открыто сейчас", filter_rating:"Рейтинг 4.5+",
     area_empty_h:"Барберов в этом районе пока нет", area_empty_p:"Скоро добавим сюда барберов — попробуйте расширить область поиска.",
+    discount_banner_title:"Промо запуска — скидка {pct}% на все цены", discount_banner_sub:"Цены ниже уже со скидкой. Расходы берём на себя, не барбер.",
     loc_denied:"Не удалось определить ваше местоположение — проверьте разрешения браузера.",
     results_one:"результат", results_many:"результатов",
     search_empty_h:"Барберов пока нет", search_noresults_h:"Ничего не найдено", search_noresults_p:"Попробуйте другой запрос или сбросьте фильтры.",
@@ -1126,6 +1129,8 @@ let favoritesData = [];
 let notificationsData = [];
 let isGuest = false;
 let activeBooking = null;
+let platformDiscountActive = false;
+let platformDiscountPercent = 3;
 
 async function loadActiveBooking(){
   if(!clientData){ activeBooking = null; return; }
@@ -1261,6 +1266,18 @@ function renderGuestHome(){
 /* ---------- init ---------- */
 async function init(){
   const { data: sessionData } = await supabaseClient.auth.getSession();
+
+  // fetch after getSession() resolves, not before — the client's auth
+  // state (and therefore the Authorization header this needs, since
+  // platform_settings is authenticated-only) isn't hydrated from storage
+  // until getSession() has actually run once on a fresh page load
+  try {
+    const { data: discountSettings } = await supabaseClient.from('platform_settings')
+      .select('discount_active, discount_percent').eq('id', 1).maybeSingle();
+    platformDiscountActive = !!(discountSettings && discountSettings.discount_active);
+    platformDiscountPercent = (discountSettings && discountSettings.discount_percent) || 3;
+  } catch(e){ console.warn('Failed to load discount settings:', e); }
+
   if(!sessionData.session){
     isGuest = true;
     applyLang(currentLang);
@@ -2315,7 +2332,10 @@ function renderMapResults(){
     mapAllBarbers.length ? (count + ' ' + (count === 1 ? t('results_one') : t('results_many'))) : '';
 
   const banner = document.getElementById('mapAreaBanner');
-  banner.innerHTML = '';
+  const discountBannerHtml = platformDiscountActive
+    ? `<div class="info-banner"><div class="ib-icon">🎉</div><div><div class="ib-title">${t('discount_banner_title').replace('{pct}', platformDiscountPercent)}</div><div class="ib-sub">${t('discount_banner_sub')}</div></div></div>`
+    : '';
+  banner.innerHTML = discountBannerHtml;
 
   if(mapAllBarbers.length === 0){
     area.innerHTML = `<div class="empty-state reveal"><div class="icon">✂️</div><strong>${t('search_empty_h')}</strong><p>${t('no_barbers_yet')}</p></div>`;
@@ -2324,7 +2344,7 @@ function renderMapResults(){
     return;
   }
   if(count === 0 && mapMetaFilters.nearby && mapNearbyLoc){
-    banner.innerHTML = `<div class="info-banner"><div class="ib-icon">📍</div><div><div class="ib-title">${t('area_empty_h')}</div><div class="ib-sub">${t('area_empty_p')}</div></div></div>`;
+    banner.innerHTML = discountBannerHtml + `<div class="info-banner"><div class="ib-icon">📍</div><div><div class="ib-title">${t('area_empty_h')}</div><div class="ib-sub">${t('area_empty_p')}</div></div></div>`;
     area.innerHTML = '';
     if(clientMap) renderMapPins([]);
     return;
@@ -2801,7 +2821,15 @@ async function setupClientMap(){
         : Promise.resolve({ data: [] }),
     ]);
     mapServicesByBarber = {};
-    (services||[]).forEach(s=>{ (mapServicesByBarber[s.barber_id] = mapServicesByBarber[s.barber_id] || []).push(s); });
+    (services||[]).forEach(s=>{
+      // apply the platform discount promo once here, at the single point
+      // every price display and the final booking insert both read from —
+      // see sql/33-client-discount-promo.sql for the barber-side commission half
+      if(platformDiscountActive && s.price){
+        s.price = Math.round(s.price * (1 - platformDiscountPercent / 100));
+      }
+      (mapServicesByBarber[s.barber_id] = mapServicesByBarber[s.barber_id] || []).push(s);
+    });
     mapPhotosByBarber = photosByBarber;
     mapReviewsByBarber = reviewsByBarber;
     mapAvgRatingByBarber = avgRatingByBarber;

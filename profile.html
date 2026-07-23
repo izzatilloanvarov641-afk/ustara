@@ -377,6 +377,20 @@ async function init(){
     }
   }
 
+  // platform discount promo — same transform client-dashboard applies to its
+  // service prices, so a booking made from a shared profile link costs the
+  // same as one made from the dashboard (platform_settings is readable only
+  // when logged in; logged-out visitors see full prices but can't book anyway,
+  // and the page reloads with a session before any insert can happen)
+  try {
+    const { data: promo } = await supabaseClient.from('platform_settings')
+      .select('discount_active, discount_percent').eq('id', 1).maybeSingle();
+    if(promo && promo.discount_active){
+      const pct = promo.discount_percent || 3;
+      servicesData.forEach(s => { if(s.price) s.price = Math.round(s.price * (1 - pct / 100)); });
+    }
+  } catch(e){ console.warn('Failed to load discount settings:', e); }
+
   render(portfolioPhotos, completedCount || 0, reviewsData);
 }
 

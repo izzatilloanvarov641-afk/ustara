@@ -172,6 +172,25 @@
       <div class="save-msg" id="payoutSaveMsg"></div>
     </div>
 
+    <h1 data-i18n="discount_title">Client discount promo</h1>
+    <p class="sub" data-i18n="discount_sub">Funded by you, not the barber — clients pay less, barbers keep their usual take-home, you cover the gap.</p>
+    <div class="card" style="margin-bottom:52px;">
+      <div class="field-group" style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+        <input type="checkbox" id="discountActive" style="width:auto; margin:0;">
+        <label for="discountActive" style="margin:0;" data-i18n="l_discount_active">Promo is active</label>
+      </div>
+      <div class="field-group">
+        <label data-i18n="l_discount_percent">Client discount (%)</label>
+        <input type="number" id="discountPercent" placeholder="3" min="0" max="100" step="0.5">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <label data-i18n="l_discount_flat">Barber's flat commission while active (soʻm)</label>
+        <input type="number" id="discountFlatCommission" placeholder="1000" min="0" step="100">
+      </div>
+      <button class="btn btn-primary" id="saveDiscountBtn" style="width:auto; margin-top:16px;" data-i18n="save_discount">Save promo settings</button>
+      <div class="save-msg" id="discountSaveMsg"></div>
+    </div>
+
     <h1 data-i18n="proofs_title">Proof of payment</h1>
     <p class="sub" data-i18n="proofs_sub">Compare the screenshot against the owed amount below it, then mark as paid or reject.</p>
     <div id="proofsArea"></div>
@@ -213,6 +232,8 @@ const I18N = {
     l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
     section_click:"Click.uz deposit settings", click_sub:"From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.",
     l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
+    discount_title:"Client discount promo", discount_sub:"Funded by you, not the barber — clients pay less, barbers keep their usual take-home, you cover the gap.",
+    l_discount_active:"Promo is active", l_discount_percent:"Client discount (%)", l_discount_flat:"Barber's flat commission while active (soʻm)", save_discount:"Save promo settings",
     proofs_title:"Proof of payment", proofs_sub:"Compare the screenshot against the owed amount below it, then mark as paid or reject.",
     empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
     mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview",
@@ -234,6 +255,8 @@ const I18N = {
     l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
     section_click:"Click.uz depozit sozlamalari", click_sub:"Click merchant kabinetingizdan — bu maxfiy emas, shu yerda saqlash xavfsiz. Maxfiy kalit esa click-payment Edge Function sirlariga qo'yiladi.",
     l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
+    discount_title:"Mijozlar uchun chegirma aksiyasi", discount_sub:"Xarajatni siz qoplaysiz, sartarosh emas — mijoz kam to'laydi, sartarosh odatdagidek daromad oladi, farqni siz to'laysiz.",
+    l_discount_active:"Aksiya faol", l_discount_percent:"Mijoz chegirmasi (%)", l_discount_flat:"Aksiya vaqtida sartaroshning belgilangan komissiyasi (so'm)", save_discount:"Aksiya sozlamalarini saqlash",
     proofs_title:"To'lov isboti", proofs_sub:"Skrinshotni pastdagi qarz summasi bilan solishtiring, so'ng to'landi deb belgilang yoki rad eting.",
     empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
     mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi",
@@ -255,6 +278,8 @@ const I18N = {
     l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
     section_click:"Настройки депозита Click.uz", click_sub:"Из вашего личного кабинета Click — это не секрет, здесь хранить безопасно. Секретный ключ добавляется в секреты Edge Function click-payment.",
     l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
+    discount_title:"Скидочное промо для клиентов", discount_sub:"Расходы берёте на себя вы, не барбер — клиент платит меньше, барбер получает как обычно, разницу покрываете вы.",
+    l_discount_active:"Промо активно", l_discount_percent:"Скидка клиенту (%)", l_discount_flat:"Фикс. комиссия барбера, пока промо активно (сум)", save_discount:"Сохранить настройки промо",
     proofs_title:"Доказательство оплаты", proofs_sub:"Сравните скриншот с суммой долга под ним, затем отметьте оплаченным или отклоните.",
     empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
     mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода",
@@ -373,6 +398,9 @@ async function loadPayoutSettings(){
   document.getElementById('payoutCardName').value = data?.payout_card_name || '';
   document.getElementById('clickMerchantId').value = data?.click_merchant_id || '';
   document.getElementById('clickServiceId').value = data?.click_service_id || '';
+  document.getElementById('discountActive').checked = !!data?.discount_active;
+  document.getElementById('discountPercent').value = data?.discount_percent ?? 3;
+  document.getElementById('discountFlatCommission').value = data?.discount_flat_commission ?? 1000;
 }
 
 document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
@@ -388,6 +416,29 @@ document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
   btn.disabled = false;
   if(error){
     console.error('Failed to save payout settings:', error);
+    msg.style.color = 'var(--err)';
+    msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
+    msg.style.display = 'block';
+    return;
+  }
+  msg.style.color = 'var(--ok)';
+  msg.textContent = t('saved');
+  msg.style.display = 'block';
+  setTimeout(()=> msg.style.display = 'none', 1800);
+});
+
+document.getElementById('saveDiscountBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('saveDiscountBtn');
+  const msg = document.getElementById('discountSaveMsg');
+  btn.disabled = true;
+  const { error } = await supabaseClient.from('platform_settings').update({
+    discount_active: document.getElementById('discountActive').checked,
+    discount_percent: parseFloat(document.getElementById('discountPercent').value) || 0,
+    discount_flat_commission: parseInt(document.getElementById('discountFlatCommission').value) || 0
+  }).eq('id', 1);
+  btn.disabled = false;
+  if(error){
+    console.error('Failed to save discount settings:', error);
     msg.style.color = 'var(--err)';
     msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
     msg.style.display = 'block';

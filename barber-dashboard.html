@@ -1071,6 +1071,7 @@ const I18N = {
     bookings_sub:"Everyone who's booked with you.",
     filter_all:"All", filter_pending:"Pending", filter_confirmed:"Confirmed", filter_cancelled:"Cancelled",
     empty_bookings:"No bookings yet.", confirm:"Confirm", cancel_booking:"Cancel", mark_completed:"Mark completed",
+    discount_barber_note:"Launch promo is on — clients see a discount, you keep your usual take-home, and commission is just a flat {amount} per booking.",
     mark_noshow:"Client didn't come", noshow_confirm:"Mark this client as a no-show? This docks them 500 points and can't be undone.",
     no_show:"didn't show up", noshow_too_early:"Available once the booking time has passed",
     confirmed:"confirmed", cancelled:"cancelled", pending:"pending", completed:"completed",
@@ -1172,6 +1173,7 @@ const I18N = {
     bookings_sub:"Siz bilan band qilganlarning barchasi.",
     filter_all:"Barchasi", filter_pending:"Kutilmoqda", filter_confirmed:"Tasdiqlangan", filter_cancelled:"Bekor qilingan",
     empty_bookings:"Hozircha bandlar yo'q.", confirm:"Tasdiqlash", cancel_booking:"Bekor qilish", mark_completed:"Bajarildi deb belgilash",
+    discount_barber_note:"Ochilish aksiyasi faol — mijozlar chegirma ko'radi, sizning daromadingiz o'zgarmaydi, komissiya esa har bir band uchun bor-yo'g'i {amount}.",
     mark_noshow:"Mijoz kelmadi", noshow_confirm:"Bu mijozni kelmadi deb belgilaysizmi? Bu undan 500 ball yechadi va ortga qaytarib bo'lmaydi.",
     no_show:"kelmadi", noshow_too_early:"Band qilingan vaqt o'tgach mavjud bo'ladi",
     confirmed:"tasdiqlangan", cancelled:"bekor qilingan", pending:"kutilmoqda", completed:"bajarildi",
@@ -1273,6 +1275,7 @@ const I18N = {
     bookings_sub:"Все, кто записался к вам.",
     filter_all:"Все", filter_pending:"Ожидают", filter_confirmed:"Подтверждены", filter_cancelled:"Отменены",
     empty_bookings:"Записей пока нет.", confirm:"Подтвердить", cancel_booking:"Отменить", mark_completed:"Отметить выполненным",
+    discount_barber_note:"Промо запуска активно — клиенты видят скидку, ваш доход не меняется, а комиссия — всего {amount} за запись.",
     mark_noshow:"Клиент не пришёл", noshow_confirm:"Отметить, что клиент не пришёл? С него спишется 500 баллов, это нельзя отменить.",
     no_show:"не пришёл", noshow_too_early:"Станет доступно после времени записи",
     confirmed:"подтверждено", cancelled:"отменено", pending:"ожидает", completed:"выполнено",
@@ -1329,6 +1332,8 @@ let bookingsData = [];
 let selectedSpecialties = [];
 let availabilityData = []; // array of { day, start, end }
 let currentBookingFilter = 'all';
+let platformDiscountActive = false;
+let platformDiscountFlatCommission = 1000;
 
 applyLang(currentLang);
 document.getElementById('langSwitch').addEventListener('click', (e)=>{
@@ -1473,12 +1478,16 @@ async function initInner(){
     { data: bookings },
     { data: photos },
     reviewsRes,
+    { data: discountSettings },
   ] = await Promise.all([
     supabaseClient.from('services').select('*').eq('barber_id', userId),
     supabaseClient.from('bookings').select('*').eq('barber_id', userId).order('start_time', { ascending:true }),
     supabaseClient.from('portfolio_photos').select('*').eq('barber_id', userId).order('position', { ascending:true }),
     supabaseClient.from('reviews').select('rating').eq('barber_id', userId).then(r=>r).catch(()=>({ data: [] })),
+    supabaseClient.from('platform_settings').select('discount_active, discount_flat_commission').eq('id', 1).maybeSingle().then(r=>r).catch(()=>({ data:null })),
   ]);
+  platformDiscountActive = !!(discountSettings && discountSettings.discount_active);
+  platformDiscountFlatCommission = (discountSettings && discountSettings.discount_flat_commission) || 1000;
   servicesData = services || [];
   renderServices();
   renderOnboardingChecklist();
@@ -2428,11 +2437,14 @@ function bookingRowHtml(b, withActions = true){
 function renderBookingsList(){
   const area = document.getElementById('bookingsArea');
   const filtered = currentBookingFilter === 'all' ? bookingsData : bookingsData.filter(b => b.status === currentBookingFilter);
+  const discountNoteHtml = platformDiscountActive
+    ? `<div style="display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--ink-dim); background:var(--bg-alt); border-radius:var(--r-btn); padding:12px 14px; margin-bottom:14px;">🎉 <span>${t('discount_barber_note').replace('{amount}', formatPrice(platformDiscountFlatCommission))}</span></div>`
+    : '';
   if(filtered.length === 0){
-    area.innerHTML = `<div class="empty-state">${t('empty_bookings')}</div>`;
+    area.innerHTML = discountNoteHtml + `<div class="empty-state">${t('empty_bookings')}</div>`;
     return;
   }
-  area.innerHTML = filtered.map(b => bookingRowHtml(b, true)).join('');
+  area.innerHTML = discountNoteHtml + filtered.map(b => bookingRowHtml(b, true)).join('');
   area.querySelectorAll('[data-confirm]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       btn.disabled = true;
