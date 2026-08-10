@@ -195,6 +195,15 @@
     font-family:'IBM Plex Sans', sans-serif; padding:4px 0;
   }
   .day-off-label{ font-size:12.5px; color:var(--ink-dim); font-style:italic; padding:4px 0; }
+  .hour-chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+  .hour-chip{
+    padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:var(--surface);
+    font-size:12.5px; font-weight:600; color:var(--ink-dim); cursor:pointer; font-family:'IBM Plex Sans', sans-serif;
+    transition:all .12s ease;
+  }
+  .hour-chip:hover{ border-color:var(--brass); }
+  .hour-chip.selected{ background:var(--brass); border-color:var(--brass); color:var(--ink); }
+  .hour-chip-granularity-note{ font-size:11.5px; color:var(--ink-dim); margin-bottom:12px; }
 
   .btn{ padding:12px 22px; border-radius:6px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
   .btn-primary{ background:var(--brass); color:var(--ink); border-radius:999px; font-weight:600; }
@@ -466,30 +475,15 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg>
         <span data-i18n="nav_analytics">Analytics</span>
       </button>
-      <button class="nav-item" data-view="profile">
-        <span class="nav-emoji">👤</span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
-        <span data-i18n="nav_profile">Profile</span>
-      </button>
       <button class="nav-item" data-view="hours">
         <span class="nav-emoji">⏰</span>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
         <span data-i18n="nav_hours">Working hours</span>
       </button>
-      <button class="nav-item" data-view="location">
-        <span class="nav-emoji">📍</span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <span data-i18n="nav_location">Location</span>
-      </button>
       <button class="nav-item" data-view="services">
         <span class="nav-emoji">✂️</span>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 9-9M3 15l4 4L21 5"/></svg>
         <span data-i18n="nav_services">Services</span>
-      </button>
-      <button class="nav-item" data-view="photos">
-        <span class="nav-emoji">📸</span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
-        <span data-i18n="nav_photos">Photos</span>
       </button>
       <button class="nav-item" data-view="bookings" style="position:relative;">
         <span class="nav-emoji">🗓️</span>
@@ -508,6 +502,11 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
         <span data-i18n="nav_payments">Payments</span>
         <span id="paymentsNavBadge" style="display:none; position:absolute; top:2px; left:34px; width:8px; height:8px; border-radius:50%; background:var(--err); z-index:2;"></span>
+      </button>
+      <button class="nav-item" data-view="profile">
+        <span class="nav-emoji">👤</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+        <span data-i18n="nav_profile">Profile</span>
       </button>
     </nav>
     <div class="sidebar-foot">
@@ -677,9 +676,182 @@
     </div>
 
     <!-- ============ PROFILE ============ -->
+    <!-- ============ WORKING HOURS ============ -->
+    <div class="view" data-view="hours">
+      <h1 data-i18n="nav_hours">Working hours</h1>
+      <p class="page-sub" data-i18n="hours_sub_v2">Tap the hours you're open — we'll figure out the blocks. Sized to your shortest service so slots always make sense.</p>
+      <div class="card">
+        <div id="availabilityEditor"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveHoursBtn" data-i18n="save">Save changes</button>
+        </div>
+        <div class="save-msg" id="saveHoursMsg" data-i18n="saved">Saved.</div>
+      </div>
+    </div>
+
+    <!-- ============ SERVICES ============ -->
+    <div class="view" data-view="services">
+      <h1 data-i18n="nav_services">Services</h1>
+      <p class="page-sub" data-i18n="services_sub">Turn on what you offer, set your own duration and price for each.</p>
+      <div class="svc-grid" id="servicesCard"></div>
+      <div class="add-service-tile" id="addServiceTile" style="margin-top:14px;">➕ <span data-i18n="add_service">Add your own service</span></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
+      </div>
+      <div class="save-msg" id="saveServicesMsg" data-i18n="saved">Saved.</div>
+    </div>
+
+    <!-- ============ BOOKINGS ============ -->
+    <div class="view" data-view="bookings">
+      <h1 data-i18n="nav_bookings">Bookings</h1>
+      <p class="page-sub" data-i18n="bookings_sub">Everyone who's booked with you.</p>
+      <button class="btn btn-primary" id="addWalkinBtn" style="margin-bottom:20px;" data-i18n="add_walkin">+ Add walk-in</button><span class="new-badge" data-i18n="badge_new" style="margin-left:10px; vertical-align:middle;">New</span>
+      <div class="filter-tabs" id="bookingFilterTabs">
+        <div class="filter-tab active" data-status="all">📋 <span data-i18n="filter_all">All</span></div>
+        <div class="filter-tab" data-status="pending">⏳ <span data-i18n="filter_pending">Pending</span></div>
+        <div class="filter-tab" data-status="confirmed">✅ <span data-i18n="filter_confirmed">Confirmed</span></div>
+        <div class="filter-tab" data-status="cancelled">❌ <span data-i18n="filter_cancelled">Cancelled</span></div>
+      </div>
+      <div id="bookingsArea"></div>
+    </div>
+
+    <!-- ============ CLIENTS ============ -->
+    <div class="view" data-view="clients">
+      <div style="position:relative;">
+        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💈</span>
+        <h1 data-i18n="nav_clients">Clients</h1>
+      </div>
+      <p class="page-sub" data-i18n="clients_sub">Everyone who's booked with you, at a glance.</p>
+      <div id="clientsArea"></div>
+    </div>
+
+    <!-- ============ PAYMENTS ============ -->
+    <div class="view" data-view="payments">
+      <div style="position:relative;">
+        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💳</span>
+        <h1 data-i18n="nav_payments">Payments</h1>
+      </div>
+      <p class="page-sub" data-i18n="payments_sub">Pay your commission and keep proof of every payment.</p>
+
+      <div class="card" style="margin-bottom:24px;" id="paymentsOwedCard"></div>
+
+      <div class="section-title"><span data-i18n="payout_account_title">Pay to</span></div>
+      <div class="card" id="payoutAccountCard" style="margin-bottom:24px;"></div>
+
+      <div class="section-title"><span data-i18n="upload_proof_title">Upload proof of payment</span></div>
+      <div class="card" style="margin-bottom:24px;">
+        <label class="file-btn" for="proofPhotoInput">📎 <span data-i18n="upload_screenshot">Upload screenshot</span></label>
+        <input type="file" id="proofPhotoInput" accept="image/*">
+        <div id="proofUploadMsg" style="font-size:12.5px; margin-top:10px; display:none;"></div>
+      </div>
+
+      <div class="section-title"><span data-i18n="proof_history_title">Your submissions</span></div>
+      <div id="paymentProofsArea"></div>
+    </div>
+
+    <!-- ============ PROFILE (merged: photo + info + location + portfolio + account) ============ -->
     <div class="view" data-view="profile">
       <h1 data-i18n="nav_profile">Profile</h1>
       <p class="page-sub" data-i18n="profile_sub">This is what clients see when they find you.</p>
+
+      <div id="liveRequirementsNote" style="display:none;"></div>
+
+      <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">📷</span><span data-i18n="photo_profile_title">Your photo</span></span></div>
+      <div class="card">
+        <div class="profile-photo-row">
+          <div class="avatar-wrap">
+            <div class="avatar-preview" id="avatarPreview"></div>
+            <span class="avatar-check" id="avatarCheck">✓</span>
+          </div>
+          <div>
+            <label class="file-btn" for="avatarInput">📷 <span data-i18n="upload_photo">Upload photo</span></label>
+            <input type="file" id="avatarInput" accept="image/*">
+            <div style="font-size:11.5px; color:var(--ink-dim); margin-top:9px;" data-i18n="avatar_tip">✨ A friendly, well-lit face builds trust fast.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <span data-i18n="nav_profile">Profile</span>
+        <span class="edit-link" id="editProfileLink" data-i18n="edit">Edit</span>
+      </div>
+      <div class="card">
+        <div class="profile-view" id="profileView"></div>
+        <div class="profile-edit" id="profileEdit">
+          <div class="row2">
+            <div class="field-group">
+              <label data-i18n="l_district">District</label>
+              <select id="editDistrict">
+                <option value="Chorsu">Chorsu</option>
+                <option value="Yunusabad">Yunusabad</option>
+                <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
+                <option value="Yakkasaray">Yakkasaray</option>
+                <option value="Sergeli">Sergeli</option>
+                <option value="Shayxontohur">Shayxontohur</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label data-i18n="l_experience">Years of experience</label>
+              <input type="number" id="editExperience" min="0" max="60">
+            </div>
+          </div>
+          <div class="field-group">
+            <label data-i18n="l_specialties">Specialties</label>
+            <div class="chip-grid" id="editChips"></div>
+          </div>
+          <div class="field-group">
+            <label data-i18n="l_bio">Short bio</label>
+            <textarea id="editBio"></textarea>
+          </div>
+          <div class="row2">
+            <div class="field-group">
+              <label data-i18n="l_phone">Phone number</label>
+              <input type="tel" id="editPhone" placeholder="+998 90 123 45 67">
+            </div>
+            <div class="field-group">
+              <label data-i18n="l_telegram">Telegram username</label>
+              <input type="text" id="editTelegram" placeholder="@username">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="saveProfileBtn" data-i18n="save">Save changes</button>
+            <button class="btn btn-secondary" id="cancelProfileBtn" data-i18n="cancel">Cancel</button>
+          </div>
+          <div class="save-msg" id="saveProfileMsg" data-i18n="saved">Saved.</div>
+        </div>
+      </div>
+
+      <div class="section-title"><span data-i18n="nav_location">Location</span></div>
+      <div class="card">
+        <p class="page-sub" style="margin-top:0;" data-i18n="location_sub">Click on the map to place a pin exactly where your shop is. Clients use this to find and navigate to you.</p>
+        <div class="field-group">
+          <label data-i18n="l_shopname">Shop name (optional)</label>
+          <input type="text" id="editShopName" placeholder="e.g. Reyes Cutz">
+        </div>
+        <div id="locationStatusMsg" style="font-size:13px; margin-bottom:12px; color:var(--ink-dim);"></div>
+        <div id="locationMapEl" style="height:340px; border-radius:10px; overflow:hidden; border:1px solid var(--line);"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="saveLocationBtn" data-i18n="save">Save changes</button>
+        </div>
+        <div class="save-msg" id="saveLocationMsg" data-i18n="saved">Saved.</div>
+      </div>
+
+      <div class="section-title">
+        <span class="st-left"><span class="title-chip chip-terracotta">🖼️</span><span data-i18n="photo_portfolio_title">Your work (optional)</span></span>
+        <span class="photo-count-pill" id="portfolioCount"></span>
+      </div>
+      <div class="card">
+        <div class="portfolio-tip" id="portfolioTip" style="display:none;">
+          <span class="emoji">💈</span><span data-i18n="portfolio_tip">Add a few of your best cuts — clients pick faster when they can see your work.</span>
+        </div>
+        <div class="portfolio-grid" id="portfolioGrid">
+          <label class="portfolio-add" for="portfolioInput">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span data-i18n="add_photo">Add photo</span>
+          </label>
+          <input type="file" id="portfolioInput" accept="image/*">
+        </div>
+      </div>
 
       <div class="section-title"><span data-i18n="account_section_title">Account</span></div>
       <div class="card reveal" style="padding:2px 22px;">
@@ -756,188 +928,6 @@
           </div>
         </div>
       </div>
-
-      <div class="section-title">
-        <span data-i18n="nav_profile">Profile</span>
-        <span class="edit-link" id="editProfileLink" data-i18n="edit">Edit</span>
-      </div>
-      <div class="card">
-        <div class="profile-view" id="profileView"></div>
-        <div class="profile-edit" id="profileEdit">
-          <div class="row2">
-            <div class="field-group">
-              <label data-i18n="l_district">District</label>
-              <select id="editDistrict">
-                <option value="Chorsu">Chorsu</option>
-                <option value="Yunusabad">Yunusabad</option>
-                <option value="Mirzo Ulugbek">Mirzo Ulugbek</option>
-                <option value="Yakkasaray">Yakkasaray</option>
-                <option value="Sergeli">Sergeli</option>
-                <option value="Shayxontohur">Shayxontohur</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label data-i18n="l_experience">Years of experience</label>
-              <input type="number" id="editExperience" min="0" max="60">
-            </div>
-          </div>
-          <div class="field-group">
-            <label data-i18n="l_specialties">Specialties</label>
-            <div class="chip-grid" id="editChips"></div>
-          </div>
-          <div class="field-group">
-            <label data-i18n="l_bio">Short bio</label>
-            <textarea id="editBio"></textarea>
-          </div>
-          <div class="row2">
-            <div class="field-group">
-              <label data-i18n="l_phone">Phone number</label>
-              <input type="tel" id="editPhone" placeholder="+998 90 123 45 67">
-            </div>
-            <div class="field-group">
-              <label data-i18n="l_telegram">Telegram username</label>
-              <input type="text" id="editTelegram" placeholder="@username">
-            </div>
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-primary" id="saveProfileBtn" data-i18n="save">Save changes</button>
-            <button class="btn btn-secondary" id="cancelProfileBtn" data-i18n="cancel">Cancel</button>
-          </div>
-          <div class="save-msg" id="saveProfileMsg" data-i18n="saved">Saved.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ WORKING HOURS ============ -->
-    <div class="view" data-view="hours">
-      <h1 data-i18n="nav_hours">Working hours</h1>
-      <p class="page-sub" data-i18n="hours_sub_v2">Set one or more time blocks per day — add a second block to carve out a lunch break or time off.</p>
-      <div class="card">
-        <div id="availabilityEditor"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="saveHoursBtn" data-i18n="save">Save changes</button>
-        </div>
-        <div class="save-msg" id="saveHoursMsg" data-i18n="saved">Saved.</div>
-      </div>
-    </div>
-
-    <!-- ============ LOCATION ============ -->
-    <div class="view" data-view="location">
-      <h1 data-i18n="nav_location">Location</h1>
-      <p class="page-sub" data-i18n="location_sub">Click on the map to place a pin exactly where your shop is. Clients use this to find and navigate to you.</p>
-      <div class="card">
-        <div class="field-group">
-          <label data-i18n="l_shopname">Shop name (optional)</label>
-          <input type="text" id="editShopName" placeholder="e.g. Reyes Cutz">
-        </div>
-        <div id="locationStatusMsg" style="font-size:13px; margin-bottom:12px; color:var(--ink-dim);"></div>
-        <div id="locationMapEl" style="height:340px; border-radius:10px; overflow:hidden; border:1px solid var(--line);"></div>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="saveLocationBtn" data-i18n="save">Save changes</button>
-        </div>
-        <div class="save-msg" id="saveLocationMsg" data-i18n="saved">Saved.</div>
-      </div>
-    </div>
-
-    <!-- ============ SERVICES ============ -->
-    <div class="view" data-view="services">
-      <h1 data-i18n="nav_services">Services</h1>
-      <p class="page-sub" data-i18n="services_sub">Turn on what you offer, set your own duration and price for each.</p>
-      <div class="svc-grid" id="servicesCard"></div>
-      <div class="add-service-tile" id="addServiceTile" style="margin-top:14px;">➕ <span data-i18n="add_service">Add your own service</span></div>
-      <div class="btn-row">
-        <button class="btn btn-primary" id="saveServicesBtn" data-i18n="save">Save changes</button>
-      </div>
-      <div class="save-msg" id="saveServicesMsg" data-i18n="saved">Saved.</div>
-    </div>
-
-    <!-- ============ PHOTOS ============ -->
-    <div class="view" data-view="photos">
-      <div style="position:relative;">
-        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">📸</span>
-        <h1 data-i18n="nav_photos">Photos</h1>
-      </div>
-      <p class="page-sub" data-i18n="photos_sub">A clear photo of you, plus examples of your work (optional).</p>
-
-      <div class="section-title"><span class="st-left"><span class="title-chip chip-gold">📷</span><span data-i18n="photo_profile_title">Your photo</span></span></div>
-      <div class="card">
-        <div class="profile-photo-row">
-          <div class="avatar-wrap">
-            <div class="avatar-preview" id="avatarPreview"></div>
-            <span class="avatar-check" id="avatarCheck">✓</span>
-          </div>
-          <div>
-            <label class="file-btn" for="avatarInput">📷 <span data-i18n="upload_photo">Upload photo</span></label>
-            <input type="file" id="avatarInput" accept="image/*">
-            <div style="font-size:11.5px; color:var(--ink-dim); margin-top:9px;" data-i18n="avatar_tip">✨ A friendly, well-lit face builds trust fast.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-title">
-        <span class="st-left"><span class="title-chip chip-terracotta">🖼️</span><span data-i18n="photo_portfolio_title">Your work (optional)</span></span>
-        <span class="photo-count-pill" id="portfolioCount"></span>
-      </div>
-      <div class="card">
-        <div class="portfolio-tip" id="portfolioTip" style="display:none;">
-          <span class="emoji">💈</span><span data-i18n="portfolio_tip">Add a few of your best cuts — clients pick faster when they can see your work.</span>
-        </div>
-        <div class="portfolio-grid" id="portfolioGrid">
-          <label class="portfolio-add" for="portfolioInput">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span data-i18n="add_photo">Add photo</span>
-          </label>
-          <input type="file" id="portfolioInput" accept="image/*">
-        </div>
-      </div>
-    </div>
-
-    <!-- ============ BOOKINGS ============ -->
-    <div class="view" data-view="bookings">
-      <h1 data-i18n="nav_bookings">Bookings</h1>
-      <p class="page-sub" data-i18n="bookings_sub">Everyone who's booked with you.</p>
-      <button class="btn btn-primary" id="addWalkinBtn" style="margin-bottom:20px;" data-i18n="add_walkin">+ Add walk-in</button><span class="new-badge" data-i18n="badge_new" style="margin-left:10px; vertical-align:middle;">New</span>
-      <div class="filter-tabs" id="bookingFilterTabs">
-        <div class="filter-tab active" data-status="all">📋 <span data-i18n="filter_all">All</span></div>
-        <div class="filter-tab" data-status="pending">⏳ <span data-i18n="filter_pending">Pending</span></div>
-        <div class="filter-tab" data-status="confirmed">✅ <span data-i18n="filter_confirmed">Confirmed</span></div>
-        <div class="filter-tab" data-status="cancelled">❌ <span data-i18n="filter_cancelled">Cancelled</span></div>
-      </div>
-      <div id="bookingsArea"></div>
-    </div>
-
-    <!-- ============ CLIENTS ============ -->
-    <div class="view" data-view="clients">
-      <div style="position:relative;">
-        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💈</span>
-        <h1 data-i18n="nav_clients">Clients</h1>
-      </div>
-      <p class="page-sub" data-i18n="clients_sub">Everyone who's booked with you, at a glance.</p>
-      <div id="clientsArea"></div>
-    </div>
-
-    <!-- ============ PAYMENTS ============ -->
-    <div class="view" data-view="payments">
-      <div style="position:relative;">
-        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💳</span>
-        <h1 data-i18n="nav_payments">Payments</h1>
-      </div>
-      <p class="page-sub" data-i18n="payments_sub">Pay your commission and keep proof of every payment.</p>
-
-      <div class="card" style="margin-bottom:24px;" id="paymentsOwedCard"></div>
-
-      <div class="section-title"><span data-i18n="payout_account_title">Pay to</span></div>
-      <div class="card" id="payoutAccountCard" style="margin-bottom:24px;"></div>
-
-      <div class="section-title"><span data-i18n="upload_proof_title">Upload proof of payment</span></div>
-      <div class="card" style="margin-bottom:24px;">
-        <label class="file-btn" for="proofPhotoInput">📎 <span data-i18n="upload_screenshot">Upload screenshot</span></label>
-        <input type="file" id="proofPhotoInput" accept="image/*">
-        <div id="proofUploadMsg" style="font-size:12.5px; margin-top:10px; display:none;"></div>
-      </div>
-
-      <div class="section-title"><span data-i18n="proof_history_title">Your submissions</span></div>
-      <div id="paymentProofsArea"></div>
     </div>
   </main>
 </div>
@@ -1043,6 +1033,8 @@ const I18N = {
     onb_step4_t:"Services & prices", onb_step4_s:"Turn on at least one service with a price",
     onb_step5_t:"Photo & hours", onb_step5_s:"Add your photo and set your working hours",
     status_live_h:"You're live", status_live_s:"Clients can find and book you.",
+    live_req_title:"Finish these to go live", live_req_name:"Your name", live_req_phone:"Phone number", live_req_avatar:"Profile photo", live_req_location:"An approved location",
+    live_req_blocked:"Almost there — finish these first: {list}",
     status_pending_h:"Pending review", status_pending_s:"We'll notify you once the founder approves your profile.",
     status_unpublished_h:"You're approved — one step left", status_unpublished_s:"Turn on \"Live\" below to become visible to clients.",
     profile_sub:"This is what clients see when they find you.",
@@ -1051,7 +1043,8 @@ const I18N = {
     l_phone:"Phone number", l_telegram:"Telegram username",
     rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"years",
     hours_sub:"Which days and times you're open. Each service's own length controls how slots are spaced.",
-    hours_sub_v2:"Set one or more time blocks per day — add a second block to carve out a lunch break or time off.",
+    hours_sub_v2:"Tap the hours you're open — we'll figure out the blocks. Sized to your shortest service so slots always make sense.",
+    hours_granularity_60:"Showing 1-hour slots.", hours_granularity_other:"Showing {min}-minute slots — matched to your shortest service.",
     add_block:"Add block", to_label:"to", day_off:"Day off",
     l_days:"Working days", l_start:"Opens at", l_end:"Closes at",
     nav_location:"Location", location_sub:"Click on the map to place a pin exactly where your shop is. Clients use this to find and navigate to you.",
@@ -1145,6 +1138,8 @@ const I18N = {
     onb_step4_t:"Xizmatlar va narxlar", onb_step4_s:"Kamida bitta xizmatni narx bilan yoqing",
     onb_step5_t:"Surat va ish vaqti", onb_step5_s:"Suratingizni qo'shing va ish vaqtini belgilang",
     status_live_h:"Siz faolsiz", status_live_s:"Mijozlar sizni topib, band qilishlari mumkin.",
+    live_req_title:"Faol bo'lish uchun buni tugating", live_req_name:"Ismingiz", live_req_phone:"Telefon raqami", live_req_avatar:"Profil surati", live_req_location:"Tasdiqlangan manzil",
+    live_req_blocked:"Deyarli tayyor — avval buni tugating: {list}",
     status_pending_h:"Ko'rib chiqilmoqda", status_pending_s:"Asoschi profilingizni tasdiqlagach xabar beramiz.",
     status_unpublished_h:"Hali ko'rinmaydi", status_unpublished_s:"Tayyor bo'lganingizda profilda \"Faol\"ni yoqing.",
     profile_sub:"Mijozlar sizni topganda shuni ko'radi.",
@@ -1153,7 +1148,8 @@ const I18N = {
     l_phone:"Telefon raqami", l_telegram:"Telegram username",
     rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
     hours_sub:"Qaysi kunlari va soatlarda ochiqsiz. Har bir xizmatning davomiyligi bo'sh joylarni belgilaydi.",
-    hours_sub_v2:"Har kun uchun bitta yoki bir nechta vaqt oralig'ini belgilang — tushlik yoki dam olish uchun ikkinchi oraliq qo'shing.",
+    hours_sub_v2:"Ishlaydigan soatlaringizni bosing — bloklarni o'zimiz hisoblaymiz. Eng qisqa xizmatingizga moslashtirilgan.",
+    hours_granularity_60:"1 soatlik oraliqlar ko'rsatilmoqda.", hours_granularity_other:"{min} daqiqalik oraliqlar ko'rsatilmoqda — eng qisqa xizmatingizga moslashtirilgan.",
     add_block:"Oraliq qo'shish", to_label:"gacha", day_off:"Dam kuni",
     l_days:"Ish kunlari", l_start:"Ochilish vaqti", l_end:"Yopilish vaqti",
     nav_location:"Joylashuv", location_sub:"Do'koningiz aniq qayerda joylashganini belgilash uchun xaritani bosing. Mijozlar sizni topish va yo'l topish uchun shundan foydalanadi.",
@@ -1247,6 +1243,8 @@ const I18N = {
     onb_step4_t:"Услуги и цены", onb_step4_s:"Включите хотя бы одну услугу с ценой",
     onb_step5_t:"Фото и часы работы", onb_step5_s:"Добавьте фото и укажите рабочие часы",
     status_live_h:"Вы активны", status_live_s:"Клиенты могут найти и записаться к вам.",
+    live_req_title:"Завершите это, чтобы стать активным", live_req_name:"Ваше имя", live_req_phone:"Номер телефона", live_req_avatar:"Фото профиля", live_req_location:"Подтверждённое местоположение",
+    live_req_blocked:"Почти готово — сначала завершите: {list}",
     status_pending_h:"На рассмотрении", status_pending_s:"Сообщим, как только основатель одобрит профиль.",
     status_unpublished_h:"Пока не виден", status_unpublished_s:"Включите \"Активен\" в профиле, когда будете готовы.",
     profile_sub:"Это видят клиенты, когда находят вас.",
@@ -1255,7 +1253,8 @@ const I18N = {
     l_phone:"Номер телефона", l_telegram:"Имя пользователя Telegram",
     rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
     hours_sub:"В какие дни и часы вы открыты. Длительность каждой услуги определяет интервалы записи.",
-    hours_sub_v2:"Задайте один или несколько временных блоков на день — добавьте второй блок для обеда или перерыва.",
+    hours_sub_v2:"Нажмите часы, когда вы работаете — блоки соберём сами. Подстроено под самую короткую услугу.",
+    hours_granularity_60:"Показаны часовые интервалы.", hours_granularity_other:"Показаны интервалы по {min} мин — подстроено под самую короткую услугу.",
     add_block:"Добавить блок", to_label:"до", day_off:"Выходной",
     l_days:"Рабочие дни", l_start:"Открытие", l_end:"Закрытие",
     nav_location:"Локация", location_sub:"Нажмите на карту, чтобы отметить точное расположение вашего салона. Клиенты используют это, чтобы найти вас.",
@@ -1460,6 +1459,7 @@ async function initInner(){
   renderGreeting();
 
   renderStatusBanner();
+  renderLiveRequirementsNote();
   renderOwnerCode();
   renderProfileView();
   renderEditChips();
@@ -1491,6 +1491,7 @@ async function initInner(){
   servicesData = services || [];
   renderServices();
   renderOnboardingChecklist();
+  renderAvailabilityEditor(); // re-render now that servicesData (chip granularity) has actually loaded
 
   bookingsData = bookings || [];
   renderOverviewStats();
@@ -1604,9 +1605,9 @@ function renderOnboardingChecklist(){
   const steps = [
     { done: !!(barberData.district && barberData.years_experience), view:'profile', t:'onb_step1_t', s:'onb_step1_s' },
     { done: (barberData.specialties || []).length > 0, view:'profile', t:'onb_step2_t', s:'onb_step2_s' },
-    { done: !!(barberData.latitude && barberData.longitude), view:'location', t:'onb_step3_t', s:'onb_step3_s' },
+    { done: !!(barberData.latitude && barberData.longitude), view:'profile', t:'onb_step3_t', s:'onb_step3_s' },
     { done: servicesData.some(s => s.is_active && s.price > 0), view:'services', t:'onb_step4_t', s:'onb_step4_s' },
-    { done: !!barberData.avatar_url && availabilityData.length > 0, view:'photos', t:'onb_step5_t', s:'onb_step5_s' }
+    { done: !!barberData.avatar_url && availabilityData.length > 0, view:'profile', t:'onb_step5_t', s:'onb_step5_s' }
   ];
   const doneCount = steps.filter(s => s.done).length;
   const pct = Math.round(doneCount / steps.length * 100);
@@ -1636,14 +1637,57 @@ function renderOnboardingChecklist(){
   });
 }
 
+// Going live requires: an admin-approved location pin, a name, a phone
+// number, and a profile photo — all things a client sees before they'll
+// trust booking with someone. Missing any of these blocks the toggle
+// client-side (server-side RLS still governs what clients can query either
+// way, this is just to stop a barber from going live half-set-up).
+function getMissingLiveRequirements(){
+  const missing = [];
+  if(!barberData.full_name) missing.push(t('live_req_name'));
+  if(!barberData.phone) missing.push(t('live_req_phone'));
+  if(!barberData.avatar_url) missing.push(t('live_req_avatar'));
+  if(!barberData.is_location_verified) missing.push(t('live_req_location'));
+  return missing;
+}
+
+function renderLiveRequirementsNote(){
+  const el = document.getElementById('liveRequirementsNote');
+  if(!el) return;
+  const missing = getMissingLiveRequirements();
+  if(missing.length === 0 || barberData.is_published){
+    el.style.display = 'none';
+    return;
+  }
+  el.style.display = 'block';
+  el.innerHTML = `<div class="chip-row" style="background:var(--surface-alt); border-radius:12px; padding:14px 16px; margin-bottom:20px;">
+    <div class="chip-row-icon chip-terracotta">🔒</div>
+    <div class="chip-row-body">
+      <div class="chip-row-title">${t('live_req_title')}</div>
+      <div class="chip-row-sub">${missing.join(' · ')}</div>
+    </div>
+  </div>`;
+}
+
 document.getElementById('publishToggle').addEventListener('change', async function(){
   const newVal = this.checked;
+  if(newVal){
+    const missing = getMissingLiveRequirements();
+    if(missing.length > 0){
+      this.checked = false;
+      alert(t('live_req_blocked').replace('{list}', missing.join(', ')));
+      goToBarberView('profile');
+      renderLiveRequirementsNote();
+      return;
+    }
+  }
   this.disabled = true;
   const { error } = await supabaseClient.from('barbers').update({ is_published: newVal }).eq('id', barberData.id);
   this.disabled = false;
   if(!error){
     barberData.is_published = newVal;
     renderStatusBanner();
+    renderLiveRequirementsNote();
   } else {
     this.checked = !newVal;
     console.error('Failed to update is_published:', error);
@@ -1977,6 +2021,7 @@ document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
     Object.assign(barberData, updates);
     renderProfileView();
     renderOnboardingChecklist();
+    renderLiveRequirementsNote();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
@@ -1994,11 +2039,74 @@ document.getElementById('saveProfileBtn').addEventListener('click', async ()=>{
 });
 
 /* ---------- working hours ---------- */
+// Working hours: instead of typing free-form start/end times, the barber
+// taps hour-sized (or shorter) chips for when they're open. Chip width is
+// sized to their shortest active service — offering hour chips to someone
+// whose fastest service is a 20-minute lineup would make half their real
+// bookable slots impossible to express, so the granularity adapts down to
+// 15/30/45 minutes as needed. Chips are just a picker: on every click we
+// immediately collapse the day's selected chips into the same contiguous
+// {day,start,end} block format the rest of the app (slot generation,
+// booking) already expects — no schema change, no separate collect step.
+const HOURS_DAY_START = '07:00', HOURS_DAY_END = '23:00';
+function timeToMinutes(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60+m; }
+function minutesToTime(mins){ return String(Math.floor(mins/60)).padStart(2,'0') + ':' + String(mins%60).padStart(2,'0'); }
+
+function getSlotGranularityMinutes(){
+  const durations = servicesData.filter(s => s.is_active && s.duration_minutes > 0).map(s => s.duration_minutes);
+  if(!durations.length) return 60;
+  const minDur = Math.min(...durations);
+  return Math.max(15, Math.min(60, Math.floor(minDur / 15) * 15 || 15));
+}
+
+function generateChipStarts(granularity){
+  const starts = [];
+  for(let m = timeToMinutes(HOURS_DAY_START); m < timeToMinutes(HOURS_DAY_END); m += granularity) starts.push(minutesToTime(m));
+  return starts;
+}
+
+function mergeChipsIntoBlocks(day, selectedStarts, granularity){
+  const blocks = [];
+  const sorted = [...selectedStarts].sort();
+  let blockStart = null, blockEndMin = null;
+  sorted.forEach(s=>{
+    const sMin = timeToMinutes(s);
+    if(blockStart === null){ blockStart = s; blockEndMin = sMin + granularity; return; }
+    if(sMin === blockEndMin){ blockEndMin = sMin + granularity; }
+    else { blocks.push({ day, start: blockStart, end: minutesToTime(blockEndMin) }); blockStart = s; blockEndMin = sMin + granularity; }
+  });
+  if(blockStart !== null) blocks.push({ day, start: blockStart, end: minutesToTime(blockEndMin) });
+  return blocks;
+}
+
 function renderAvailabilityEditor(){
   const container = document.getElementById('availabilityEditor');
-  container.innerHTML = DAY_KEYS.map(day => {
-    const blocks = availabilityData.filter(b => b.day === day);
-    const open = blocks.length > 0;
+  const granularity = getSlotGranularityMinutes();
+  const chipStarts = generateChipStarts(granularity);
+
+  // expand each saved {day,start,end} block back into the chip-starts it
+  // covers — clamped to the chips actually on screen (07:00–23:00). A block
+  // reaching outside that window (old data, or a weird manual save) would
+  // otherwise sit there invisibly and silently survive every future edit;
+  // clamping means what you see here is exactly what gets saved, no hidden
+  // leftover hours no barbershop needs at 3am anyway.
+  const chipStartSet = new Set(chipStarts);
+  const selectedByDay = {};
+  DAY_KEYS.forEach(day => { selectedByDay[day] = new Set(); });
+  availabilityData.forEach(b=>{
+    let m = timeToMinutes(b.start);
+    const end = timeToMinutes(b.end);
+    while(m < end){
+      const time = minutesToTime(m);
+      if(chipStartSet.has(time)) selectedByDay[b.day].add(time);
+      m += granularity;
+    }
+  });
+
+  const granNote = granularity === 60 ? t('hours_granularity_60') : t('hours_granularity_other').replace('{min}', granularity);
+
+  container.innerHTML = `<div class="hour-chip-granularity-note">${granNote}</div>` + DAY_KEYS.map(day=>{
+    const open = selectedByDay[day].size > 0;
     return `
       <div class="day-block" data-day="${day}">
         <div class="day-block-head">
@@ -2006,19 +2114,13 @@ function renderAvailabilityEditor(){
             <button type="button" class="day-check ${open ? 'checked' : ''}" data-toggle-day="${day}" aria-pressed="${open}" aria-label="${t('day_' + day.toLowerCase())}">✓</button>
             <span class="day-block-name">${t('day_' + day.toLowerCase())}</span>
           </div>
-          <span class="add-block-btn" data-add-day="${day}">+ ${t('add_block')}</span>
         </div>
         <div class="blocks-list">
-          ${blocks.length === 0
+          ${!open
             ? `<div class="day-off-label">${t('day_off')}</div>`
-            : blocks.map((b, i) => `
-                <div class="time-range-row" data-day="${day}" data-index="${i}">
-                  <input type="time" class="block-start" value="${b.start}">
-                  <span class="to-label">${t('to_label')}</span>
-                  <input type="time" class="block-end" value="${b.end}">
-                  <button class="remove-block-btn" data-remove-day="${day}" data-remove-index="${i}">&times;</button>
-                </div>
-              `).join('')}
+            : `<div class="hour-chip-grid" data-day-grid="${day}">
+                 ${chipStarts.map(start => `<button type="button" class="hour-chip ${selectedByDay[day].has(start) ? 'selected' : ''}" data-day="${day}" data-start="${start}">${start}</button>`).join('')}
+               </div>`}
         </div>
       </div>
     `;
@@ -2027,71 +2129,42 @@ function renderAvailabilityEditor(){
   container.querySelectorAll('[data-toggle-day]').forEach(el=>{
     el.addEventListener('click', ()=>{
       const day = el.dataset.toggleDay;
-      const hasBlocks = availabilityData.some(b => b.day === day);
-      if(hasBlocks){
+      const isOpen = selectedByDay[day].size > 0;
+      if(isOpen){
         availabilityData = availabilityData.filter(b => b.day !== day);
       } else {
-        availabilityData.push({ day, start:'09:00', end:'18:00' });
+        // turning a day on seeds a sensible 09:00–18:00 default the barber
+        // can then trim or extend one chip at a time
+        availabilityData = availabilityData.filter(b => b.day !== day).concat([{ day, start:'09:00', end:'18:00' }]);
       }
       renderAvailabilityEditor();
     });
   });
-  container.querySelectorAll('[data-add-day]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const day = el.dataset.addDay;
-      const existing = availabilityData.filter(b => b.day === day);
-      const lastEnd = existing.length ? existing[existing.length-1].end : '09:00';
-      availabilityData.push({ day, start: lastEnd, end: '18:00' });
-      renderAvailabilityEditor();
-    });
-  });
-  container.querySelectorAll('[data-remove-day]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const day = el.dataset.removeDay;
-      const idx = parseInt(el.dataset.removeIndex);
-      const dayBlocks = availabilityData.filter(b => b.day === day);
-      const toRemove = dayBlocks[idx];
-      availabilityData = availabilityData.filter(b => b !== toRemove);
-      renderAvailabilityEditor();
-    });
-  });
-}
 
-function collectAvailabilityFromEditor(){
-  const rows = document.querySelectorAll('.time-range-row');
-  const collected = [];
-  rows.forEach(row => {
-    const start = row.querySelector('.block-start').value;
-    const end = row.querySelector('.block-end').value;
-    if(start && end) collected.push({ day: row.dataset.day, start, end });
+  container.querySelectorAll('.hour-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const day = chip.dataset.day;
+      const start = chip.dataset.start;
+      const set = selectedByDay[day];
+      if(set.has(start)) set.delete(start); else set.add(start);
+      availabilityData = availabilityData.filter(b => b.day !== day).concat(mergeChipsIntoBlocks(day, set, granularity));
+      renderAvailabilityEditor();
+    });
   });
-  return collected;
 }
 
 document.getElementById('saveHoursBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('saveHoursBtn');
   const msg = document.getElementById('saveHoursMsg');
-  const newAvailability = collectAvailabilityFromEditor();
-  const hasInvalidBlock = newAvailability.some(b => b.end <= b.start);
-  if(hasInvalidBlock){
-    msg.style.color = 'var(--err)';
-    msg.textContent = 'Closing time must be after opening time.';
-    msg.style.display = 'block';
-    return;
-  }
   btn.disabled = true;
-  // keep work_days/work_start/work_end roughly in sync for any code that
-  // hasn't migrated to the new availability format yet
-  const daysWithBlocks = [...new Set(newAvailability.map(b => b.day))];
-  const updates = {
-    availability: newAvailability,
-    work_days: daysWithBlocks
-  };
+  // keep work_days roughly in sync for any code that hasn't migrated to the
+  // new availability format yet
+  const daysWithBlocks = [...new Set(availabilityData.map(b => b.day))];
+  const updates = { availability: availabilityData, work_days: daysWithBlocks };
   const { error } = await supabaseClient.from('barbers').update(updates).eq('id', barberData.id);
   btn.disabled = false;
   if(!error){
     Object.assign(barberData, updates);
-    availabilityData = newAvailability;
     renderOnboardingChecklist();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
@@ -2223,6 +2296,7 @@ document.getElementById('saveServicesBtn').addEventListener('click', async ()=>{
     renderServices();
     renderOverviewStats();
     renderOnboardingChecklist();
+    renderAvailabilityEditor(); // chip granularity depends on the shortest active service
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
@@ -2268,6 +2342,7 @@ document.getElementById('avatarInput').addEventListener('change', async (e)=>{
     barberData.avatar_url = publicUrl;
     renderAvatar(true);
     renderOnboardingChecklist();
+    renderLiveRequirementsNote();
   }
 });
 
@@ -2993,11 +3068,12 @@ function setupLocationPicker(){
     locationMapInitialized = true;
   };
 
-  const locationNavBtn = document.querySelector('.nav-item[data-view="location"]');
-  if(document.querySelector('.view[data-view="location"]').classList.contains('active')){
+  // location now lives inside the merged "profile" view, not its own tab
+  const profileNavBtn = document.querySelector('.nav-item[data-view="profile"]');
+  if(document.querySelector('.view[data-view="profile"]').classList.contains('active')){
     initLocationMap();
   } else {
-    locationNavBtn.addEventListener('click', initLocationMap, { once:true });
+    profileNavBtn.addEventListener('click', initLocationMap, { once:true });
   }
 }
 
@@ -3030,6 +3106,7 @@ document.getElementById('saveLocationBtn').addEventListener('click', async ()=>{
     Object.assign(barberData, updates);
     updateLocationStatusMsg();
     renderOnboardingChecklist();
+    renderLiveRequirementsNote();
     msg.style.color = 'var(--ok)';
     msg.textContent = t('saved');
     msg.style.display = 'block';
