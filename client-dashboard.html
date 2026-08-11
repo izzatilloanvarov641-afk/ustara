@@ -340,10 +340,18 @@
     font-weight:700; cursor:pointer; border-radius:16px;
   }
   .nav-btn.active{ color:var(--gold-soft); }
-  .nav-btn.active svg{ animation:nav-chip-pop .35s cubic-bezier(.16,1,.3,1); }
-  @keyframes nav-chip-pop{ 0%{ transform:scale(.8); } 60%{ transform:scale(1.15); } 100%{ transform:scale(1); } }
+  /* the chip box is reserved on every icon (content-box + padding) so activating
+     a tab swaps the gradient in without the bar jumping height */
+  .nav-btn svg{ width:20px; height:20px; box-sizing:content-box; padding:8px; border-radius:14px; }
+  .nav-btn.active svg{
+    color:#0C0E14;
+    background-image:linear-gradient(115deg,#A9DB3A,#CDFF5E,#2BE6D6,#A9DB3A);
+    background-size:200% 200%;
+    box-shadow:0 4px 14px rgba(169,219,58,.4);
+    animation:holoSweep 4s linear infinite, iconMorphPop .45s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes iconMorphPop{ 0%{ transform:scale(.7) rotate(-18deg); } 55%{ transform:scale(1.18) rotate(6deg); } 100%{ transform:scale(1) rotate(0deg); } }
   @media (prefers-reduced-motion: reduce){ .nav-btn.active svg{ animation:none; } }
-  .nav-btn svg{ width:20px; height:20px; }
 
   @media (min-width:561px){ body{ box-shadow:0 0 60px rgba(17,17,17,0.08); } }
 
@@ -405,6 +413,41 @@
   @keyframes popRing{ 0%{ transform:scale(0.6); opacity:0.9; } 100%{ transform:scale(2.2); opacity:0; } }
   @keyframes tickDraw{ from{ stroke-dashoffset:24; } to{ stroke-dashoffset:0; } }
   @keyframes bellSwing{ 0%,100%{ transform:rotate(0deg); } 20%{ transform:rotate(-12deg); } 40%{ transform:rotate(10deg); } 60%{ transform:rotate(-6deg); } 80%{ transform:rotate(4deg); } }
+
+  /* ================= HOLO ICON-CHIP SYSTEM (design handoff round 3) =================
+     Every icon sits in a chip carrying a 4-stop gradient that sweeps forever,
+     plus a per-icon idle loop so the set never reads as static. Icon stroke/fill
+     is always near-black on the chip — the gradients are bright enough that
+     white strokes disappear against them. Durations vary per colour so
+     neighbouring chips desync instead of pulsing in lockstep. */
+  @keyframes holoSweep{ 0%{ background-position:0% 50%; } 100%{ background-position:200% 50%; } }
+  @keyframes pinDrop{ 0%{ transform:translateY(-7px); } 55%{ transform:translateY(0); } 68%{ transform:translateY(-3px); } 100%{ transform:translateY(0); } }
+  @keyframes starSpin{ 0%{ transform:rotate(0deg) scale(1); } 50%{ transform:rotate(180deg) scale(1.22); } 100%{ transform:rotate(360deg) scale(1); } }
+  @keyframes coinFlip{ 0%,100%{ transform:rotateY(0deg); } 50%{ transform:rotateY(180deg); } }
+  @keyframes clockHand{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+  @keyframes razorGlide{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(4px); } }
+  @keyframes floatUp{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4px); } }
+  @keyframes scissorSnap{ 0%,70%,100%{ transform:rotate(0deg); } 82%{ transform:rotate(-16deg); } 91%{ transform:rotate(3deg); } }
+
+  .icon-chip{ background-size:200% 200%; animation:holoSweep 4s linear infinite; }
+  .icon-chip.lime { background-image:linear-gradient(115deg,#A9DB3A,#CDFF5E,#2BE6D6,#A9DB3A); box-shadow:0 4px 12px rgba(169,219,58,.32); }
+  .icon-chip.coral{ background-image:linear-gradient(115deg,#FF5A3C,#FF3D8A,#FFC02E,#FF5A3C); box-shadow:0 4px 12px rgba(255,90,60,.34); animation-duration:4.4s; }
+  .icon-chip.sky  { background-image:linear-gradient(115deg,#3F8CFF,#2BE6D6,#9B5CFF,#3F8CFF); box-shadow:0 4px 12px rgba(63,140,255,.34); animation-duration:4.8s; }
+  .icon-chip.sun  { background-image:linear-gradient(115deg,#FFC02E,#FFE68A,#FF5A3C,#FFC02E); box-shadow:0 4px 12px rgba(255,192,46,.36); animation-duration:3.6s; }
+  /* idle loops, applied to the svg inside a chip */
+  .ic-pin svg{ animation:pinDrop 2.2s ease-in-out infinite; }
+  .ic-star svg{ animation:starSpin 3.4s ease-in-out infinite; }
+  .ic-coin svg{ animation:coinFlip 3.2s ease-in-out infinite; }
+  .ic-cal svg{ animation:floatUp 2.8s ease-in-out infinite; }
+  .ic-person svg{ animation:floatUp 3.2s ease-in-out infinite; }
+  .ic-rebook svg{ animation:razorGlide 2.4s ease-in-out infinite; }
+  .ic-scissor svg{ transform-origin:50% 78%; animation:scissorSnap 2.6s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce){
+    .icon-chip, .icon-chip svg,
+    .ic-pin svg, .ic-star svg, .ic-coin svg, .ic-cal svg,
+    .ic-person svg, .ic-rebook svg, .ic-scissor svg{ animation:none !important; }
+  }
   .title-chip svg{ transform-origin:center; }
   .title-chip.bell-chip svg{ animation:bellSwing 3.5s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce){ .title-chip.bell-chip svg{ animation:none; } }
@@ -720,7 +763,7 @@
 
   <div class="wrap home-section">
     <div class="home-section-head">
-      <div class="st-left"><span class="title-chip chip-terracotta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g><animateTransform attributeName="transform" type="rotate" values="0 12 4;12 12 4;-12 12 4;0 12 4" dur="3.4s" repeatCount="indefinite"></animateTransform><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"></path></g></svg></span><h3 data-i18n="nearby_h">Nearby barbers</h3></div>
+      <div class="st-left"><span class="title-chip chip-terracotta icon-chip coral ic-pin"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.4 7-12a7 7 0 10-14 0c0 5.6 7 12 7 12z"></path><circle cx="12" cy="10" r="2.6"></circle></svg></span><h3 data-i18n="nearby_h">Nearby barbers</h3></div>
       <a href="javascript:void(0)" data-nav="map" data-i18n="see_all">See all</a>
     </div>
     <div class="home-barber-scroll" id="homeNearbyRow"></div>
@@ -728,7 +771,7 @@
 
   <div class="wrap home-section">
     <div class="home-section-head">
-      <div class="st-left"><span class="title-chip chip-gold"><svg width="15" height="15" viewBox="0 0 24 24" fill="#1C1A14" stroke="none"><path d="m12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></span><h3 data-i18n="top_h">Top rated</h3></div>
+      <div class="st-left"><span class="title-chip chip-gold icon-chip sun ic-star"><svg width="15" height="15" viewBox="0 0 24 24" fill="#0C0E14" stroke="none"><path d="m12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></span><h3 data-i18n="top_h">Top rated</h3></div>
       <a href="javascript:void(0)" data-nav="map" data-i18n="see_all">See all</a>
     </div>
     <div class="home-barber-grid" id="homeTopGrid"></div>
@@ -738,7 +781,7 @@
 <!-- ============ BOOKINGS ============ -->
 <div class="view" data-view="bookings">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1A14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span><span data-i18n="bookings_title">Your bookings</span></span></div>
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold icon-chip lime ic-cal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span><span data-i18n="bookings_title">Your bookings</span></span></div>
     <div class="filter-pills" id="bookingFilterTabs">
       <div class="filter-pill active" data-status="all">📋 <span data-i18n="filter_all">All</span></div>
       <div class="filter-pill" data-status="pending">⏳ <span data-i18n="filter_pending">Pending</span></div>
@@ -752,7 +795,7 @@
 <!-- ============ MAP ============ -->
 <div class="view" data-view="map">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span class="st-left"><span class="title-chip chip-terracotta"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g><animateTransform attributeName="transform" type="rotate" values="0 12 4;12 12 4;-12 12 4;0 12 4" dur="3.4s" repeatCount="indefinite"></animateTransform><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"></path></g></svg></span><span data-i18n="map_title">Find a barber</span></span></div>
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-terracotta icon-chip coral ic-pin"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.4 7-12a7 7 0 10-14 0c0 5.6 7 12 7 12z"></path><circle cx="12" cy="10" r="2.6"></circle></svg></span><span data-i18n="map_title">Find a barber</span></span></div>
 
     <div class="map-toolbar">
       <div class="search-box">
@@ -801,7 +844,7 @@
 <div class="view" data-view="notifications">
   <div class="wrap" style="padding-top:24px;">
     <div class="section-title">
-      <span class="st-left"><span class="title-chip chip-blue bell-chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"></path><path d="M10.5 19.5a1.8 1.8 0 0 0 3 0"></path></svg></span><span data-i18n="notifications_title">Notifications</span></span>
+      <span class="st-left"><span class="title-chip chip-blue bell-chip icon-chip sky"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9Z"></path><path d="M10.5 19.5a1.8 1.8 0 0 0 3 0"></path></svg></span><span data-i18n="notifications_title">Notifications</span></span>
       <span class="see-all" data-nav="home" data-i18n="close_label">Close</span>
     </div>
     <div id="notificationsArea"></div>
@@ -811,10 +854,10 @@
 <!-- ============ ACCOUNT ============ -->
 <div class="view" data-view="account">
   <div class="wrap" style="padding-top:24px;">
-    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1A14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a8 8 0 0 1 16 0v1"></path></svg></span><span data-i18n="account_title">Account</span></span></div>
+    <div class="section-title"><span class="st-left"><span class="title-chip chip-gold icon-chip lime ic-person"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a8 8 0 0 1 16 0v1"></path></svg></span><span data-i18n="account_title">Account</span></span></div>
     <div class="info-card" id="infoCard"></div>
 
-    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-terracotta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g><animateTransform attributeName="transform" type="rotate" values="0 8 8;-14 8 8;0 8 8" dur="1.6s" repeatCount="indefinite"></animateTransform><circle cx="6" cy="6" r="2.6"></circle><path d="M8 8 20 20"></path></g></svg></span><span data-i18n="style_title">My style</span></span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-terracotta icon-chip coral ic-scissor"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"></path></svg></span><span data-i18n="style_title">My style</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="style_sub">Set your usual cut once — it'll auto-attach to future bookings so you don't have to explain it every time.</p>
       <div style="display:flex; gap:14px; align-items:center; margin-bottom:14px;">
@@ -827,19 +870,19 @@
       <div id="styleSaveMsg" style="font-size:12px; color:var(--success); margin-top:8px; display:none;"></div>
     </div>
 
-    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4 3 11l6 2.5M21 4l-7 17-4-8.5M21 4l-11 9.5"></path></svg></span><span data-i18n="telegram_title">Telegram alerts</span></span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-blue icon-chip sky"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4 3 11l6 2.5M21 4l-7 17-4-8.5M21 4l-11 9.5"></path></svg></span><span data-i18n="telegram_title">Telegram alerts</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="telegram_sub">Get booking confirmations and reminders straight to Telegram.</p>
       <div id="telegramStatus"></div>
     </div>
 
-    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-green"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1A14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1.5"></rect><path d="M3 12h18M12 8v13"></path><path d="M12 8c-1.5-4-6-4-6-1s3 1 6 1zM12 8c1.5-4 6-4 6-1s-3 1-6 1z"></path></svg></span><span data-i18n="referral_title">Invite friends</span></span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-green icon-chip lime"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1.5"></rect><path d="M3 12h18M12 8v13"></path><path d="M12 8c-1.5-4-6-4-6-1s3 1 6 1zM12 8c1.5-4 6-4 6-1s-3 1-6 1z"></path></svg></span><span data-i18n="referral_title">Invite friends</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <p style="font-size:12.5px; color:var(--ink-dim); margin-bottom:14px;" data-i18n="referral_sub">Share your code — when a friend completes their first booking, you both get 200 points.</p>
       <div id="referralCard"></div>
     </div>
 
-    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-teal"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1C1A14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg></span><span data-i18n="language_title">Language</span></span></div>
+    <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-teal icon-chip sun"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg></span><span data-i18n="language_title">Language</span></span></div>
     <div class="lang-row" id="langSwitch">
       <button class="lang-btn active" data-lang="en">EN</button>
       <button class="lang-btn" data-lang="uz">UZ</button>
@@ -2536,7 +2579,7 @@ async function openMapProfilePop(b, jumpToBooking = false){
       ` : ''}
       ${b.bio ? `<div class="pop-bio">${escapeHtml(b.bio)}</div>` : ''}
       <div class="pop-tags">${specs}</div>
-      <div class="pop-section-t" style="display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:50%; background:var(--sky); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g><animateTransform attributeName="transform" type="rotate" values="0 8 8;-14 8 8;0 8 8" dur="1.6s" repeatCount="indefinite"></animateTransform><circle cx="6" cy="6" r="2.6"></circle><path d="M8 8 20 20"></path></g></svg></span>${t('choose_service')}</div>
+      <div class="pop-section-t" style="display:flex; align-items:center; gap:8px;"><span class="icon-chip sky ic-scissor" style="width:26px; height:26px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4L8.12 15.88M14.47 14.48L20 20M8.12 8.12L12 12"></path></svg></span>${t('choose_service')}</div>
       <div id="mapPopServiceList"></div>
       ${popHoursListHtml(b)}
       ${popReviewsHtml(b.id)}
@@ -2665,7 +2708,7 @@ async function showMapDayPicker(b, serviceKey, duration, price, addonKeys = []){
 
   listEl.innerHTML = `
     <span class="back-link" id="mapPopBack">← ${t('back')}</span>
-    <div class="pop-section-t" style="margin-top:4px; display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:50%; background:var(--sun); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1C1A14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>${t('book_title')}</div>
+    <div class="pop-section-t" style="margin-top:4px; display:flex; align-items:center; gap:8px;"><span class="icon-chip sun ic-cal" style="width:26px; height:26px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>${t('book_title')}</div>
     ${summaryLine}
     ${days.length ? `<div class="day-tabs" id="mapPopDayTabs"></div><div class="slot-grid" id="mapPopSlotGrid"></div>` : `<div class="no-slots-msg">${t('no_slots')}</div>`}
   `;
