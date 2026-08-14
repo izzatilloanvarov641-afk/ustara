@@ -199,6 +199,47 @@ h3{ font-size:1.25rem; font-weight:600; }
 .cta-band__ctas{ display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; }
 .cta-band__sub{ margin-top:22px; color:var(--text-on-ink-muted); font-size:.92rem; }
 .cta-band__sub a{ color:var(--lime); font-weight:600; }
+.waitlist{
+  margin-top:44px; padding:30px 32px; border:1px solid var(--line-on-ink); border-radius:20px;
+  background:rgba(255,255,255,0.04); max-width:620px;
+}
+.waitlist__head{
+  display:inline-flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:.76rem;
+  font-weight:600; text-transform:uppercase; letter-spacing:.14em; color:var(--sun); margin-bottom:14px;
+}
+/* small animated square badge — a ticking clock, i.e. "we'll get to you" */
+.wl-badge{
+  width:30px; height:30px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0; background-image:linear-gradient(115deg,#FFC02E,#FFE68A,#FF5A3C,#FFC02E);
+  background-size:200% 200%; animation:wlHolo 3.6s linear infinite;
+  box-shadow:0 4px 12px rgba(255,192,46,.34);
+}
+.wl-badge svg{ width:16px; height:16px; }
+.wl-badge .wl-hand{ transform-origin:12px 12px; animation:wlHand 3s linear infinite; }
+@keyframes wlHolo{ 0%{ background-position:0% 50%; } 100%{ background-position:200% 50%; } }
+@keyframes wlHand{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){
+  .wl-badge, .wl-badge .wl-hand{ animation:none; }
+}
+.waitlist h3{ font-size:1.5rem; margin-bottom:10px; }
+.waitlist > p{ color:var(--text-on-ink-muted); font-size:.95rem; max-width:46ch; }
+.waitlist__form{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:22px; }
+.waitlist__form input{
+  background:rgba(0,0,0,0.25); border:1px solid var(--line-on-ink); border-radius:12px;
+  padding:13px 16px; color:var(--text-on-ink); font-family:var(--font-body); font-size:.95rem; width:100%;
+}
+.waitlist__form input::placeholder{ color:var(--text-on-ink-muted); }
+.waitlist__form input:focus{ outline:none; border-color:var(--lime); }
+.waitlist__form #wlCity{ grid-column:1 / -1; }
+.waitlist__form button{ grid-column:1 / -1; justify-content:center; cursor:pointer; }
+.waitlist__form button:disabled{ opacity:.55; cursor:not-allowed; }
+.waitlist__msg{ margin-top:16px; font-size:.92rem; display:none; }
+.waitlist__msg.ok{ color:var(--lime); display:block; }
+.waitlist__msg.err{ color:var(--coral); display:block; }
+@media (max-width:560px){
+  .waitlist{ padding:24px 20px; }
+  .waitlist__form{ grid-template-columns:1fr; }
+}
 .footer{ background:var(--ink); color:var(--text-on-ink); border-top:1px solid var(--line-on-ink); padding:72px 0 40px; }
 .footer__grid{ display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px; margin-bottom:56px; }
 .footer__brand p{ color:var(--text-on-ink-muted); font-size:.92rem; margin-top:14px; max-width:30ch; }
@@ -223,9 +264,10 @@ h3{ font-size:1.25rem; font-weight:600; }
       <a href="#reviews" data-i18n="nav_reviews">Reviews</a>
     </div>
     <div class="nav__right">
+      <!-- Client sign-in is intentionally absent while clients are waitlist-only.
+           Barbers and shop owners still sign in here as normal. To bring clients
+           back, restore the client-login link and the "Book a chair" CTA below. -->
       <div class="nav__login">
-        <a href="auth.html" class="client-login" data-i18n="nav_login_client">Client login</a>
-        <span class="sep">/</span>
         <a href="auth.html?role=barber" data-i18n="nav_login_barber">Barber login</a>
       </div>
       <div class="lang-switch" id="langSwitch">
@@ -233,7 +275,7 @@ h3{ font-size:1.25rem; font-weight:600; }
         <button type="button" data-lang="uz">UZ</button>
         <button type="button" data-lang="ru">RU</button>
       </div>
-      <a href="auth.html" class="btn btn--ink btn--sm nav__cta" data-i18n="nav_cta">Book a chair</a>
+      <a href="#get-started" class="btn btn--ink btn--sm nav__cta" data-i18n="nav_cta">Join waitlist</a>
     </div>
   </div>
 </nav>
@@ -253,7 +295,7 @@ h3{ font-size:1.25rem; font-weight:600; }
       <h1 class="reveal reveal--left" style="transition-delay:80ms" data-i18n="hero_h1">Your next haircut is already <span class="highlight">waiting for you</span></h1>
       <p class="reveal reveal--left" style="transition-delay:160ms" data-i18n="hero_p">Ustara shows you the barbers near you, their real reviews, their live schedule — and books your seat in under a minute. Walk in at your time, not after three other heads.</p>
       <div class="hero__ctas reveal reveal--left" style="transition-delay:240ms">
-        <a href="auth.html" class="btn btn--primary" data-i18n="hero_cta_client">Find your barber</a>
+        <a href="#get-started" class="btn btn--primary" data-i18n="hero_cta_client">Join the waitlist</a>
         <a href="auth.html?role=barber" class="btn btn--ghost" data-i18n="hero_cta_barber">I'm a barber</a>
         <button type="button" id="installAppBtn" style="display:none;" data-i18n="install_btn">📲 Install app</button>
       </div>
@@ -607,11 +649,33 @@ h3{ font-size:1.25rem; font-weight:600; }
   <div class="container">
     <span class="eyebrow reveal reveal--left" data-i18n="cta_eyebrow"><span class="dot dot--lime"></span> Get started</span>
     <h2 class="reveal reveal--left" style="transition-delay:60ms" data-i18n="cta_h2">Your barber is three taps away. <span class="highlight">Stop waiting in line.</span></h2>
+    <!-- the client "create account" button lives here when clients aren't
+         waitlist-only; the waitlist form below takes its place for now -->
     <div class="cta-band__ctas reveal reveal--left" style="transition-delay:140ms">
-      <a href="auth.html" class="btn btn--primary" data-i18n="cta_client">Create free account</a>
       <a href="auth.html?role=barber" class="btn btn--ghost" data-i18n="cta_barber">I'm a barber</a>
     </div>
     <p class="cta-band__sub reveal reveal--left" style="transition-delay:200ms" data-i18n="cta_sub">Cutting hair for a living? <a href="auth.html?role=barber">Set up your barber profile</a> — free, five minutes.</p>
+
+    <div class="waitlist reveal reveal--left" style="transition-delay:260ms" id="waitlistBlock">
+      <div class="waitlist__head">
+        <span class="wl-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <line class="wl-hand" x1="12" y1="12" x2="12" y2="7"></line>
+          </svg>
+        </span>
+        <span data-i18n="wl_eyebrow">Join waitlist</span>
+      </div>
+      <h3 data-i18n="wl_title">Join the waitlist</h3>
+      <p data-i18n="wl_sub">Leave your name and number — we'll message you the moment Ustara opens in your city.</p>
+      <form class="waitlist__form" id="waitlistForm" novalidate>
+        <input type="text" id="wlName" data-i18n-ph="wl_ph_name" placeholder="Your name" autocomplete="name" required>
+        <input type="tel" id="wlPhone" data-i18n-ph="wl_ph_phone" placeholder="+998 90 123 45 67" autocomplete="tel" required>
+        <input type="text" id="wlCity" data-i18n-ph="wl_ph_city" placeholder="City (optional)" autocomplete="address-level2">
+        <button type="submit" class="btn btn--primary" id="wlSubmit" data-i18n="wl_submit">Join the waitlist</button>
+      </form>
+      <div class="waitlist__msg" id="waitlistMsg"></div>
+    </div>
   </div>
 </section>
 
@@ -658,11 +722,11 @@ h3{ font-size:1.25rem; font-weight:600; }
 const I18N = {
   en:{
     nav_how:"How it works", nav_features:"Features", nav_barbers:"For barbers", nav_reviews:"Reviews",
-    nav_login_client:"Client login", nav_login_barber:"Barber login", nav_cta:"Book a chair",
+    nav_login_client:"Client login", nav_login_barber:"Barber login", nav_cta:"Join waitlist",
     hero_kicker:"Barber booking · Uzbekistan",
     hero_h1:'Your next haircut is already <span class="highlight">waiting for you</span>',
     hero_p:"Ustara shows you the barbers near you, their real reviews, their live schedule — and books your seat in under a minute. Walk in at your time, not after three other heads.",
-    hero_cta_client:"Find your barber", hero_cta_barber:"I'm a barber", install_btn:"📲 Install app",
+    hero_cta_client:"Join the waitlist", hero_cta_barber:"I'm a barber", install_btn:"📲 Install app",
     hero_pill1:"No waiting line", hero_pill2:"4.9★ rated masters", hero_pill3:"Open now near you", hero_pill4:"Free to book",
     concepts_eyebrow:"Why Ustara exists", concepts_h2:"Three things every man knows about haircuts",
     c1_term:"the wait", c1_title:"Nobody plans for it", c1_body:"You show up, the chair is taken, two more are ahead of you. Forty minutes of your day, gone before the first snip. Ustara replaces the queue with a reserved time.",
@@ -713,6 +777,14 @@ const I18N = {
     cta_eyebrow:"Get started", cta_h2:'Your barber is three taps away. <span class="highlight">Stop waiting in line.</span>',
     cta_client:"Create free account", cta_barber:"I'm a barber",
     cta_sub:'Cutting hair for a living? <a href="auth.html?role=barber">Set up your barber profile</a> — free, five minutes.',
+    wl_eyebrow:"Join waitlist", wl_title:"Be first in the chair",
+    wl_sub:"Leave your name and number — we'll message you the moment Ustara opens in your city.",
+    wl_ph_name:"Your name", wl_ph_phone:"+998 90 123 45 67", wl_ph_city:"City (optional)",
+    wl_submit:"Join the waitlist", wl_sending:"Adding you…",
+    wl_ok:"You're on the list. We'll be in touch.",
+    wl_dupe:"That number is already on the list — you're all set.",
+    wl_err_fields:"Please add your name and phone number.",
+    wl_err:"Couldn't add you just now. Please try again.",
     footer_tagline:"Barbers worth booking, bookings worth keeping. Made for Uzbekistan.",
     foot_h_product:"Product", foot_h_barbers:"For barbers", foot_h_company:"Company",
     foot_panel:"Barber panel", foot_walkin:"Walk-in bookings", foot_analytics:"Analytics",
@@ -721,11 +793,11 @@ const I18N = {
   },
   uz:{
     nav_how:"Qanday ishlaydi", nav_features:"Imkoniyatlar", nav_barbers:"Sartaroshlar uchun", nav_reviews:"Sharhlar",
-    nav_login_client:"Mijoz kirishi", nav_login_barber:"Sartarosh kirishi", nav_cta:"Joy band qiling",
+    nav_login_client:"Mijoz kirishi", nav_login_barber:"Sartarosh kirishi", nav_cta:"Navbatga yozilish",
     hero_kicker:"Sartarosh bron qilish · O'zbekiston",
     hero_h1:'Keyingi soch olishingiz allaqachon <span class="highlight">sizni kutmoqda</span>',
     hero_p:"Ustara sizga yaqin atrofdagi sartaroshlarni, ularning haqiqiy sharhlarini va bo'sh vaqtlarini ko'rsatadi — va joyingizni bir daqiqadan kamroq vaqtda bron qiladi. O'z vaqtingizda keling, uch kishidan keyin emas.",
-    hero_cta_client:"Sartaroshingizni toping", hero_cta_barber:"Men sartaroshman", install_btn:"📲 Ilovani o'rnatish",
+    hero_cta_client:"Navbatga yozilish", hero_cta_barber:"Men sartaroshman", install_btn:"📲 Ilovani o'rnatish",
     hero_pill1:"Navbatsiz", hero_pill2:"4.9★ baholangan ustalar", hero_pill3:"Hozir ochiq", hero_pill4:"Bepul bron qilish",
     concepts_eyebrow:"Ustara nima uchun kerak", concepts_h2:"Har bir erkak soch olish haqida biladigan uch narsa",
     c1_term:"kutish", c1_title:"Buni hech kim rejalashtirmaydi", c1_body:"Kelasiz, stul band, yana ikki kishi navbatda. Kunning qirq daqiqasi birinchi qaychi tegmasdan ketadi. Ustara navbatni bron qilingan vaqt bilan almashtiradi.",
@@ -776,6 +848,14 @@ const I18N = {
     cta_eyebrow:"Boshlash", cta_h2:'Sartaroshingiz uch teginish uzoqlikda. <span class="highlight">Navbatda kutishni bas qiling.</span>',
     cta_client:"Bepul hisob yaratish", cta_barber:"Men sartaroshman",
     cta_sub:'Soch olish bilan kun ko\'rasizmi? <a href="auth.html?role=barber">Sartarosh profilingizni yarating</a> — bepul, besh daqiqa.',
+    wl_eyebrow:"Navbatga yozilish", wl_title:"Birinchi bo'lib stulga o'tiring",
+    wl_sub:"Ismingiz va raqamingizni qoldiring — Ustara shahringizda ochilishi bilan xabar beramiz.",
+    wl_ph_name:"Ismingiz", wl_ph_phone:"+998 90 123 45 67", wl_ph_city:"Shahar (ixtiyoriy)",
+    wl_submit:"Ro'yxatga yozilish", wl_sending:"Qo'shilmoqda…",
+    wl_ok:"Ro'yxatdasiz. Tez orada bog'lanamiz.",
+    wl_dupe:"Bu raqam allaqachon ro'yxatda — hammasi joyida.",
+    wl_err_fields:"Ismingiz va telefon raqamingizni kiriting.",
+    wl_err:"Hozir qo'sha olmadik. Iltimos, qayta urinib ko'ring.",
     footer_tagline:"Bron qilishga arziydigan sartaroshlar, saqlashga arziydigan bandlar. O'zbekiston uchun yaratilgan.",
     foot_h_product:"Mahsulot", foot_h_barbers:"Sartaroshlar uchun", foot_h_company:"Kompaniya",
     foot_panel:"Sartarosh paneli", foot_walkin:"Navbatsiz bandlar", foot_analytics:"Tahlillar",
@@ -784,11 +864,11 @@ const I18N = {
   },
   ru:{
     nav_how:"Как это работает", nav_features:"Возможности", nav_barbers:"Барберам", nav_reviews:"Отзывы",
-    nav_login_client:"Вход для клиентов", nav_login_barber:"Вход для барберов", nav_cta:"Забронировать место",
+    nav_login_client:"Вход для клиентов", nav_login_barber:"Вход для барберов", nav_cta:"Лист ожидания",
     hero_kicker:"Запись к барберу · Узбекистан",
     hero_h1:'Ваша следующая стрижка уже <span class="highlight">ждёт вас</span>',
     hero_p:"Ustara показывает барберов рядом с вами, их настоящие отзывы, живое расписание — и бронирует место меньше чем за минуту. Приходите в своё время, а не после троих других.",
-    hero_cta_client:"Найти барбера", hero_cta_barber:"Я барбер", install_btn:"📲 Установить приложение",
+    hero_cta_client:"В лист ожидания", hero_cta_barber:"Я барбер", install_btn:"📲 Установить приложение",
     hero_pill1:"Без очереди", hero_pill2:"4.9★ у лучших мастеров", hero_pill3:"Открыто прямо сейчас", hero_pill4:"Бесплатная запись",
     concepts_eyebrow:"Зачем нужна Ustara", concepts_h2:"Три вещи, которые знает каждый о стрижках",
     c1_term:"ожидание", c1_title:"К этому невозможно подготовиться", c1_body:"Вы приходите, кресло занято, впереди ещё двое. Сорок минут дня уходят до первого щелчка ножниц. Ustara меняет очередь на забронированное время.",
@@ -839,6 +919,14 @@ const I18N = {
     cta_eyebrow:"Начать", cta_h2:'Ваш барбер в трёх касаниях. <span class="highlight">Хватит стоять в очереди.</span>',
     cta_client:"Создать аккаунт бесплатно", cta_barber:"Я барбер",
     cta_sub:'Стрижёте на жизнь? <a href="auth.html?role=barber">Создайте профиль барбера</a> — бесплатно, пять минут.',
+    wl_eyebrow:"Лист ожидания", wl_title:"Займите кресло первым",
+    wl_sub:"Оставьте имя и номер — напишем, как только Ustara откроется в вашем городе.",
+    wl_ph_name:"Ваше имя", wl_ph_phone:"+998 90 123 45 67", wl_ph_city:"Город (необязательно)",
+    wl_submit:"В лист ожидания", wl_sending:"Добавляем…",
+    wl_ok:"Вы в списке. Мы свяжемся с вами.",
+    wl_dupe:"Этот номер уже в списке — всё в порядке.",
+    wl_err_fields:"Укажите имя и номер телефона.",
+    wl_err:"Не удалось добавить. Попробуйте ещё раз.",
     footer_tagline:"Барберы, к которым стоит записаться, записи, которые стоит сохранить. Сделано для Узбекистана.",
     foot_h_product:"Продукт", foot_h_barbers:"Барберам", foot_h_company:"Компания",
     foot_panel:"Панель барбера", foot_walkin:"Запись без очереди", foot_analytics:"Аналитика",
@@ -870,12 +958,23 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 })();
 
 let currentLang = 'en';
+// the dashboards all have this helper; the landing page needed it once the
+// waitlist form started producing runtime messages rather than static copy
+function t(key){
+  const dict = I18N[currentLang] || I18N.en;
+  return dict[key] !== undefined ? dict[key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+}
 function applyLang(lang){
   currentLang = lang;
   const dict = I18N[lang];
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const key = el.dataset.i18n;
     if(dict[key] !== undefined) el.innerHTML = dict[key];
+  });
+  // inputs carry their label in the placeholder, so they translate separately
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.dataset.i18nPh;
+    if(dict[key] !== undefined) el.placeholder = dict[key];
   });
   document.querySelectorAll('#langSwitch button').forEach(b=>{
     b.classList.toggle('active', b.dataset.lang === lang);
@@ -889,6 +988,59 @@ document.getElementById('langSwitch').addEventListener('click', (e)=>{
 
 const storedLang = localStorage.getItem('ustara_lang');
 applyLang(I18N[storedLang] ? storedLang : 'en');
+
+/* ---------- waitlist ---------- */
+// Anyone can insert (public form); only the founder can read the list back —
+// see sql/34-waitlist.sql. phone is unique, so a repeat submit comes back as
+// 23505 and we tell them they're already on it rather than showing an error.
+document.getElementById('waitlistForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = document.getElementById('wlSubmit');
+  const msg = document.getElementById('waitlistMsg');
+  const fullName = document.getElementById('wlName').value.trim();
+  const phone = document.getElementById('wlPhone').value.trim();
+  const city = document.getElementById('wlCity').value.trim();
+
+  msg.className = 'waitlist__msg';
+  if(!fullName || !phone){
+    msg.textContent = t('wl_err_fields');
+    msg.className = 'waitlist__msg err';
+    return;
+  }
+
+  btn.disabled = true;
+  const originalLabel = btn.textContent;
+  btn.textContent = t('wl_sending');
+
+  // contact/role/lang are the older columns this table shipped with (and they're
+  // NOT NULL), so we keep filling them rather than altering a table that already
+  // holds real signups — contact mirrors the phone, role marks these as client
+  // sign-ups as opposed to the barber ones the old form collected.
+  const { error } = await supabaseClient.from('waitlist').insert([{
+    full_name: fullName, phone, city: city || null,
+    contact: phone, role: 'client', lang: currentLang
+  }]);
+
+  btn.disabled = false;
+  btn.textContent = originalLabel;
+
+  if(error){
+    if(error.code === '23505'){
+      msg.textContent = t('wl_dupe');
+      msg.className = 'waitlist__msg ok';
+      document.getElementById('waitlistForm').reset();
+      return;
+    }
+    console.error('Waitlist insert failed:', error);
+    msg.textContent = t('wl_err');
+    msg.className = 'waitlist__msg err';
+    return;
+  }
+
+  msg.textContent = t('wl_ok');
+  msg.className = 'waitlist__msg ok';
+  document.getElementById('waitlistForm').reset();
+});
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 if(prefersReducedMotion){
