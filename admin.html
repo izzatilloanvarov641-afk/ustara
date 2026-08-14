@@ -87,6 +87,52 @@
     color:var(--brass); border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:20px;
   }
 
+  /* ---------- tabbed sections ----------
+     The admin page had grown into one long scroll mixing approvals, money
+     settings and stats. Three tabs keep each job on its own screen. */
+  .admin-tabs{
+    display:flex; gap:8px; margin-bottom:34px; border-bottom:1px solid var(--line);
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .admin-tabs::-webkit-scrollbar{ display:none; }
+  .admin-tab{
+    background:none; border:none; border-bottom:2px solid transparent; color:var(--bone-dim);
+    font-family:'Inter', sans-serif; font-size:13.5px; font-weight:600; padding:12px 16px;
+    cursor:pointer; white-space:nowrap; margin-bottom:-1px; display:flex; align-items:center; gap:8px;
+  }
+  .admin-tab:hover{ color:var(--bone); }
+  .admin-tab.active{ color:var(--brass); border-bottom-color:var(--brass); }
+  .admin-tab .tab-count{
+    background:var(--bg-alt); border:1px solid var(--line); color:var(--bone-dim);
+    font-size:11px; font-weight:700; border-radius:20px; padding:1px 8px; min-width:20px; text-align:center;
+  }
+  .admin-tab.has-pending .tab-count{ background:var(--err); border-color:var(--err); color:#fff; }
+  .admin-panel{ display:none; }
+  .admin-panel.active{ display:block; }
+  .admin-panel > h1:first-child{ margin-top:0; }
+
+  /* collapsible "see their names" lists on the analytics tab */
+  .names-toggle{
+    background:none; border:1px solid var(--line); color:var(--bone); border-radius:6px;
+    font-family:'Inter', sans-serif; font-size:13px; font-weight:600; padding:10px 16px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; margin-top:6px;
+  }
+  .names-toggle:hover{ border-color:var(--brass); color:var(--brass); }
+  .names-toggle .chev{ transition:transform .18s ease; display:inline-block; }
+  .names-toggle[aria-expanded="true"] .chev{ transform:rotate(90deg); }
+  .names-list{ display:none; margin-top:14px; }
+  .names-list.open{ display:block; }
+  .name-row{
+    display:flex; justify-content:space-between; align-items:center; gap:14px;
+    padding:12px 0; border-bottom:1px solid var(--line); font-size:13.5px;
+  }
+  .name-row:last-child{ border-bottom:none; }
+  .name-row .nr-main{ min-width:0; }
+  .name-row .nr-name{ font-weight:600; }
+  .name-row .nr-sub{ font-size:12px; color:var(--bone-dim); margin-top:2px; }
+  .name-row .nr-meta{ font-size:12px; color:var(--bone-dim); white-space:nowrap; flex-shrink:0; }
+  .name-row a{ color:var(--brass); }
+
   .proof-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin-bottom:14px; display:flex; gap:18px; flex-wrap:wrap; }
   .proof-thumb{ width:120px; height:120px; border-radius:6px; overflow:hidden; flex-shrink:0; background:var(--bg-alt); border:1px solid var(--line); }
   .proof-thumb img{ width:100%; height:100%; object-fit:cover; cursor:pointer; }
@@ -134,20 +180,37 @@
 
 <main id="adminMain" style="display:none;">
   <div class="wrap">
-    <div class="admin-section-label" data-i18n="section_overview">Platform overview</div>
-    <div class="stat-row" id="platformStats"></div>
+    <div class="admin-tabs" id="adminTabs">
+      <button class="admin-tab active" data-tab="approvals">
+        <span data-i18n="tab_approvals">Approvals</span>
+        <span class="tab-count" id="approvalsCount">0</span>
+      </button>
+      <button class="admin-tab" data-tab="money">
+        <span data-i18n="tab_money">Promo &amp; revenue</span>
+      </button>
+      <button class="admin-tab" data-tab="analytics">
+        <span data-i18n="tab_analytics">Analytics</span>
+      </button>
+    </div>
 
-    <div class="admin-section-label" data-i18n="section_approval">Barber approval</div>
-    <h1 data-i18n="title">Pending barbers</h1>
-    <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
-    <div id="pendingArea"></div>
+    <!-- ============ 1 · APPROVALS ============ -->
+    <div class="admin-panel active" data-panel="approvals">
+      <h1 data-i18n="title">Pending barbers</h1>
+      <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
+      <div id="pendingArea"></div>
 
-    <h1 data-i18n="loc_title" style="margin-top:52px;">Pending location verification</h1>
-    <p class="sub" data-i18n="loc_sub">Confirm a barber's pin is a real, findable shop before it appears on the public map.</p>
-    <div id="pendingLocationArea"></div>
+      <h1 data-i18n="loc_title" style="margin-top:52px;">Pending location verification</h1>
+      <p class="sub" data-i18n="loc_sub">Confirm a barber's pin is a real, findable shop before it appears on the public map.</p>
+      <div id="pendingLocationArea"></div>
 
-    <div class="admin-section-label" style="margin-top:64px;" data-i18n="section_payments">Payments</div>
-    <h1 data-i18n="payout_title">Payout account</h1>
+      <h1 data-i18n="proofs_title" style="margin-top:52px;">Proof of payment</h1>
+      <p class="sub" data-i18n="proofs_sub">Compare the screenshot against the owed amount below it, then mark as paid or reject.</p>
+      <div id="proofsArea"></div>
+    </div>
+
+    <!-- ============ 2 · PROMO & REVENUE ============ -->
+    <div class="admin-panel" data-panel="money">
+      <h1 data-i18n="payout_title">Payout account</h1>
     <p class="sub" data-i18n="payout_sub">Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.</p>
     <div class="card" style="margin-bottom:52px;">
       <div class="field-group">
@@ -191,13 +254,31 @@
       <div class="save-msg" id="discountSaveMsg"></div>
     </div>
 
-    <h1 data-i18n="proofs_title">Proof of payment</h1>
-    <p class="sub" data-i18n="proofs_sub">Compare the screenshot against the owed amount below it, then mark as paid or reject.</p>
-    <div id="proofsArea"></div>
+      <div class="section-title" data-i18n="revenue_title">Revenue overview</div>
+      <div class="stat-row" id="revenueStats"></div>
+      <div class="card" id="revenueByBarberCard"></div>
+    </div>
 
-    <div class="section-title" data-i18n="revenue_title">Revenue overview</div>
-    <div class="stat-row" id="revenueStats"></div>
-    <div class="card" id="revenueByBarberCard"></div>
+    <!-- ============ 3 · ANALYTICS ============ -->
+    <div class="admin-panel" data-panel="analytics">
+      <h1 data-i18n="an_title">Platform analytics</h1>
+      <p class="sub" data-i18n="an_sub">Where Ustara stands right now.</p>
+      <div class="stat-row" id="platformStats"></div>
+
+      <div class="section-title" data-i18n="an_people_title">People</div>
+      <div class="card">
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <button type="button" class="names-toggle" id="waitlistNamesToggle" aria-expanded="false" aria-controls="waitlistNamesList">
+            <span class="chev">›</span><span data-i18n="an_see_waitlist">See waitlist names</span>
+          </button>
+          <button type="button" class="names-toggle" id="barberNamesToggle" aria-expanded="false" aria-controls="barberNamesList">
+            <span class="chev">›</span><span data-i18n="an_see_barbers">See barber names</span>
+          </button>
+        </div>
+        <div class="names-list" id="waitlistNamesList"></div>
+        <div class="names-list" id="barberNamesList"></div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -238,6 +319,13 @@ const I18N = {
     empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
     mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview",
     section_overview:"Platform overview", stat_barbers_joined:"Barbers joined", stat_clients_joined:"Clients joined",
+    tab_approvals:"Approvals", tab_money:"Promo & revenue", tab_analytics:"Analytics",
+    an_title:"Platform analytics", an_sub:"Where Ustara stands right now.",
+    an_people_title:"People", stat_waitlist:"On the waitlist",
+    an_see_waitlist:"See waitlist names", an_see_barbers:"See barber names",
+    an_loading:"Loading…", an_load_failed:"Couldn't load that list.",
+    an_waitlist_empty:"Nobody on the waitlist yet.", an_barbers_empty:"No barbers yet.",
+    an_state_pending:"Pending", an_state_live:"Live", an_state_offline:"Not live",
     stat_bookings_completed:"Bookings completed", stat_no_shows:"No-shows" },
   uz:{ logout:"Chiqish", login_title:"Admin kirish", l_email:"Email", l_password:"Parol",
     err_generic:"Email yoki parol noto'g'ri.", login_btn:"Kirish", signup_btn:"Hisob yaratish",
@@ -261,6 +349,13 @@ const I18N = {
     empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
     mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi",
     section_overview:"Platforma umumiy ko'rinishi", stat_barbers_joined:"Qo'shilgan sartaroshlar", stat_clients_joined:"Qo'shilgan mijozlar",
+    tab_approvals:"Tasdiqlash", tab_money:"Aksiya va daromad", tab_analytics:"Tahlil",
+    an_title:"Platforma tahlili", an_sub:"Ustara hozir qay ahvolda.",
+    an_people_title:"Odamlar", stat_waitlist:"Navbat ro'yxatida",
+    an_see_waitlist:"Navbat ro'yxatidagi ismlar", an_see_barbers:"Sartaroshlar ismlari",
+    an_loading:"Yuklanmoqda…", an_load_failed:"Ro'yxatni yuklab bo'lmadi.",
+    an_waitlist_empty:"Hozircha navbat ro'yxatida hech kim yo'q.", an_barbers_empty:"Hozircha sartaroshlar yo'q.",
+    an_state_pending:"Kutilmoqda", an_state_live:"Faol", an_state_offline:"Faol emas",
     stat_bookings_completed:"Bajarilgan bandlar", stat_no_shows:"Kelmagan mijozlar" },
   ru:{ logout:"Выйти", login_title:"Вход для админа", l_email:"Email", l_password:"Пароль",
     err_generic:"Неверный email или пароль.", login_btn:"Войти", signup_btn:"Создать аккаунт",
@@ -284,6 +379,13 @@ const I18N = {
     empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
     mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода",
     section_overview:"Обзор платформы", stat_barbers_joined:"Присоединилось барберов", stat_clients_joined:"Присоединилось клиентов",
+    tab_approvals:"Заявки", tab_money:"Промо и доход", tab_analytics:"Аналитика",
+    an_title:"Аналитика платформы", an_sub:"Как обстоят дела прямо сейчас.",
+    an_people_title:"Люди", stat_waitlist:"В листе ожидания",
+    an_see_waitlist:"Показать лист ожидания", an_see_barbers:"Показать барберов",
+    an_loading:"Загрузка…", an_load_failed:"Не удалось загрузить список.",
+    an_waitlist_empty:"В листе ожидания пока никого.", an_barbers_empty:"Барберов пока нет.",
+    an_state_pending:"Ожидает", an_state_live:"Активен", an_state_offline:"Не активен",
     stat_bookings_completed:"Завершено записей", stat_no_shows:"Не пришли" }
 };
 
@@ -360,17 +462,44 @@ async function checkAuthorizedAndEnter(user){
   loadPayoutSettings();
   loadProofs();
   loadRevenue();
+  setupNamesToggle('waitlistNamesToggle', 'waitlistNamesList', waitlistNamesHtml);
+  setupNamesToggle('barberNamesToggle', 'barberNamesList', barberNamesHtml);
+}
+
+/* ---------- tabs ---------- */
+document.getElementById('adminTabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.admin-tab');
+  if(!tab) return;
+  document.querySelectorAll('.admin-tab').forEach(x => x.classList.toggle('active', x === tab));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab.dataset.tab));
+  window.scrollTo(0, 0);
+});
+
+// the Approvals tab carries a count badge so you can see there's work waiting
+// without opening it — barbers awaiting approval + pins + payment proofs
+const approvalCounts = { barbers:0, locations:0, proofs:0 };
+function updateApprovalsCount(){
+  const el = document.getElementById('approvalsCount');
+  if(!el) return;
+  const n = approvalCounts.barbers + approvalCounts.locations + approvalCounts.proofs;
+  el.textContent = n;
+  document.querySelector('.admin-tab[data-tab="approvals"]').classList.toggle('has-pending', n > 0);
 }
 
 /* ---------- platform overview ---------- */
 async function loadPlatformOverview(){
-  const [barbers, clients, bookingsCompleted, noShows] = await Promise.all([
+  const [waitlist, barbers, clients, bookingsCompleted, noShows] = await Promise.all([
+    supabaseClient.from('waitlist').select('*', { count:'exact', head:true }),
     supabaseClient.from('barbers').select('*', { count:'exact', head:true }),
     supabaseClient.from('clients').select('*', { count:'exact', head:true }),
     supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status', 'completed'),
     supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status', 'no_show'),
   ]);
   document.getElementById('platformStats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num">${waitlist.count ?? 0}</div>
+      <div class="stat-label">${t('stat_waitlist')}</div>
+    </div>
     <div class="stat-card">
       <div class="stat-num">${barbers.count ?? 0}</div>
       <div class="stat-label">${t('stat_barbers_joined')}</div>
@@ -388,6 +517,74 @@ async function loadPlatformOverview(){
       <div class="stat-label">${t('stat_no_shows')}</div>
     </div>
   `;
+}
+
+/* ---------- "see their names" lists ----------
+   Loaded lazily on first expand rather than up front: these are the only
+   queries on the page that pull personal data (names, phone numbers), so
+   there's no reason to fetch them until they're actually asked for. */
+function setupNamesToggle(btnId, listId, loader){
+  const btn = document.getElementById(btnId);
+  const list = document.getElementById(listId);
+  let loaded = false;
+  btn.addEventListener('click', async ()=>{
+    const open = list.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(open && !loaded){
+      loaded = true;
+      list.innerHTML = `<div class="nr-sub" style="padding:12px 0;">${t('an_loading')}</div>`;
+      try{ list.innerHTML = await loader(); }
+      catch(e){ console.error(listId + ' load failed:', e); list.innerHTML = `<div class="nr-sub" style="padding:12px 0;">${t('an_load_failed')}</div>`; loaded = false; }
+    }
+  });
+}
+
+async function waitlistNamesHtml(){
+  const { data, error } = await supabaseClient
+    .from('waitlist').select('full_name, phone, city, contact, role, created_at')
+    .order('created_at', { ascending:false });
+  if(error) throw error;
+  if(!data || data.length === 0) return `<div class="nr-sub" style="padding:12px 0;">${t('an_waitlist_empty')}</div>`;
+  // rows collected by the older form have no name and store their contact
+  // detail in `contact`, so fall back to that rather than showing placeholders
+  const isPlaceholder = v => !v || v === '—' || /^unknown-/.test(v);
+  return data.map(w => {
+    const name = isPlaceholder(w.full_name) ? (w.contact || '—') : w.full_name;
+    const reach = isPlaceholder(w.phone) ? (w.contact || '') : w.phone;
+    const bits = [];
+    if(reach) bits.push(`<a href="tel:${escapeHtml(reach)}">${escapeHtml(reach)}</a>`);
+    if(w.city) bits.push(escapeHtml(w.city));
+    if(w.role && w.role !== 'client') bits.push(escapeHtml(w.role));
+    return `
+      <div class="name-row">
+        <div class="nr-main">
+          <div class="nr-name">${escapeHtml(name)}</div>
+          <div class="nr-sub">${bits.join(' · ')}</div>
+        </div>
+        <div class="nr-meta">${new Date(w.created_at).toLocaleDateString()}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function barberNamesHtml(){
+  const { data, error } = await supabaseClient
+    .from('barbers').select('full_name, district, phone, is_approved, is_published, created_at')
+    .order('created_at', { ascending:false });
+  if(error) throw error;
+  if(!data || data.length === 0) return `<div class="nr-sub" style="padding:12px 0;">${t('an_barbers_empty')}</div>`;
+  return data.map(b => {
+    const state = !b.is_approved ? t('an_state_pending') : (b.is_published ? t('an_state_live') : t('an_state_offline'));
+    return `
+      <div class="name-row">
+        <div class="nr-main">
+          <div class="nr-name">${escapeHtml(b.full_name || '—')}</div>
+          <div class="nr-sub">${b.district ? escapeHtml(b.district) : ''}${b.phone ? (b.district ? ' · ' : '') + escapeHtml(b.phone) : ''}</div>
+        </div>
+        <div class="nr-meta">${state}</div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ---------- payout account ---------- */
@@ -466,7 +663,9 @@ async function loadProofs(){
     .eq('status', 'pending')
     .order('created_at', { ascending:true });
 
-  if(error){ console.error('Failed to load payment proofs:', error); area.innerHTML = ''; return; }
+  if(error){ console.error('Failed to load payment proofs:', error); area.innerHTML = ''; approvalCounts.proofs = 0; updateApprovalsCount(); return; }
+  approvalCounts.proofs = (proofs || []).length;
+  updateApprovalsCount();
   if(!proofs || proofs.length === 0){
     area.innerHTML = `<div class="empty-state" style="margin-bottom:52px;">${t('empty_proofs')}</div>`;
     return;
@@ -624,6 +823,8 @@ async function loadPending(){
     .eq('is_rejected', false)
     .order('created_at', { ascending:true });
 
+  approvalCounts.barbers = (data || []).length;
+  updateApprovalsCount();
   if(error || !data || data.length === 0){
     area.innerHTML = `<div class="empty-pending">${t('empty_pending')}</div>`;
     return;
@@ -672,6 +873,8 @@ async function loadPendingLocations(){
     .eq('is_location_verified', false)
     .order('created_at', { ascending:true });
 
+  approvalCounts.locations = (data || []).length;
+  updateApprovalsCount();
   if(error || !data || data.length === 0){
     area.innerHTML = `<div class="empty-pending">${t('empty_location')}</div>`;
     return;

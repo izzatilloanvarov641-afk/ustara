@@ -97,9 +97,11 @@
 
   <div class="form-panel" data-panel="signup">
     <h1 data-i18n="signup_title">Create your account</h1>
+    <!-- Client sign-up is intentionally absent while clients are waitlist-only
+         (they join from the landing page instead). To bring clients back,
+         restore the client button here and flip CLIENT_SIGNUP_ENABLED below. -->
     <div class="role-toggle" id="roleToggle">
-      <button type="button" class="active" data-role="client" data-i18n="role_client">I'm a client</button>
-      <button type="button" data-role="barber" data-i18n="role_barber">I'm a barber</button>
+      <button type="button" class="active" data-role="barber" data-i18n="role_barber">I'm a barber</button>
       <button type="button" data-role="owner" data-i18n="role_owner">I'm a shop owner</button>
     </div>
     <p class="barber-note" id="barberNote" data-i18n="barber_note">Barber profiles are reviewed before going live — usually within a day.</p>
@@ -199,7 +201,14 @@ const params = new URLSearchParams(window.location.search);
 const storedLang = localStorage.getItem('ustara_lang');
 const browserLang = (navigator.language || 'en').slice(0,2);
 const currentLang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
-let signupRole = ['barber','owner'].includes(params.get('role')) ? params.get('role') : 'client';
+// Clients are waitlist-only for now — they join from the landing page instead
+// of creating an account. Flip this back to true (and restore the client button
+// in #roleToggle) to reopen client sign-up.
+const CLIENT_SIGNUP_ENABLED = false;
+const DEFAULT_SIGNUP_ROLE = CLIENT_SIGNUP_ENABLED ? 'client' : 'barber';
+let signupRole = ['barber','owner'].includes(params.get('role'))
+  ? params.get('role')
+  : (params.get('role') === 'client' && CLIENT_SIGNUP_ENABLED ? 'client' : DEFAULT_SIGNUP_ROLE);
 const refCode = params.get('ref');
 if(refCode) localStorage.setItem('ustara_pending_ref', refCode);
 
