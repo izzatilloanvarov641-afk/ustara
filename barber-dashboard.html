@@ -1623,23 +1623,20 @@ function renderStatusBanner(){
   const toggleWrap = document.getElementById('publishToggleWrap');
   const toggle = document.getElementById('publishToggle');
 
-  if(!barberData.is_approved){
-    banner.className = 'status-banner status-banner--stacked pending';
-    letterReveal(headline, t('status_pending_h'));
-    letterReveal(sub, t('status_pending_s'), 120);
-    toggleWrap.style.display = 'none';
+  // Profiles are no longer reviewed by hand, so there's no "waiting for
+  // approval" state any more — a barber can go Live as soon as their profile
+  // is complete and their location pin has been verified (see
+  // getMissingLiveRequirements, which is what actually gates the toggle).
+  toggleWrap.style.display = 'block';
+  toggle.checked = !!barberData.is_published;
+  if(barberData.is_published){
+    banner.className = 'status-banner status-banner--stacked live';
+    letterReveal(headline, t('status_live_h'));
+    letterReveal(sub, t('status_live_s'), 120);
   } else {
-    toggleWrap.style.display = 'block';
-    toggle.checked = !!barberData.is_published;
-    if(barberData.is_published){
-      banner.className = 'status-banner status-banner--stacked live';
-      letterReveal(headline, t('status_live_h'));
-      letterReveal(sub, t('status_live_s'), 120);
-    } else {
-      banner.className = 'status-banner status-banner--stacked pending';
-      letterReveal(headline, t('status_unpublished_h'));
-      letterReveal(sub, t('status_unpublished_s'), 120);
-    }
+    banner.className = 'status-banner status-banner--stacked pending';
+    letterReveal(headline, t('status_unpublished_h'));
+    letterReveal(sub, t('status_unpublished_s'), 120);
   }
 }
 
