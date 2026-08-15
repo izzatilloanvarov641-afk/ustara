@@ -195,11 +195,10 @@
 
     <!-- ============ 1 · APPROVALS ============ -->
     <div class="admin-panel active" data-panel="approvals">
-      <h1 data-i18n="title">Pending barbers</h1>
-      <p class="sub" data-i18n="sub">Review new barber profiles before they go live.</p>
-      <div id="pendingArea"></div>
-
-      <h1 data-i18n="loc_title" style="margin-top:52px;">Pending location verification</h1>
+      <!-- Barber profiles are no longer reviewed by hand — they're approved on
+           signup (sql/36-auto-approve-barbers.sql). What's left below is the
+           two checks that actually matter: the location pin and payments. -->
+      <h1 data-i18n="loc_title">Pending location verification</h1>
       <p class="sub" data-i18n="loc_sub">Confirm a barber's pin is a real, findable shop before it appears on the public map.</p>
       <div id="pendingLocationArea"></div>
 
@@ -457,7 +456,6 @@ async function checkAuthorizedAndEnter(user){
   document.getElementById('logoutBtn').style.display = 'inline-block';
   document.getElementById('adminMain').style.display = 'block';
   loadPlatformOverview();
-  loadPending();
   loadPendingLocations();
   loadPayoutSettings();
   loadProofs();
@@ -477,11 +475,11 @@ document.getElementById('adminTabs').addEventListener('click', (e)=>{
 
 // the Approvals tab carries a count badge so you can see there's work waiting
 // without opening it — barbers awaiting approval + pins + payment proofs
-const approvalCounts = { barbers:0, locations:0, proofs:0 };
+const approvalCounts = { locations:0, proofs:0 };
 function updateApprovalsCount(){
   const el = document.getElementById('approvalsCount');
   if(!el) return;
-  const n = approvalCounts.barbers + approvalCounts.locations + approvalCounts.proofs;
+  const n = approvalCounts.locations + approvalCounts.proofs;
   el.textContent = n;
   document.querySelector('.admin-tab[data-tab="approvals"]').classList.toggle('has-pending', n > 0);
 }
@@ -810,56 +808,6 @@ async function loadRevenue(){
         .update({ last_settled_at: new Date().toISOString() })
         .eq('id', btn.dataset.settle);
       if(!error) await loadRevenue();
-    });
-  });
-}
-
-async function loadPending(){
-  const area = document.getElementById('pendingArea');
-  const { data, error } = await supabaseClient
-    .from('barbers')
-    .select('*')
-    .eq('is_approved', false)
-    .eq('is_rejected', false)
-    .order('created_at', { ascending:true });
-
-  approvalCounts.barbers = (data || []).length;
-  updateApprovalsCount();
-  if(error || !data || data.length === 0){
-    area.innerHTML = `<div class="empty-pending">${t('empty_pending')}</div>`;
-    return;
-  }
-
-  area.innerHTML = data.map(b => {
-    const specs = (b.specialties || []).map(s=>`<span class="review-tag">${escapeHtml(localizeSpecialty(s))}</span>`).join('');
-    return `
-      <div class="review-card">
-        <h3>${escapeHtml(b.full_name)}</h3>
-        <div class="review-meta">${escapeHtml(b.district || t('not_set'))}${b.years_experience ? ' · ' + b.years_experience + ' ' + t('years') : ''}</div>
-        ${b.bio ? `<div class="review-bio">${escapeHtml(b.bio)}</div>` : ''}
-        <div class="review-tags">${specs}</div>
-        <div class="review-actions">
-          <button class="btn btn-approve" data-approve="${b.id}">${t('approve')}</button>
-          <button class="btn btn-reject" data-reject="${b.id}">${t('reject')}</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  area.querySelectorAll('[data-approve]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      btn.disabled = true;
-      const { error } = await supabaseClient.from('barbers').update({ is_approved: true, is_rejected: false }).eq('id', btn.dataset.approve);
-      if(error) console.error('Approve failed:', error);
-      loadPending();
-    });
-  });
-  area.querySelectorAll('[data-reject]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      btn.disabled = true;
-      const { error } = await supabaseClient.from('barbers').update({ is_rejected: true, is_published: false }).eq('id', btn.dataset.reject);
-      if(error) console.error('Reject failed:', error);
-      loadPending();
     });
   });
 }

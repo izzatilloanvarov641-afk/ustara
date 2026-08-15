@@ -90,7 +90,6 @@
       <div class="field-group"><label data-i18n="l_email">Email</label><input type="email" id="loginEmail" required></div>
       <div class="field-group"><label data-i18n="l_password">Password</label><input type="password" id="loginPassword" required></div>
       <div class="error-text" id="loginError" data-i18n="err_login">Incorrect email or password.</div>
-      <div class="error-text" id="pendingError" data-i18n="err_pending">Your barber profile hasn't been approved yet. We'll notify you by email once it's ready.</div>
       <button type="submit" class="btn" id="loginBtn" data-i18n="submit_login">Log in</button>
     </form>
   </div>
@@ -104,7 +103,7 @@
       <button type="button" class="active" data-role="barber" data-i18n="role_barber">I'm a barber</button>
       <button type="button" data-role="owner" data-i18n="role_owner">I'm a shop owner</button>
     </div>
-    <p class="barber-note" id="barberNote" data-i18n="barber_note">Barber profiles are reviewed before going live — usually within a day.</p>
+    <p class="barber-note" id="barberNote" data-i18n="barber_note">You can set up straight away — your shop location just needs verifying before you can go live.</p>
     <form id="signupForm">
       <div class="field-row">
         <div class="field-group"><label data-i18n="l_first_name">Legal first name</label><input type="text" id="signupFirstName" required></div>
@@ -134,9 +133,10 @@
     <div class="info-text" id="signupInfo" style="display:block;"></div>
   </div>
 
-  <div style="text-align:center; margin-top:18px;">
-    <a href="client-dashboard.html" id="guestLink" data-i18n="guest_link" style="font-size:13px; color:var(--ink-dim); text-decoration:underline;">Continue as a guest</a>
-  </div>
+  <!-- "Continue as a guest" is parked while clients are waitlist-only — guest
+       browsing only makes sense once clients can actually book again. Restore
+       this block (and the one in app-entry.html) to bring it back:
+       <a href="client-dashboard.html" id="guestLink" data-i18n="guest_link">Continue as a guest</a> -->
 
   <div class="foot-link" id="footLinks">
     <span data-i18n="legal_prefix">By continuing, you agree to our</span>
@@ -155,11 +155,12 @@ const I18N = {
     l_email:"Email", l_password:"Password", l_first_name:"Legal first name", l_last_name:"Legal surname",
     l_phone:"Phone number", l_telegram_label:"Telegram profile", l_optional:"(optional)", l_shop_name:"Shop name",
     role_client:"I'm a client", role_barber:"I'm a barber", role_owner:"I'm a shop owner",
-    barber_note:"Barber profiles are reviewed before going live — usually within a day.",
+    barber_note:"You can set up straight away — your shop location just needs verifying before you can go live.",
+    err_email_taken:"That email is already registered.", err_email_taken_login:"Log in instead →",
     err_login:"Incorrect email or password.", err_signup:"Something went wrong. Try again.",
     err_pending:"Your barber profile hasn't been approved yet. We'll notify you by email once it's ready.",
     check_email_client:'Account created — check your email to activate it, then log in.',
-    check_email_barber:'Account created — check your email to activate it. Your profile will also need a quick review before you can log in; we\'ll email you once it\'s approved.',
+    check_email_barber:'Account created — check your email to activate it, then log in.',
     pending_after_signup:"Account created — your barber profile is now pending review. We'll email you once it's approved.",
     submit_login:"Log in", submit_signup:"Create account",
     lang_title:"Choose your language", lang_sub:"You can always change this later in Account settings.",
@@ -170,11 +171,12 @@ const I18N = {
     l_email:"Email", l_password:"Parol", l_first_name:"Ismingiz (hujjatdagidek)", l_last_name:"Familiyangiz (hujjatdagidek)",
     l_phone:"Telefon raqami", l_telegram_label:"Telegram profili", l_optional:"(ixtiyoriy)", l_shop_name:"Do'kon nomi",
     role_client:"Men mijozman", role_barber:"Men sartaroshman", role_owner:"Men do'kon egasiman",
-    barber_note:"Sartarosh profillari faollashtirishdan oldin ko'rib chiqiladi — odatda bir kun ichida.",
+    barber_note:"Darhol sozlashingiz mumkin — faol bo'lish uchun faqat manzilingiz tasdiqlanishi kerak.",
+    err_email_taken:"Bu email allaqachon ro'yxatdan o'tgan.", err_email_taken_login:"Kirish →",
     err_login:"Email yoki parol noto'g'ri.", err_signup:"Xatolik yuz berdi. Qayta urinib ko'ring.",
     err_pending:"Sartarosh profilingiz hali tasdiqlanmagan. Tayyor bo'lganda sizga email orqali xabar beramiz.",
     check_email_client:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng kiring.',
-    check_email_barber:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring. Profilingiz kirishdan oldin qisqacha ko\'rib chiqiladi — tasdiqlangach xabar beramiz.',
+    check_email_barber:'Hisob yaratildi — uni faollashtirish uchun emailingizni tekshiring, so\'ng kiring.',
     pending_after_signup:"Hisob yaratildi — sartarosh profilingiz endi ko'rib chiqilmoqda. Tasdiqlangach sizga email orqali xabar beramiz.",
     submit_login:"Kirish", submit_signup:"Hisob yaratish",
     lang_title:"Tilni tanlang", lang_sub:"Buni keyinroq Hisob sozlamalarida o'zgartirishingiz mumkin.",
@@ -185,11 +187,12 @@ const I18N = {
     l_email:"Email", l_password:"Пароль", l_first_name:"Имя (как в документе)", l_last_name:"Фамилия (как в документе)",
     l_phone:"Номер телефона", l_telegram_label:"Профиль Telegram", l_optional:"(необязательно)", l_shop_name:"Название салона",
     role_client:"Я клиент", role_barber:"Я барбер", role_owner:"Я владелец салона",
-    barber_note:"Профили барберов проверяются перед публикацией — обычно в течение дня.",
+    barber_note:"Можно сразу всё настроить — для публикации нужно лишь подтвердить адрес.",
+    err_email_taken:"Этот email уже зарегистрирован.", err_email_taken_login:"Войти →",
     err_login:"Неверный email или пароль.", err_signup:"Что-то пошло не так. Попробуйте снова.",
     err_pending:"Ваш профиль барбера ещё не подтверждён. Мы сообщим по email, когда всё будет готово.",
     check_email_client:'Аккаунт создан — проверьте почту, чтобы активировать его, затем войдите.',
-    check_email_barber:'Аккаунт создан — проверьте почту, чтобы активировать его. Профиль также пройдёт короткую проверку перед входом — сообщим по email, когда он будет одобрен.',
+    check_email_barber:'Аккаунт создан — проверьте почту, чтобы активировать его, затем войдите.',
     pending_after_signup:"Аккаунт создан — ваш профиль барбера сейчас на проверке. Сообщим по email, когда он будет одобрен.",
     submit_login:"Войти", submit_signup:"Создать аккаунт",
     lang_title:"Выберите язык", lang_sub:"Вы всегда можете изменить это позже в настройках аккаунта.",
@@ -250,13 +253,10 @@ async function redirectByRole(userId, { silent } = {}){
   const { data: client } = await supabaseClient.from('clients').select('id').eq('id', userId).single();
   if(client){ window.location.replace('client-dashboard.html'); return; }
 
-  const { data: barber } = await supabaseClient.from('barbers').select('is_approved').eq('id', userId).single();
-  if(barber){
-    if(barber.is_approved){ window.location.replace('barber-dashboard.html'); return; }
-    await supabaseClient.auth.signOut();
-    if(!silent) document.getElementById('pendingError').style.display = 'block';
-    return;
-  }
+  // barbers are approved on signup now, so there's no pending state to block
+  // login on — the Live toggle in their dashboard is the only gate left
+  const { data: barber } = await supabaseClient.from('barbers').select('id').eq('id', userId).single();
+  if(barber){ window.location.replace('barber-dashboard.html'); return; }
 
   const { data: owner } = await supabaseClient.from('owners').select('id').eq('id', userId).single();
   if(owner){ window.location.replace('owner-dashboard.html'); return; }
@@ -271,9 +271,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   e.preventDefault();
   const btn = document.getElementById('loginBtn');
   const err = document.getElementById('loginError');
-  const pending = document.getElementById('pendingError');
   err.style.display = 'none';
-  pending.style.display = 'none';
   btn.disabled = true; const orig = btn.textContent; btn.textContent = '...';
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -334,6 +332,18 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     return;
   }
 
+  // Supabase deliberately returns success for an email that already has an
+  // account, so nobody can probe which addresses are registered — but it gives
+  // it away with an empty identities array, and it sends no confirmation mail.
+  // Telling the user "check your email" there is a dead end (that's exactly the
+  // trap we hit ourselves), so say plainly that it's already registered.
+  const identities = (authData && authData.user && authData.user.identities) || [];
+  if(!authData.session && identities.length === 0){
+    err.innerHTML = `${t('err_email_taken')} <a href="auth.html" style="color:var(--brass); font-weight:700;">${t('err_email_taken_login')}</a>`;
+    err.style.display = 'block';
+    return;
+  }
+
   afterLangChoice = async ()=>{
     if(authData.session){
       if(signupRole === 'client'){
@@ -346,9 +356,9 @@ document.getElementById('signupForm').addEventListener('submit', async function(
       } else if(signupRole === 'owner'){
         window.location.href = 'owner-dashboard.html';
       } else {
-        await supabaseClient.auth.signOut();
-        showPanel('postlang');
-        document.getElementById('signupInfo').textContent = t('pending_after_signup');
+        // barbers are approved on signup now, so straight into the dashboard —
+        // the Live toggle there is what gates them until their location is verified
+        window.location.href = 'barber-dashboard.html';
       }
     } else {
       showPanel('postlang');
