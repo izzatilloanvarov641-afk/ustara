@@ -402,26 +402,9 @@
   .filter-tab.active{ background:var(--brass); border-color:var(--brass); color:var(--ink); font-weight:600; }
 
   /* ---------- analytics ---------- */
-  .an-tiles{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:28px; }
-  .an-tile{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:18px 20px; }
-  /* square variant: a fixed 2-up grid of 1:1 tiles, icon pinned top-left and
-     the number/label stack pushed to the bottom. Caps at 2 columns on every
-     width so the tiles stay square rather than stretching on desktop. */
-  /* capped rather than fluid: these are 1:1 tiles, so letting them stretch on a
-     wide screen turns each into a huge near-empty square. The cap keeps them at
-     roughly the phone size the design was drawn at, on every viewport. */
-  .an-tiles--square{ grid-template-columns:1fr 1fr; gap:10px; max-width:440px; }
-  .an-tiles--square .an-tile{
-    aspect-ratio:1; border-radius:16px; padding:14px;
-    display:flex; flex-direction:column; justify-content:space-between;
-  }
-  .an-tiles--square .an-tile-icon{ margin-bottom:0; width:30px; height:30px; }
-  .an-tiles--square .an-tile .an-num{ font-size:19px; font-weight:600; }
-  .an-tiles--square .an-tile .an-label{ font-size:10px; font-weight:600; margin-bottom:0; margin-top:1px; }
-  .an-tiles--square .an-tile .an-trend{ font-size:10px; margin-top:2px; }
-  .an-tile .an-label{ font-size:11.5px; color:var(--ink-dim); margin-bottom:6px; }
-  .an-tile .an-num{ font-family:'Space Grotesk', sans-serif; font-size:24px; }
-  .an-tile .an-trend{ font-size:11.5px; margin-top:4px; font-weight:600; }
+  .an-label{ font-size:11.5px; color:var(--ink-dim); margin-bottom:6px; }
+  .an-num{ font-family:'Space Grotesk', sans-serif; font-size:24px; }
+  .an-trend{ font-size:11.5px; margin-top:4px; font-weight:600; }
   .an-tile-icon{
     width:34px; height:34px; border-radius:999px; display:flex; align-items:center; justify-content:center;
     font-size:16px; margin-bottom:12px;
@@ -429,6 +412,98 @@
   .chip-gold{ background:var(--brass-soft); color:var(--ink); }
   .chip-teal{ background:var(--sun); color:var(--ink); }
   .an-trend.up{ color:var(--ok); } .an-trend.down{ color:var(--err); }
+
+  /* ---------- analytics: orbit diagrams ----------
+     Two circular readings replace the flat bar list: concentric arcs for
+     revenue per service (outermost ring = best seller) and a 24-hour clock
+     for busy time. The KPI numbers move underneath as a compact 4-up row. */
+  .an-orbit{ display:grid; grid-template-columns:1fr 320px; gap:12px; }
+  @media (max-width:840px){ .an-orbit{ grid-template-columns:1fr; } }
+  .an-circle-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:24px 26px;
+  }
+  .an-circle-title{ font-family:'Space Grotesk', sans-serif; font-size:15px; margin-bottom:6px; }
+  .an-circle-sub{ font-size:11.5px; color:var(--ink-dim); margin-bottom:10px; }
+
+  /* --- rings --- */
+  .an-rings{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; }
+  .an-rings-svg{ display:block; transform:rotate(-90deg); flex-shrink:0; }  /* start at 12 o'clock */
+  .an-ring-seg{ animation:ringDraw 1.1s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes ringDraw{ from{ stroke-dashoffset:var(--from); } }
+  .an-legend{ flex:1; min-width:180px; display:flex; flex-direction:column; gap:2px; }
+  .an-legend-row{
+    display:flex; align-items:center; gap:10px; padding:8px 0;
+    border-bottom:1px solid var(--line); font-size:13px;
+  }
+  .an-legend-row:last-of-type{ border-bottom:none; }
+  .an-legend-dot{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .an-legend-name{ flex:1; }
+  .an-legend-amt{ font-weight:600; }
+  .an-legend-total{
+    margin-top:14px; padding-top:12px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .an-legend-total span:first-child{ font-size:12px; color:var(--ink-dim); }
+  .an-legend-total span:last-child{ font-family:'Space Grotesk', sans-serif; font-size:20px; color:#96701A; }
+
+  /* --- 24-hour clock --- */
+  .an-clock-card{ display:flex; flex-direction:column; align-items:center; }
+  .an-clock-card .an-circle-title,
+  .an-clock-card .an-circle-sub{ align-self:flex-start; }
+  .an-clock{ position:relative; width:248px; height:248px; margin-top:6px; max-width:100%; }
+  .an-clock-ring{ position:absolute; inset:64px; border-radius:50%; border:1px dashed var(--line); }
+  .an-clock-spokes{ position:absolute; left:50%; top:50%; width:100%; height:100%; transform:translate(-50%,-50%); }
+  /* the stem is the rotating arm; the 62px of it below the bar is what keeps
+     the middle of the dial clear for the peak-hour readout */
+  .an-spoke{ position:absolute; left:50%; bottom:50%; margin-left:-3px; width:6px; transform-origin:50% 100%; }
+  .an-spoke i{
+    position:absolute; top:0; left:0; width:6px; border-radius:3px; display:block;
+    animation:spokeRise .65s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes spokeRise{ from{ height:0; opacity:0; } }
+  .an-clock-hand{ position:absolute; inset:0; animation:sweepHand 9s linear infinite; }
+  .an-clock-hand i{
+    position:absolute; left:50%; top:0; bottom:50%; width:2px; margin-left:-1px; display:block;
+    background:linear-gradient(to bottom, rgba(169,219,58,0), var(--brass));
+  }
+  @keyframes sweepHand{ to{ transform:rotate(360deg); } }
+  .an-clock-centre{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; pointer-events:none;
+  }
+  .an-clock-disc{ position:absolute; width:104px; height:104px; border-radius:50%; background:var(--surface); }
+  .an-clock-peak{ position:relative; font-family:'Space Grotesk', sans-serif; font-size:22px; }
+  .an-clock-cuts{ position:relative; font-size:10.5px; color:var(--ink-dim); }
+  .an-clock-dot{
+    position:relative; width:8px; height:8px; border-radius:50%; background:var(--brass);
+    margin-top:6px; animation:pulseDot 2.2s ease-in-out infinite;
+  }
+  @keyframes pulseDot{ 50%{ transform:scale(1.35); opacity:.35; } }
+  .an-dial{ position:absolute; font-family:'IBM Plex Mono', monospace; font-size:10px; color:var(--ink-dim); }
+  .an-dial-0 { top:-2px;    left:50%;  transform:translateX(-50%); }
+  .an-dial-6 { right:-6px;  top:50%;   transform:translateY(-50%); }
+  .an-dial-12{ bottom:-2px; left:50%;  transform:translateX(-50%); }
+  .an-dial-18{ left:-6px;   top:50%;   transform:translateY(-50%); }
+  .an-clock-foot{
+    margin-top:auto; padding-top:16px; width:100%;
+    display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-dim);
+  }
+
+  /* --- KPI row under the diagrams --- */
+  .an-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:12px; margin-bottom:28px; }
+  @media (max-width:700px){ .an-kpis{ grid-template-columns:1fr 1fr; } }
+  .an-kpi{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:14px 16px; display:flex; align-items:center; gap:12px;
+  }
+  .an-kpi .an-tile-icon{ width:30px; height:30px; margin-bottom:0; flex-shrink:0; }
+  .an-kpi .an-num{ font-family:'Space Grotesk', sans-serif; font-size:17px; }
+  .an-kpi .an-label{ font-size:10px; font-weight:600; color:var(--ink-dim); margin-bottom:0; }
+  .an-kpi .an-trend{ font-size:10px; margin-top:1px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .an-ring-seg, .an-spoke i, .an-clock-hand, .an-clock-dot{ animation:none !important; }
+  }
   /* ---------- square card grids (bookings + clients) ---------- */
   .card-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:440px; }
   .sq-card{
@@ -467,11 +542,6 @@
     border-radius:50%; font-size:16px; color:var(--ink-dim); cursor:pointer; line-height:1;
   }
   .bd-modal .booking-row{ border:none; padding:0; background:none; }
-
-  .an-svc-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
-  .an-svc-row:last-child{ border-bottom:none; }
-  .an-svc-row .an-svc-bar{ flex:1; height:6px; background:var(--surface-alt); border-radius:4px; margin:0 14px; position:relative; overflow:hidden; }
-  .an-svc-row .an-svc-bar::after{ content:''; position:absolute; left:0; top:0; bottom:0; width:var(--pct,0%); background:var(--brass); border-radius:4px; }
 
   /* ---------- onboarding checklist ---------- */
   .onboarding-card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:22px 24px; margin-bottom:28px; }
@@ -701,8 +771,23 @@
       </div>
       <div id="anRangeLabel" style="font-size:12.5px; color:var(--ink-dim); margin-bottom:20px;"></div>
 
-      <div class="an-tiles an-tiles--square">
-        <div class="an-tile reveal">
+      <div class="an-orbit">
+        <div class="an-circle-card reveal">
+          <div class="an-circle-title" data-i18n="an_revenue_by_service">Revenue by service</div>
+          <div class="an-circle-sub" data-i18n="an_svc_ring_sub">Each ring is one service — a full sweep is your best seller.</div>
+          <div class="an-rings" id="anServiceRings"></div>
+        </div>
+
+        <div class="an-circle-card an-clock-card reveal">
+          <div class="an-circle-title" data-i18n="an_hours_clock">Busiest hours</div>
+          <div class="an-circle-sub" id="anClockSub"></div>
+          <div class="an-clock" id="anHoursClock"></div>
+          <div class="an-clock-foot" id="anClockFoot"></div>
+        </div>
+      </div>
+
+      <div class="an-kpis">
+        <div class="an-kpi reveal">
           <span class="an-tile-icon icon-chip lime ic-coin">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"></path></svg>
           </span>
@@ -712,7 +797,7 @@
             <div class="an-trend" id="anPeriodTrend"></div>
           </div>
         </div>
-        <div class="an-tile reveal">
+        <div class="an-kpi reveal">
           <span class="an-tile-icon icon-chip sky ic-cal">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M3 10h18M8 2v4M16 2v4"></path></svg>
           </span>
@@ -721,7 +806,7 @@
             <div class="an-label" data-i18n="an_bookings_count">Bookings</div>
           </div>
         </div>
-        <div class="an-tile reveal">
+        <div class="an-kpi reveal">
           <span class="an-tile-icon icon-chip sun ic-star">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#0C0E14" stroke="none"><path d="m12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
           </span>
@@ -730,7 +815,7 @@
             <div class="an-label" data-i18n="an_avg_rating">Average rating</div>
           </div>
         </div>
-        <div class="an-tile reveal">
+        <div class="an-kpi reveal">
           <span class="an-tile-icon icon-chip coral ic-rebook">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2"><path d="M17 1l4 4-4 4"></path><path d="M3 11V9a4 4 0 014-4h14"></path><path d="M7 23l-4-4 4-4"></path><path d="M21 13v2a4 4 0 01-4 4H3"></path></svg>
           </span>
@@ -741,14 +826,8 @@
         </div>
       </div>
 
-      <div class="section-title"><span data-i18n="an_revenue_by_service">Revenue by service</span></div>
-      <div class="card" style="padding:8px 26px;" id="anServiceBreakdown"></div>
-
       <div class="section-title"><span data-i18n="an_revenue_chart">Revenue by week</span></div>
       <div class="card" style="padding:20px;"><div id="anRevenueChart"></div></div>
-
-      <div class="section-title" style="margin-top:24px;"><span data-i18n="an_hours_chart">Busiest hours</span></div>
-      <div class="card" style="padding:20px;"><div id="anHoursChart"></div></div>
     </div>
 
     <!-- ============ PROFILE ============ -->
@@ -1056,6 +1135,9 @@ const I18N = {
     an_clients_title:"Clients", an_new_clients:"New", an_returning_clients:"Returning",
     an_avg_rating:"Average rating", an_reviews_count:"Reviews", an_no_reviews:"No reviews yet",
     an_revenue_by_service:"Revenue by service", an_no_service_revenue:"No completed bookings in this period yet.",
+    an_svc_ring_sub:"Each ring is one service — a full sweep is your best seller.", an_svc_other:"Other",
+    an_total:"Total", an_hours_clock:"Busiest hours", an_hours_clock_sub:"24 hours around the dial · peak {h}",
+    an_quietest:"Quietest", an_open_hours:"Open", an_cuts:"cuts",
     an_other_title:"Other", an_total_bookings:"Total bookings", an_peak_hour:"Peak hour", an_peak_day:"Peak day",
     an_total_revenue:"Total revenue (all time)",
     telegram_title:"Telegram alerts", telegram_sub_barber:"Get a Telegram message the moment a client books, cancels, or a reminder is due.",
@@ -1161,6 +1243,9 @@ const I18N = {
     an_clients_title:"Mijozlar", an_new_clients:"Yangilar", an_returning_clients:"Qaytganlar",
     an_avg_rating:"O'rtacha reyting", an_reviews_count:"Izohlar", an_no_reviews:"Hali izohlar yo'q",
     an_revenue_by_service:"Xizmatlar bo'yicha daromad", an_no_service_revenue:"Bu davrda bajarilgan bandlar yo'q.",
+    an_svc_ring_sub:"Har bir halqa — bitta xizmat, to'liq halqa eng ko'p sotilgani.", an_svc_other:"Boshqa",
+    an_total:"Jami", an_hours_clock:"Eng band soatlar", an_hours_clock_sub:"Sutkaning 24 soati · eng band {h}",
+    an_quietest:"Eng tinch", an_open_hours:"Ish vaqti", an_cuts:"soch olish",
     an_other_title:"Boshqa", an_total_bookings:"Jami yozuvlar", an_peak_hour:"Avj soat", an_peak_day:"Avj kun",
     an_total_revenue:"Umumiy daromad (hammasi)",
     telegram_title:"Telegram xabarnomalari", telegram_sub_barber:"Mijoz band qilganda, bekor qilganda yoki eslatma vaqti kelganda Telegramda xabar oling.",
@@ -1266,6 +1351,9 @@ const I18N = {
     an_clients_title:"Клиенты", an_new_clients:"Новые", an_returning_clients:"Вернувшиеся",
     an_avg_rating:"Средний рейтинг", an_reviews_count:"Отзывы", an_no_reviews:"Отзывов пока нет",
     an_revenue_by_service:"Доход по услугам", an_no_service_revenue:"В этом периоде нет завершённых записей.",
+    an_svc_ring_sub:"Каждое кольцо — одна услуга, полное кольцо — лидер продаж.", an_svc_other:"Другое",
+    an_total:"Всего", an_hours_clock:"Самые загруженные часы", an_hours_clock_sub:"24 часа по кругу · пик {h}",
+    an_quietest:"Тише всего", an_open_hours:"Работа", an_cuts:"стрижек",
     an_other_title:"Другое", an_total_bookings:"Всего записей", an_peak_hour:"Пиковый час", an_peak_day:"Пиковый день",
     an_total_revenue:"Общий доход (за всё время)",
     telegram_title:"Уведомления в Telegram", telegram_sub_barber:"Получайте сообщение в Telegram, как только клиент забронирует, отменит запись или наступит время напоминания.",
@@ -1949,7 +2037,7 @@ document.getElementById('anPeriodTabs').addEventListener('click', (e)=>{
 });
 
 function renderAnalytics(){
-  document.querySelectorAll('.view[data-view="analytics"] .an-tile.reveal').forEach(el => el.classList.remove('in'));
+  document.querySelectorAll('.view[data-view="analytics"] .reveal').forEach(el => el.classList.remove('in'));
   const completed = bookingsData.filter(b => b.status === 'completed');
   const dateOf = b => new Date(b.completed_at || b.start_time);
   const { start, end, prevStart, prevEnd } = getPeriodRange(currentAnPeriod);
@@ -1988,15 +2076,7 @@ function renderAnalytics(){
     if(b.service_label) svcLabels[key] = b.service_label;
   });
   const svcEntries = Object.entries(svcTotals).sort((a,b)=> b[1]-a[1]);
-  const svcMax = svcEntries.length ? svcEntries[0][1] : 0;
-  const breakdownEl = document.getElementById('anServiceBreakdown');
-  breakdownEl.innerHTML = svcEntries.length
-    ? svcEntries.map(([key, amt])=>{
-        const name = serviceLabel(key) !== key ? serviceLabel(key) : (svcLabels[key] || key);
-        const pct = svcMax ? Math.round(amt/svcMax*100) : 0;
-        return `<div class="an-svc-row"><span>${escapeHtml(name)}</span><span class="an-svc-bar" style="--pct:${pct}%;"></span><span>${formatPrice(amt)}</span></div>`;
-      }).join('')
-    : `<div style="padding:18px 0; color:var(--ink-dim); font-size:13px;">${t('an_no_service_revenue')}</div>`;
+  renderServiceRings(svcEntries, svcLabels);
 
   // repeat-client ("rebook") rate — share of clients who came back more than once
   const clientCounts = {};
@@ -2032,25 +2112,139 @@ function renderAnalytics(){
   }).join('');
   document.getElementById('anRevenueChart').innerHTML = `<svg viewBox="0 0 ${svgW} ${chartH+30}" width="100%" style="max-width:${svgW}px; display:block;">${bars}</svg>`;
 
-  // busiest-hour histogram (0-23h across all non-cancelled bookings)
+  // busiest hours (0-23h across all non-cancelled bookings)
   const hourCounts = new Array(24).fill(0);
   bookingsData.filter(b => b.status !== 'cancelled').forEach(b => {
     hourCounts[new Date(b.start_time).getHours()]++;
   });
-  const maxHour = Math.max(1, ...hourCounts);
-  const hBarW = 14, hGap = 4, hChartH = 100;
-  const hSvgW = 24*(hBarW+hGap);
-  let hBars = hourCounts.map((c,h)=>{
-    const bh = Math.round((c/maxHour) * (hChartH-20));
-    const x = h*(hBarW+hGap);
-    return `
-      <rect x="${x}" y="${hChartH-bh}" width="${hBarW}" height="${Math.max(bh,2)}" rx="3" fill="#141414" opacity="${c ? 0.85 : 0.15}"/>
-      ${h % 3 === 0 ? `<text x="${x+hBarW/2}" y="${hChartH+14}" text-anchor="middle" font-size="9" fill="#6F6F6F" font-family="Inter,sans-serif">${h}h</text>` : ''}
-    `;
-  }).join('');
-  document.getElementById('anHoursChart').innerHTML = `<svg viewBox="0 0 ${hSvgW} ${hChartH+22}" width="100%" style="max-width:${hSvgW}px; display:block;">${hBars}</svg>`;
+  renderHoursClock(hourCounts);
 
   revealNow(document.querySelector('.view[data-view="analytics"]'));
+}
+
+/* ---------- analytics: orbit diagrams ---------- */
+
+// Five fixed rings, outermost first. A full ring is only 3/4 of the circle so
+// the arcs read as arcs rather than closed circles; the gap also gives the
+// round line-caps somewhere to sit. Circumference = 2πr, track = 0.75 × C.
+const AN_RINGS = [
+  { r:100, c:628.3, colour:'#A9DB3A' },
+  { r:82,  c:515.2, colour:'#5B8DEF' },
+  { r:64,  c:402.1, colour:'#FFB84D' },
+  { r:46,  c:289.0, colour:'#FF6A4D' },
+  { r:28,  c:175.9, colour:'#6B6455' }
+];
+
+function renderServiceRings(svcEntries, svcLabels){
+  // more than five services: keep the top four, roll the tail into "Other"
+  let rows = svcEntries.slice(0, AN_RINGS.length).map(([key, amt]) => ({
+    name: serviceLabel(key) !== key ? serviceLabel(key) : (svcLabels[key] || key),
+    amt
+  }));
+  if(svcEntries.length > AN_RINGS.length){
+    rows = svcEntries.slice(0, AN_RINGS.length - 1).map(([key, amt]) => ({
+      name: serviceLabel(key) !== key ? serviceLabel(key) : (svcLabels[key] || key),
+      amt
+    }));
+    rows.push({
+      name: t('an_svc_other'),
+      amt: svcEntries.slice(AN_RINGS.length - 1).reduce((s, e) => s + e[1], 0)
+    });
+  }
+
+  const max = rows.length ? Math.max(...rows.map(r => r.amt)) : 0;
+  const total = rows.reduce((s, r) => s + r.amt, 0);
+
+  const tracks = AN_RINGS.map(ring=>{
+    const track = ring.c * 0.75;
+    return `<circle cx="120" cy="120" r="${ring.r}" fill="none" stroke="var(--surface-alt)" stroke-width="13"
+              stroke-dasharray="${track.toFixed(0)} ${(ring.c - track).toFixed(0)}"></circle>`;
+  }).join('');
+
+  const segs = rows.map((row, i)=>{
+    const ring = AN_RINGS[i];
+    const track = ring.c * 0.75;
+    const len = max ? track * (row.amt / max) : 0;
+    return `<circle class="an-ring-seg" style="--from:${track.toFixed(0)}; animation-delay:${(i*0.08).toFixed(2)}s"
+              cx="120" cy="120" r="${ring.r}" fill="none" stroke="${ring.colour}" stroke-width="13"
+              stroke-linecap="round" stroke-dasharray="${len.toFixed(0)} ${(ring.c - len).toFixed(0)}"></circle>`;
+  }).join('');
+
+  const legend = rows.length
+    ? rows.map((row, i)=>`
+        <div class="an-legend-row">
+          <span class="an-legend-dot" style="background:${AN_RINGS[i].colour};"></span>
+          <span class="an-legend-name">${escapeHtml(row.name)}</span>
+          <span class="an-legend-amt">${formatPrice(row.amt)}</span>
+        </div>`).join('') +
+      `<div class="an-legend-total"><span>${t('an_total')}</span><span>${formatPrice(total)}</span></div>`
+    : `<div style="padding:18px 0; color:var(--ink-dim); font-size:13px;">${t('an_no_service_revenue')}</div>`;
+
+  document.getElementById('anServiceRings').innerHTML = `
+    <svg class="an-rings-svg" viewBox="0 0 240 240" width="230" height="230">${tracks}${segs}</svg>
+    <div class="an-legend">${legend}</div>`;
+}
+
+function renderHoursClock(hourCounts){
+  const max = Math.max(...hourCounts);
+  const pad = h => String(h).padStart(2,'0') + ':00';
+
+  // heat ramp — a bar's colour says how busy that hour is relative to the peak
+  const colourFor = (count)=>{
+    if(!count) return 'var(--line)';
+    const ratio = count / max;
+    if(ratio <= 0.35) return '#C9DE8F';
+    if(ratio <= 0.55) return '#B9D95E';
+    if(ratio <= 0.75) return '#A9DB3A';
+    if(ratio <= 0.90) return '#8FBF2A';
+    return '#7C9E22';
+  };
+
+  const spokes = hourCounts.map((count, h)=>{
+    const bar = max ? Math.round(6 + (count / max) * 54) : 6;
+    return `<div class="an-spoke" style="height:${62 + bar}px; transform:rotate(${h*15}deg);">
+              <i style="height:${bar}px; background:${colourFor(count)}; animation-delay:${(h*0.045).toFixed(3)}s"></i>
+            </div>`;
+  }).join('');
+
+  document.getElementById('anHoursClock').innerHTML = `
+    <div class="an-clock-ring"></div>
+    <div class="an-clock-hand"><i></i></div>
+    <div class="an-clock-spokes">${spokes}</div>
+    <div class="an-clock-centre">
+      <div class="an-clock-disc"></div>
+      <div class="an-clock-peak">${max ? pad(hourCounts.indexOf(max)) : '—'}</div>
+      <div class="an-clock-cuts">${max ? max + ' ' + t('an_cuts') : ''}</div>
+      <div class="an-clock-dot"></div>
+    </div>
+    <span class="an-dial an-dial-0">00</span>
+    <span class="an-dial an-dial-6">06</span>
+    <span class="an-dial an-dial-12">12</span>
+    <span class="an-dial an-dial-18">18</span>`;
+
+  document.getElementById('anClockSub').textContent =
+    t('an_hours_clock_sub').replace('{h}', max ? pad(hourCounts.indexOf(max)) : '—');
+
+  // quietest = the least busy hour the barber actually works, not 04:00
+  const openHours = hourCounts
+    .map((count, h) => ({ count, h }))
+    .filter(x => x.count > 0);
+  const quietest = openHours.length
+    ? openHours.reduce((a, b) => b.count < a.count ? b : a).h
+    : null;
+
+  // opening range comes from the saved availability blocks, so the footer
+  // matches what the barber set in Working hours
+  let openLabel = '—';
+  if(availabilityData.length){
+    const starts = availabilityData.map(b => b.start).sort();
+    const ends = availabilityData.map(b => b.end).sort();
+    openLabel = starts[0].slice(0,2) + '–' + ends[ends.length-1].slice(0,2);
+  }
+
+  document.getElementById('anClockFoot').innerHTML =
+    `<span>${t('an_quietest')} ${quietest === null ? '—' : pad(quietest)}</span>` +
+    `<span>${t('an_open_hours')} ${openLabel}</span>`;
 }
 
 /* ---------- profile ---------- */
