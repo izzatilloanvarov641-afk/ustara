@@ -1503,6 +1503,37 @@ async function init(){
   }
 }
 
+// A barber's profile row is normally created the moment the account is, by the
+// on_auth_user_created trigger (sql/08). That trigger deliberately swallows
+// every error so a profile hiccup can never block account creation — which
+// means "account exists but profile row doesn't" is a state we can land in with
+// no trace. It stranded a real signup arriving from an email confirmation link.
+//
+// So rather than dead-end on "contact support", rebuild the row from the
+// metadata the account was created with. The "Barbers can insert own profile"
+// policy already allows exactly this (auth.uid() = id). Returns the new row, or
+// null if this user isn't a barber at all.
+async function recoverMissingProfile(user){
+  // wrong dashboard for this account? send them to the right one instead
+  const { data: client } = await supabaseClient.from('clients').select('id').eq('id', user.id).maybeSingle();
+  if(client){ window.location.replace('client-dashboard.html'); return 'redirected'; }
+  const { data: owner } = await supabaseClient.from('owners').select('id').eq('id', user.id).maybeSingle();
+  if(owner){ window.location.replace('owner-dashboard.html'); return 'redirected'; }
+
+  const meta = user.user_metadata || {};
+  if(meta.role && meta.role !== 'barber') return null;
+
+  const { data: created, error } = await supabaseClient.from('barbers').insert([{
+    id: user.id,
+    full_name: meta.full_name || '',
+    phone: meta.phone || '',
+    district: meta.district || null,
+    bio: meta.bio || null
+  }]).select().single();
+  if(error){ console.error('Profile recovery failed:', error); return null; }
+  return created;
+}
+
 async function initInner(){
   const { data: sessionData } = await supabaseClient.auth.getSession();
   if(!sessionData.session){
@@ -1511,10 +1542,16 @@ async function initInner(){
   }
   const userId = sessionData.session.user.id;
 
-  const { data: barber, error } = await supabaseClient.from('barbers').select('*').eq('id', userId).single();
-  if(error || !barber){
-    document.querySelector('main').innerHTML = '<p style="padding:40px;">Could not load your profile. Please contact support.</p>';
-    return;
+  let { data: barber } = await supabaseClient.from('barbers').select('*').eq('id', userId).maybeSingle();
+  if(!barber){
+    barber = await recoverMissingProfile(sessionData.session.user);
+    if(barber === 'redirected') return;
+    if(!barber){
+      document.querySelector('main').innerHTML =
+        '<p style="padding:40px;">We couldn\'t open a barber profile for this account. ' +
+        'If you signed up as a client, use the client app — otherwise please contact support.</p>';
+      return;
+    }
   }
   barberData = barber;
   selectedSpecialties = (barber.specialties || []).map(s => SPECIALTIES_EN.indexOf(s)).filter(i => i !== -1);
