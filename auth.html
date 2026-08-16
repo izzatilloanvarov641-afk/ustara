@@ -308,13 +308,18 @@ document.getElementById('signupForm').addEventListener('submit', async function(
   const telegram = document.getElementById('signupTelegram').value.trim();
   const shopName = document.getElementById('signupShopName').value.trim();
 
-  // Where the confirmation link drops them after they tap it in the email.
-  // Clients land straight in their dashboard; barbers and shop owners go to the
-  // landing page, since their profile still needs approval before the dashboard
-  // is much use. Built from the current origin so the same code works on
+  // Where the confirmation link drops them after they tap it in the email:
+  // each role's own dashboard. The link carries the auth tokens in its hash and
+  // supabase-js on the landing page picks the session up automatically, so they
+  // arrive already logged in. (Barbers used to go to the landing page while
+  // profiles needed approval; approval is gone, so the dashboard is usable
+  // immediately.) Built from the current origin so the same code works on
   // localhost and on ustara.org — both must be allow-listed under
   // Supabase → Authentication → URL Configuration → Redirect URLs.
-  const confirmLanding = signupRole === 'client' ? 'client-dashboard.html' : 'index.html';
+  const confirmLanding =
+    signupRole === 'client' ? 'client-dashboard.html' :
+    signupRole === 'owner'  ? 'owner-dashboard.html'  :
+                              'barber-dashboard.html';
   const { data: authData, error: authError } = await supabaseClient.auth.signUp({
     email, password,
     options: {
