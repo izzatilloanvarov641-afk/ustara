@@ -294,9 +294,9 @@
     <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-blue">🌐</span><span data-i18n="language_title">Language</span></span></div>
     <div class="info-card" style="padding:18px 20px;">
       <div class="lang-row" id="langSwitch">
-        <button type="button" class="lang-btn" data-lang="en">EN</button>
         <button type="button" class="lang-btn" data-lang="uz">UZ</button>
         <button type="button" class="lang-btn" data-lang="ru">RU</button>
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
       </div>
     </div>
 
@@ -402,7 +402,7 @@ const I18N = {
   }
 };
 
-let currentLang = I18N[localStorage.getItem('ustara_lang')] ? localStorage.getItem('ustara_lang') : 'en';
+let currentLang = I18N[localStorage.getItem('ustara_lang')] ? localStorage.getItem('ustara_lang') : 'uz';
 function t(key){ return I18N[currentLang][key]; }
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '0 UZS'; }

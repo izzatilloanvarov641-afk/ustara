@@ -884,9 +884,9 @@
 
     <div class="section-title" style="margin-top:30px;"><span class="st-left"><span class="title-chip chip-teal icon-chip sun"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#0C0E14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path></svg></span><span data-i18n="language_title">Language</span></span></div>
     <div class="lang-row" id="langSwitch">
-      <button class="lang-btn active" data-lang="en">EN</button>
-      <button class="lang-btn" data-lang="uz">UZ</button>
+      <button class="lang-btn active" data-lang="uz">UZ</button>
       <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="en">EN</button>
     </div>
 
     <button class="logout-btn" id="logoutBtn" data-i18n="logout">Log out</button>
@@ -1213,7 +1213,7 @@ const I18N = {
 };
 
 const _storedLang = localStorage.getItem('ustara_lang');
-let currentLang = ['en','uz','ru'].includes(_storedLang) ? _storedLang : 'en';
+let currentLang = ['en','uz','ru'].includes(_storedLang) ? _storedLang : 'uz';
 let clientData = null;
 let userEmail = '';
 let bookingsData = [];

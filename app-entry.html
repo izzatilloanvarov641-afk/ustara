@@ -164,8 +164,7 @@ const I18N = {
 };
 
 const storedLang = localStorage.getItem('ustara_lang');
-const browserLang = (navigator.language || 'en').slice(0,2);
-const lang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
+const lang = I18N[storedLang] ? storedLang : 'uz';
 const dict = I18N[lang];
 document.getElementById('launchPillText').textContent = dict.launch;
 document.getElementById('heroTitle').innerHTML = dict.heroTitle;
@@ -176,7 +175,8 @@ document.getElementById('prop1').textContent = dict.prop1;
 document.getElementById('prop2').textContent = dict.prop2;
 document.getElementById('prop3').textContent = dict.prop3;
 document.getElementById('signupLink').textContent = dict.signup;
-document.getElementById('loginLink').textContent = dict.login;
+document.getElementById('loginLink').textContent = dict.login;
+
 document.getElementById('termsLink').textContent = dict.terms;
 document.getElementById('privacyLink').textContent = dict.privacy;
 document.getElementById('installBtnText').textContent = dict.install;

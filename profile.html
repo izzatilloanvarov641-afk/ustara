@@ -301,8 +301,7 @@ const T = {
        foot_terms:"Условия", foot_privacy:"Конфиденциальность" }
 };
 const storedLang = localStorage.getItem('ustara_lang');
-const browserLang = (navigator.language || 'en').slice(0,2);
-const lang = T[storedLang] ? storedLang : (T[browserLang] ? browserLang : 'en');
+const lang = T[storedLang] ? storedLang : 'uz';
 function t(k){ return T[lang][k]; }
 document.getElementById('footTermsLink').textContent = t('foot_terms');
 document.getElementById('footPrivacyLink').textContent = t('foot_privacy');

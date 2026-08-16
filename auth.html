@@ -123,9 +123,11 @@
     <h1 data-i18n="lang_title">Choose your language</h1>
     <p data-i18n="lang_sub">You can always change this later in Account settings.</p>
     <div class="lang-options">
-      <button type="button" class="lang-option" data-lang="en">English <span class="native">EN</span></button>
+      <!-- All three offered here: this is the one place someone picks English,
+           and their choice carries into the dashboard. -->
       <button type="button" class="lang-option" data-lang="uz">O'zbekcha <span class="native">UZ</span></button>
       <button type="button" class="lang-option" data-lang="ru">Русский <span class="native">RU</span></button>
+      <button type="button" class="lang-option" data-lang="en">English <span class="native">EN</span></button>
     </div>
   </div>
 
@@ -201,9 +203,11 @@ const I18N = {
 };
 
 const params = new URLSearchParams(window.location.search);
+// Uzbek is the default rather than the browser's language: almost everyone
+// here arrives with a Russian or English browser locale, which is a poor guess
+// at what they'd rather read. A stored preference still wins.
 const storedLang = localStorage.getItem('ustara_lang');
-const browserLang = (navigator.language || 'en').slice(0,2);
-const currentLang = I18N[storedLang] ? storedLang : (I18N[browserLang] ? browserLang : 'en');
+const currentLang = I18N[storedLang] ? storedLang : 'uz';
 // Clients are waitlist-only for now — they join from the landing page instead
 // of creating an account. Flip this back to true (and restore the client button
 // in #roleToggle) to reopen client sign-up.

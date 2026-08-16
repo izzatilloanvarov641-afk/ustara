@@ -363,8 +363,8 @@ const I18N = {
     stat_bookings_completed:"Завершено записей", stat_no_shows:"Не пришли" }
 };
 
-const browserLang = (navigator.language || 'en').slice(0,2);
-const currentLang = I18N[browserLang] ? browserLang : 'en';
+// founder-only screen, so this one stays on English regardless of locale
+const currentLang = 'en';
 let signupMode = false;
 
 function t(key){ return I18N[currentLang][key]; }

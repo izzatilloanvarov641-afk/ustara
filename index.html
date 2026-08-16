@@ -271,8 +271,11 @@ h3{ font-size:1.25rem; font-weight:600; }
         <a href="auth.html?role=barber" data-i18n="nav_login_barber">Barber login</a>
       </div>
       <div class="lang-switch" id="langSwitch">
-        <button type="button" data-lang="en" class="active">EN</button>
-        <button type="button" data-lang="uz">UZ</button>
+        <!-- Public site is Uzbek and Russian only. English stays in the
+             dictionaries and is still offered during signup, so a barber who
+             picks it keeps an English dashboard — it just isn't a language we
+             put in front of visitors in Tashkent. -->
+        <button type="button" data-lang="uz" class="active">UZ</button>
         <button type="button" data-lang="ru">RU</button>
       </div>
       <a href="#get-started" class="btn btn--ink btn--sm nav__cta" data-i18n="nav_cta">Join waitlist</a>
@@ -957,7 +960,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
   if(barber){ window.location.replace('barber-dashboard.html'); return; }
 })();
 
-let currentLang = 'en';
+let currentLang = 'uz';
 // the dashboards all have this helper; the landing page needed it once the
 // waitlist form started producing runtime messages rather than static copy
 function t(key){
@@ -986,8 +989,11 @@ document.getElementById('langSwitch').addEventListener('click', (e)=>{
   if(btn){ applyLang(btn.dataset.lang); localStorage.setItem('ustara_lang', btn.dataset.lang); }
 });
 
+// Uzbek is the default. A stored preference still wins, except English —
+// someone who set English inside the app shouldn't land on an English public
+// page whose switcher is UZ/RU only and offers no way back.
 const storedLang = localStorage.getItem('ustara_lang');
-applyLang(I18N[storedLang] ? storedLang : 'en');
+applyLang(storedLang === 'ru' ? 'ru' : 'uz');
 
 /* ---------- waitlist ---------- */
 // Anyone can insert (public form); only the founder can read the list back —
