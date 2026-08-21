@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="push.js"></script>
 <style>
   :root{
     --bg:#F6F1E4; --surface:#ECE5D2; --surface-alt:#E3DAC4; --line:#D8CFB8;
@@ -543,6 +544,32 @@
   }
   .bd-modal .booking-row{ border:none; padding:0; background:none; }
 
+  /* ---------- inquiries + push opt-in ---------- */
+  .inquiry-card{
+    background:var(--surface); border:1px solid var(--brass); border-radius:16px;
+    padding:16px 18px; margin-bottom:12px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .inquiry-card .iq-dot{ width:9px; height:9px; border-radius:50%; background:var(--brass); flex-shrink:0; }
+  .inquiry-card .iq-main{ flex:1; min-width:180px; }
+  .inquiry-card .iq-title{ font-weight:700; font-size:13.5px; }
+  .inquiry-card .iq-sub{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .inquiry-card .iq-actions{ display:flex; gap:8px; }
+  .iq-accept{ background:var(--brass); color:var(--ink); border:none; border-radius:10px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .iq-decline{ background:none; border:1px solid var(--err); color:var(--err); border-radius:10px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit; }
+  .iq-actions button:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .push-prompt{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:14px 16px; margin-bottom:12px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .push-prompt__icon img{ border-radius:9px; display:block; }
+  .push-prompt__text{ flex:1; min-width:180px; }
+  .push-prompt__text strong{ display:block; font-size:13.5px; }
+  .push-prompt__text span{ font-size:12px; color:var(--ink-dim); }
+  .push-prompt__actions{ display:flex; gap:8px; }
+  .push-prompt__enable{ background:var(--brass); color:var(--ink); border:none; border-radius:10px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .push-prompt__later{ background:none; border:1px solid var(--line); color:var(--ink-dim); border-radius:10px; padding:9px 14px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+
   /* ---------- onboarding checklist ---------- */
   .onboarding-card{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:22px 24px; margin-bottom:28px; }
   .onboarding-eyebrow{ font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:4px; }
@@ -732,6 +759,12 @@
           </div>
         </div>
       </div>
+
+      <!-- Inquiries: the barber-side inbox. A booking now raises a notification
+           addressed to the barber (sql/38), and it can be answered from here
+           without hunting through the Bookings list. -->
+      <div id="pushPromptSlot"></div>
+      <div id="inquiriesArea"></div>
 
       <div class="status-banner" id="cancellationAlert" style="display:none; background:#F5E9E5; border-color:#E0B8AC; cursor:pointer;">
         <div class="status-dot" style="background:var(--err);"></div>
@@ -1106,6 +1139,8 @@ const I18N = {
     an_period_revenue:"Period revenue", an_bookings_count:"Bookings", an_vs_prev:"vs. previous period",
     an_clients_title:"Clients", an_new_clients:"New", an_returning_clients:"Returning",
     an_avg_rating:"Average rating", an_reviews_count:"Reviews", an_no_reviews:"No reviews yet",
+    inq_title:"New request", inq_someone:"A client", inq_accept:"Accept", inq_decline:"Decline",
+    push_title:"Turn on notifications", push_body:"We'll tell you the moment a new request comes in.", push_enable:"Turn on", push_later:"Later",
     an_revenue_by_service:"Revenue by service", an_no_service_revenue:"No completed bookings in this period yet.",
     an_svc_ring_sub:"Each ring is one service — a full sweep is your best seller.", an_svc_other:"Other",
     an_total:"Total", an_hours_clock:"Busiest hours", an_hours_clock_sub:"24 hours around the dial · peak {h}",
@@ -1214,6 +1249,8 @@ const I18N = {
     an_period_revenue:"Davr daromadi", an_bookings_count:"Yozuvlar", an_vs_prev:"oldingi davrga nisbatan",
     an_clients_title:"Mijozlar", an_new_clients:"Yangilar", an_returning_clients:"Qaytganlar",
     an_avg_rating:"O'rtacha reyting", an_reviews_count:"Izohlar", an_no_reviews:"Hali izohlar yo'q",
+    inq_title:"Yangi so'rov", inq_someone:"Mijoz", inq_accept:"Qabul qilish", inq_decline:"Rad etish",
+    push_title:"Bildirishnomalarni yoqing", push_body:"Yangi so'rov kelishi bilan darhol xabar beramiz.", push_enable:"Yoqish", push_later:"Keyinroq",
     an_revenue_by_service:"Xizmatlar bo'yicha daromad", an_no_service_revenue:"Bu davrda bajarilgan bandlar yo'q.",
     an_svc_ring_sub:"Har bir halqa — bitta xizmat, to'liq halqa eng ko'p sotilgani.", an_svc_other:"Boshqa",
     an_total:"Jami", an_hours_clock:"Eng band soatlar", an_hours_clock_sub:"Sutkaning 24 soati · eng band {h}",
@@ -1322,6 +1359,8 @@ const I18N = {
     an_period_revenue:"Доход за период", an_bookings_count:"Записи", an_vs_prev:"по сравнению с предыдущим периодом",
     an_clients_title:"Клиенты", an_new_clients:"Новые", an_returning_clients:"Вернувшиеся",
     an_avg_rating:"Средний рейтинг", an_reviews_count:"Отзывы", an_no_reviews:"Отзывов пока нет",
+    inq_title:"Новый запрос", inq_someone:"Клиент", inq_accept:"Принять", inq_decline:"Отклонить",
+    push_title:"Включите уведомления", push_body:"Сразу сообщим о новом запросе.", push_enable:"Включить", push_later:"Позже",
     an_revenue_by_service:"Доход по услугам", an_no_service_revenue:"В этом периоде нет завершённых записей.",
     an_svc_ring_sub:"Каждое кольцо — одна услуга, полное кольцо — лидер продаж.", an_svc_other:"Другое",
     an_total:"Всего", an_hours_clock:"Самые загруженные часы", an_hours_clock_sub:"24 часа по кругу · пик {h}",
@@ -1666,6 +1705,10 @@ async function initInner(){
   renderBookingsList();
   renderCancellationAlert();
   renderClientsList();
+  loadInquiries();
+  mountPushPrompt(document.getElementById('pushPromptSlot'), supabaseClient, {
+    title: t('push_title'), body: t('push_body'), enable: t('push_enable'), later: t('push_later')
+  });
 
   renderPortfolio(photos || []);
 
@@ -2849,14 +2892,6 @@ function attachBookingActionHandlers(area){
         status:'confirmed',
         ...(depositAmount > 0 ? { deposit_amount: depositAmount, deposit_status: 'pending' } : {})
       }).eq('id', btn.dataset.confirm);
-      if(booking){
-        await supabaseClient.from('notifications').insert([{
-          client_id: booking.client_id, type: 'booking_confirmed', related_booking_id: booking.id,
-          message: depositAmount > 0
-            ? `${barberData.full_name} confirmed your booking for ${formatFriendlyDateTime(booking.start_time)}. Pay a ${formatPrice(depositAmount)} deposit to secure it.`
-            : `${barberData.full_name} confirmed your booking for ${formatFriendlyDateTime(booking.start_time)}.`
-        }]).then(({error}) => { if(error) console.warn('Notification insert failed (non-critical):', error); });
-      }
       await refreshBookings();
     });
   });
@@ -2868,14 +2903,6 @@ function attachBookingActionHandlers(area){
       // paid deposit always owes a refund regardless of timing
       const depositUpdate = booking && booking.deposit_status === 'paid' ? { deposit_status: 'refund_due' } : {};
       await supabaseClient.from('bookings').update({ status:'cancelled', ...depositUpdate }).eq('id', btn.dataset.cancel);
-      if(booking){
-        await supabaseClient.from('notifications').insert([{
-          client_id: booking.client_id, type: 'booking_cancelled_by_barber', related_booking_id: booking.id,
-          message: depositUpdate.deposit_status === 'refund_due'
-            ? `${barberData.full_name} had to cancel your booking for ${formatFriendlyDateTime(booking.start_time)}. Your deposit will be refunded.`
-            : `${barberData.full_name} had to cancel your booking for ${formatFriendlyDateTime(booking.start_time)}.`
-        }]).then(({error}) => { if(error) console.warn('Notification insert failed (non-critical):', error); });
-      }
       await refreshBookings();
     });
   });
@@ -2941,6 +2968,7 @@ async function refreshBookings(){
   renderBookingsList();
   renderCancellationAlert();
   renderClientsList();
+  loadInquiries();
   // if a booking detail modal is open its contents just went stale — re-render
   // it in place (so e.g. confirming swaps the buttons to complete/no-show)
   // rather than closing it out from under the barber mid-task
@@ -2987,6 +3015,90 @@ function renderClientsList(){
       </${tag}>
     `;
   }).join('') + `</div>`;
+}
+
+
+/* ---------- inquiries (barber notification inbox) ----------
+   A booking writes a notification addressed to the barber (sql/38). This
+   surfaces the unread ones on the overview so a new request is answerable in
+   one tap, instead of only appearing as another card in the Bookings list.
+   Answering marks the notification read and reuses the same status update the
+   Bookings list uses, so both stay in agreement. */
+let inquiriesData = [];
+
+async function loadInquiries(){
+  if(!barberData) return;
+  const { data, error } = await supabaseClient
+    .from('notifications')
+    .select('id, type, message, related_booking_id, is_read, created_at')
+    .eq('barber_id', barberData.id)
+    .eq('type', 'booking_inquiry')
+    .eq('is_read', false)
+    .order('created_at', { ascending:false });
+  if(error){ console.warn('Inquiries load failed:', error.message); return; }
+  inquiriesData = data || [];
+  renderInquiries();
+}
+
+function renderInquiries(){
+  const area = document.getElementById('inquiriesArea');
+  if(!area) return;
+
+  // an inquiry whose booking is no longer pending was already answered
+  // elsewhere — don't show a stale Accept/Decline pair for it
+  const live = inquiriesData.filter(n => {
+    const b = bookingsData.find(x => x.id === n.related_booking_id);
+    return b && b.status === 'pending';
+  });
+
+  if(live.length === 0){ area.innerHTML = ''; return; }
+
+  area.innerHTML = live.map(n => {
+    const b = bookingsData.find(x => x.id === n.related_booking_id);
+    const who = (b && (b.client_name || b.guest_name)) || t('inq_someone');
+    const when = b ? formatFriendlyDateTime(b.start_time) : '';
+    const svc = (b && b.service_label) || '';
+    return `
+      <div class="inquiry-card" data-inq="${n.id}">
+        <span class="iq-dot"></span>
+        <div class="iq-main">
+          <div class="iq-title">${t('inq_title')} — ${escapeHtml(who)}</div>
+          <div class="iq-sub">${escapeHtml(svc)}${svc && when ? ' · ' : ''}${escapeHtml(when)}</div>
+        </div>
+        <div class="iq-actions">
+          <button class="iq-decline" data-inq-decline="${n.related_booking_id}" data-nid="${n.id}">${t('inq_decline')}</button>
+          <button class="iq-accept" data-inq-accept="${n.related_booking_id}" data-nid="${n.id}">${t('inq_accept')}</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  area.querySelectorAll('[data-inq-accept]').forEach(btn=>{
+    btn.addEventListener('click', ()=> answerInquiry(btn, btn.dataset.inqAccept, btn.dataset.nid, 'confirmed'));
+  });
+  area.querySelectorAll('[data-inq-decline]').forEach(btn=>{
+    btn.addEventListener('click', ()=> answerInquiry(btn, btn.dataset.inqDecline, btn.dataset.nid, 'cancelled'));
+  });
+}
+
+async function answerInquiry(btn, bookingId, notificationId, status){
+  const card = btn.closest('.inquiry-card');
+  card.querySelectorAll('button').forEach(b => b.disabled = true);
+
+  const update = status === 'confirmed'
+    ? { status:'confirmed' }
+    : { status:'cancelled', cancelled_by:'barber' };
+
+  const { error } = await supabaseClient.from('bookings').update(update).eq('id', bookingId);
+  if(error){
+    console.error('Answering inquiry failed:', error);
+    card.querySelectorAll('button').forEach(b => b.disabled = false);
+    return;
+  }
+  // the client is told by the DB trigger, not from here — one writer only
+  await supabaseClient.from('notifications').update({ is_read:true }).eq('id', notificationId);
+  inquiriesData = inquiriesData.filter(n => n.id !== notificationId);
+  await refreshBookings();
+  renderInquiries();
 }
 
 /* ---------- walk-in booking ---------- */

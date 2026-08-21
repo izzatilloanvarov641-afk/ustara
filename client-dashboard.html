@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="push.js"></script>
 <style>
   :root{
     /* light surfaces — bookings, map, account (Cashly paper) */
@@ -299,6 +300,19 @@
   .empty-state .icon{ font-size:26px; margin:0 auto 14px; width:52px; height:52px; border-radius:50%; background:var(--surface-alt); display:flex; align-items:center; justify-content:center; }
   .empty-state strong{ font-family:'Space Grotesk', sans-serif; font-style:normal; font-weight:600; font-size:18px; color:var(--ink); display:block; margin-bottom:4px; font-weight:400; }
   .empty-state .btn{ display:inline-block; margin-top:16px; background:var(--gold-soft); color:var(--ink); padding:13px 22px; border-radius:var(--r-btn); font-size:13px; font-weight:700; }
+
+  /* push opt-in card — dark home screen, so it borrows the surface colours */
+  .push-prompt{
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px;
+    padding:14px 16px; margin-bottom:14px; display:flex; align-items:center; gap:13px; flex-wrap:wrap;
+  }
+  .push-prompt__icon img{ border-radius:9px; display:block; }
+  .push-prompt__text{ flex:1; min-width:160px; }
+  .push-prompt__text strong{ display:block; font-size:13.5px; color:#F3EFE2; }
+  .push-prompt__text span{ font-size:12px; color:rgba(243,239,226,.66); }
+  .push-prompt__actions{ display:flex; gap:8px; }
+  .push-prompt__enable{ background:var(--gold); color:#12151c; border:none; border-radius:10px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .push-prompt__later{ background:none; border:1px solid rgba(255,255,255,.18); color:rgba(243,239,226,.7); border-radius:10px; padding:9px 14px; font-size:12.5px; cursor:pointer; font-family:inherit; }
 
   .notification-row{
     background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:14px 16px;
@@ -746,6 +760,7 @@
       </button>
     </div>
 
+    <div id="pushPromptSlot"></div>
     <div id="rebookNudge"></div>
 
     <div id="homeBookings">
@@ -1000,6 +1015,7 @@ const I18N = {
     empty_h:"Nothing booked yet", empty_p:"Find a barber and book your first cut.",
     empty_btn:"Browse barbers", rv_name:"Name", rv_phone:"Phone", rv_email:"Email",
     stat_upcoming:"Upcoming", stat_total:"Total visits", confirmed:"confirmed", pending:"pending", cancelled:"cancelled", completed:"completed", no_show:"didn't show up",
+    push_title:"Turn on notifications", push_body:"We'll tell you the moment your barber replies.", push_enable:"Turn on", push_later:"Later",
     favorites_title:"Your favorites", notifications_title:"Notifications", close_label:"Close", no_notifications:"No notifications yet.",
     rebook_nudge:"It's been a while since your last visit with {barber} — ready for another?", rebook_cta:"Book again",
     review_prompt_title:"How was your cut with {barber}?", review_comment_ph:"Leave a comment (optional)",
@@ -1085,6 +1101,7 @@ const I18N = {
     empty_h:"Hozircha bandlar yo'q", empty_p:"Sartaroshni toping va birinchi bandingizni yarating.",
     empty_btn:"Sartaroshlarni ko'rish", rv_name:"Ism", rv_phone:"Telefon", rv_email:"Email",
     stat_upcoming:"Kelgusi", stat_total:"Jami tashriflar", confirmed:"tasdiqlangan", pending:"kutilmoqda", cancelled:"bekor qilingan", completed:"bajarildi", no_show:"kelmadi",
+    push_title:"Bildirishnomalarni yoqing", push_body:"Sartarosh javob berishi bilan darhol xabar beramiz.", push_enable:"Yoqish", push_later:"Keyinroq",
     favorites_title:"Sevimlilaringiz", notifications_title:"Bildirishnomalar", close_label:"Yopish", no_notifications:"Hozircha bildirishnoma yo'q.",
     rebook_nudge:"{barber} bilan oxirgi tashrifingizdan beri vaqt o'tdi — yana borasizmi?", rebook_cta:"Qayta band qilish",
     review_prompt_title:"{barber} bilan soch olish qanday o'tdi?", review_comment_ph:"Izoh qoldiring (ixtiyoriy)",
@@ -1170,6 +1187,7 @@ const I18N = {
     empty_h:"Записей пока нет", empty_p:"Найдите барбера и запишитесь на первую стрижку.",
     empty_btn:"Смотреть барберов", rv_name:"Имя", rv_phone:"Телефон", rv_email:"Email",
     stat_upcoming:"Предстоящие", stat_total:"Всего визитов", confirmed:"подтверждено", pending:"ожидает", cancelled:"отменено", completed:"выполнено", no_show:"не пришёл",
+    push_title:"Включите уведомления", push_body:"Сразу сообщим, когда барбер ответит.", push_enable:"Включить", push_later:"Позже",
     favorites_title:"Ваши избранные", notifications_title:"Уведомления", close_label:"Закрыть", no_notifications:"Уведомлений пока нет.",
     rebook_nudge:"Прошло время с последнего визита к {barber} — не пора ли снова?", rebook_cta:"Записаться снова",
     review_prompt_title:"Как прошла стрижка у {barber}?", review_comment_ph:"Оставьте комментарий (необязательно)",
@@ -1821,6 +1839,9 @@ async function refreshBookings(){
   bookingsData = bookings || [];
   await loadActiveBooking();
   renderHomeBookings();
+  mountPushPrompt(document.getElementById('pushPromptSlot'), supabaseClient, {
+    title: t('push_title'), body: t('push_body'), enable: t('push_enable'), later: t('push_later')
+  });
   renderDashboardTiles();
   renderAllBookings();
   renderRebookNudge();
