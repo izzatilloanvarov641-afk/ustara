@@ -12,7 +12,7 @@
  * The private half lives only in the send-push Edge Function's secrets.
  */
 
-const VAPID_PUBLIC_KEY = 'BBehJYgUtaH2Aqt2bD4WUoJJgGGn6BfJ-QzkJJwGPF_hL9nsrcjqj1VP2rePEto7i4EOcNZb8f3qUwjzeOjo_dg';
+const VAPID_PUBLIC_KEY = 'BCI3gm0EMWZzngW3VP29LPwNjGnqZuMF-4lRYRgHb21IPAALR-y3FdvYOhiB_NOSayNwaSSOt4547bVGpf5LaOc';
 const PUSH_DISMISSED_KEY = 'ustara_push_dismissed';
 
 function pushSupported(){
