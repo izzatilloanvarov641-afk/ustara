@@ -5,262 +5,475 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ustara — Admin</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#141414">
+<meta name="theme-color" content="#f6f1e4">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
-  :root{ --bg:#171614; --bg-alt:#1D1B18; --surface:#221F1B; --line:#34302A; --bone:#F2EDE4; --bone-dim:#A39A8B; --brass:#C9A227; --brass-soft:#E4C25A; --err:#c0392b; --ok:#4a7c59; }
+  :root{
+    --ink:#12151c; --paper:#f6f1e4; --paper-dim:#ece5d2; --line:#d8cfb8;
+    --text:#1c1a14; --text-muted:#6b6455;
+    --lime:#cdff5e; --lime-deep:#a9db3a; --coral:#ff6a4d; --sky:#5b8def; --sun:#ffb84d;
+    --ok:#3d9e2f; --err:#c0392b;
+  }
   *{ margin:0; padding:0; box-sizing:border-box; }
-  body{ background:var(--bg); color:var(--bone); font-family:'Inter', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  body{
+    background:var(--paper); color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
   a{ color:inherit; text-decoration:none; }
-  .wrap{ max-width:820px; margin:0 auto; padding:0 24px; }
-  @media (max-width:640px){ .wrap{ padding:0 18px; } }
+  button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
 
-  nav{ border-bottom:1px solid var(--line); background:rgba(23,22,20,0.9); backdrop-filter:blur(10px); position:sticky; top:0; z-index:10; }
-  nav .inner{ max-width:820px; margin:0 auto; padding:0 24px; height:68px; display:flex; align-items:center; justify-content:space-between; }
-  .logo{ font-family:'Fraunces', serif; font-size:19px; }
-  .logo em{ font-style:italic; color:var(--brass); }
-  .logout-btn{ font-size:13px; color:var(--bone-dim); background:none; border:1px solid var(--line); padding:8px 16px; border-radius:20px; cursor:pointer; font-family:'Inter', sans-serif; }
-  .logout-btn:hover{ border-color:var(--bone-dim); color:var(--bone); }
-
-  main{ padding:44px 0 100px; }
-
-  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:clamp(26px,4vw,34px); margin-bottom:4px; }
-  .sub{ color:var(--bone-dim); font-size:14.5px; margin-bottom:32px; }
-
-  .login-wrap{ display:none; min-height:70vh; align-items:center; justify-content:center; padding:20px; }
+  /* ============ login ============ */
+  .login-wrap{ display:none; min-height:100vh; align-items:center; justify-content:center; padding:24px; }
   .login-wrap.active{ display:flex; }
   .login-card{ width:100%; max-width:380px; }
-  .login-card h1{ font-size:24px; text-align:center; margin-bottom:28px; }
+  .login-card .logo{ font-family:'Space Grotesk', sans-serif; font-size:22px; display:block; text-align:center; margin-bottom:26px; }
+  .login-card .logo em{ font-style:italic; color:var(--lime-deep); }
+  .login-card h1{ font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:24px; text-align:center; margin-bottom:24px; }
   .field-group{ margin-bottom:16px; }
-  label{ display:block; font-size:13px; color:var(--bone-dim); margin-bottom:7px; }
-  input{ width:100%; background:var(--surface); border:1px solid var(--line); color:var(--bone); padding:12px 14px; border-radius:4px; font-size:14px; font-family:'Inter', sans-serif; }
-  input:focus{ outline:none; border-color:var(--brass); }
+  label{ display:block; font-size:13px; color:var(--text-muted); margin-bottom:7px; }
+  input[type=email], input[type=password], input[type=text]{
+    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--text);
+    padding:12px 14px; border-radius:12px; font-size:14px; font-family:inherit;
+  }
+  input:focus{ outline:none; border-color:var(--lime-deep); }
   .error-text{ font-size:12.5px; color:var(--err); margin-top:12px; display:none; text-align:center; }
-  .btn{ padding:12px 22px; border-radius:4px; font-size:13.5px; font-weight:600; cursor:pointer; border:none; }
-  .btn-primary{ background:var(--brass); color:var(--bg); width:100%; padding:13px; margin-top:6px; }
-  .btn-primary:hover{ background:var(--brass-soft); }
-  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
-  .toggle-mode{ text-align:center; font-size:13px; color:var(--bone-dim); margin-top:20px; cursor:pointer; }
-  .toggle-mode span{ color:var(--brass); font-weight:600; }
+  .btn{ padding:13px 22px; border-radius:12px; font-size:13.5px; font-weight:600; }
+  .btn-primary{ background:var(--lime); color:var(--ink); width:100%; margin-top:6px; }
+  .btn-primary:hover{ background:var(--lime-deep); }
+  .btn-primary:disabled{ opacity:.5; cursor:not-allowed; }
+  .toggle-mode{ text-align:center; font-size:13px; color:var(--text-muted); margin-top:20px; cursor:pointer; }
+  .toggle-mode span{ color:var(--lime-deep); font-weight:600; }
 
-  .not-authorized{ display:none; text-align:center; padding:100px 20px; }
+  .not-authorized{ display:none; text-align:center; padding:120px 24px; }
   .not-authorized.active{ display:block; }
-  .not-authorized .icon{ font-size:36px; margin-bottom:18px; }
-  .not-authorized h2{ font-family:'Fraunces', serif; font-size:24px; margin-bottom:10px; }
-  .not-authorized p{ color:var(--bone-dim); font-size:14.5px; }
+  .not-authorized .lock{ font-size:38px; margin-bottom:18px; }
+  .not-authorized h2{ font-family:'Space Grotesk', sans-serif; font-size:24px; margin-bottom:10px; }
+  .not-authorized p{ color:var(--text-muted); font-size:14.5px; }
 
-  .empty-pending{ text-align:center; padding:56px 20px; border:1px dashed var(--line); border-radius:8px; color:var(--bone-dim); font-size:14px; }
+  /* ============ shell ============ */
+  .shell{ display:none; grid-template-columns:220px minmax(0,1fr) 260px; min-height:100vh; }
+  .shell.active{ display:grid; }
 
-  .review-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:22px 24px; margin-bottom:14px; }
-  .review-card h3{ font-family:'Fraunces', serif; font-weight:500; font-size:19px; margin-bottom:4px; }
-  .review-meta{ font-size:12.5px; color:var(--bone-dim); margin-bottom:12px; }
-  .review-bio{ font-size:13.5px; line-height:1.65; color:var(--bone); margin-bottom:14px; }
-  .review-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
-  .review-tag{ font-size:11px; border:1px solid var(--line); color:var(--bone-dim); padding:4px 9px; border-radius:20px; }
-  .review-actions{ display:flex; gap:10px; }
-  .btn-approve{ background:var(--ok); color:var(--bone); padding:10px 20px; font-size:13px; }
-  .btn-approve:hover{ opacity:0.9; }
-  .btn-reject{ background:none; border:1px solid var(--err); color:var(--err); padding:10px 20px; font-size:13px; }
-  .btn-reject:hover{ background:rgba(192,57,43,0.1); }
-  .review-actions button:disabled{ opacity:0.5; cursor:not-allowed; }
+  .sidebar{
+    border-right:1px solid var(--line); background:var(--paper);
+    position:sticky; top:0; height:100vh; display:flex; flex-direction:column; padding:22px 14px 16px;
+  }
+  .sidebar .logo{ font-family:'Space Grotesk', sans-serif; font-size:20px; padding:0 10px 20px; }
+  .sidebar .logo em{ font-style:italic; color:var(--lime-deep); }
+  .nav{ display:flex; flex-direction:column; gap:2px; }
+  .nav-item{
+    display:flex; align-items:center; gap:12px; padding:10px; border-radius:12px;
+    font-size:14px; font-weight:500; color:var(--text-muted); text-align:left; width:100%;
+    transition:background .15s ease, color .15s ease;
+  }
+  .nav-item:hover{ background:var(--paper-dim); color:var(--text); }
+  .nav-item.active{ background:var(--lime); color:var(--ink); font-weight:700; }
+  .nav-item .ico{ width:20px; height:20px; flex-shrink:0; }
+  .nav-count{
+    margin-left:auto; font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600;
+    background:var(--paper-dim); border:1px solid var(--line); border-radius:999px; padding:1px 7px;
+  }
+  .nav-item.active .nav-count{ background:rgba(18,21,28,.14); border-color:transparent; }
+  .nav-count.hot{ background:var(--coral); border-color:var(--coral); color:#fff; }
+  .nudge{
+    margin-top:auto; background:var(--paper-dim); border:1px solid var(--line); border-radius:16px;
+    padding:14px; font-size:12.5px; color:var(--text-muted); line-height:1.5;
+  }
+  .nudge strong{ display:block; color:var(--text); font-family:'Space Grotesk', sans-serif; font-size:13.5px; margin-bottom:4px; }
+  .signout{ text-align:center; font-size:12.5px; color:var(--text-muted); margin-top:14px; text-decoration:underline; }
 
-  .section-title{ font-family:'Fraunces', serif; font-size:19px; font-weight:500; margin:52px 0 18px; }
-  .stat-row{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:24px; }
-  #platformStats{ grid-template-columns:repeat(4, 1fr); }
-  @media (max-width:640px){ .stat-row{ grid-template-columns:1fr; } }
-  .stat-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px; }
-  .stat-num{ font-family:'Fraunces', serif; font-size:28px; color:var(--brass); }
-  .stat-label{ font-size:13px; color:var(--bone-dim); margin-top:4px; }
-  .card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:22px 24px; }
-  .info-row{ display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); }
-  .info-row:last-child{ border-bottom:none; }
-  .empty-state{ text-align:center; padding:56px 20px; border:1px dashed var(--line); border-radius:8px; color:var(--bone-dim); font-size:14px; }
-  .btn-secondary{ background:none; border:1px solid var(--line); color:var(--bone); }
-  .btn-secondary:hover{ border-color:var(--bone-dim); }
-  .save-msg{ font-size:13px; color:var(--ok); margin-top:12px; display:none; }
-
-  .admin-section-label{
-    font-size:11.5px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
-    color:var(--brass); border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:20px;
+  /* ============ main ============ */
+  main{ min-width:0; }
+  .page{ display:none; position:relative; overflow:hidden; padding:44px 0 90px; }
+  .page.active{ display:block; }
+  .page__photo{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .page__photo i{
+    position:absolute; inset:-8% -4%; display:block; background-size:cover; background-position:center 32%;
+    filter:grayscale(.55) sepia(.18) brightness(1.1) contrast(.96); opacity:.26;
+  }
+  .page__photo b{
+    position:absolute; inset:0; display:block;
+    background:linear-gradient(to bottom, var(--paper) 0%, transparent 15%, transparent 85%, var(--paper) 100%);
+  }
+  .page__inner{ position:relative; z-index:1; max-width:880px; margin:0 auto; padding:0 34px; }
+  .eyebrow{
+    display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono', monospace;
+    font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;
+  }
+  .eyebrow i{ width:7px; height:7px; border-radius:50%; display:block; }
+  h1{ font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:clamp(26px,4vw,33px); margin-bottom:6px; }
+  .page-sub{ color:var(--text-muted); font-size:14px; margin-bottom:26px; }
+  .section-title{
+    font-family:'Space Grotesk', sans-serif; font-size:18px; font-weight:500;
+    margin:34px 0 14px; display:flex; align-items:center; gap:10px;
   }
 
-  /* ---------- tabbed sections ----------
-     The admin page had grown into one long scroll mixing approvals, money
-     settings and stats. Three tabs keep each job on its own screen. */
-  .admin-tabs{
-    display:flex; gap:8px; margin-bottom:34px; border-bottom:1px solid var(--line);
-    overflow-x:auto; scrollbar-width:none;
+  .card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:20px 22px; }
+  .chip{
+    width:40px; height:40px; border-radius:999px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
   }
-  .admin-tabs::-webkit-scrollbar{ display:none; }
-  .admin-tab{
-    background:none; border:none; border-bottom:2px solid transparent; color:var(--bone-dim);
-    font-family:'Inter', sans-serif; font-size:13.5px; font-weight:600; padding:12px 16px;
-    cursor:pointer; white-space:nowrap; margin-bottom:-1px; display:flex; align-items:center; gap:8px;
-  }
-  .admin-tab:hover{ color:var(--bone); }
-  .admin-tab.active{ color:var(--brass); border-bottom-color:var(--brass); }
-  .admin-tab .tab-count{
-    background:var(--bg-alt); border:1px solid var(--line); color:var(--bone-dim);
-    font-size:11px; font-weight:700; border-radius:20px; padding:1px 8px; min-width:20px; text-align:center;
-  }
-  .admin-tab.has-pending .tab-count{ background:var(--err); border-color:var(--err); color:#fff; }
-  .admin-panel{ display:none; }
-  .admin-panel.active{ display:block; }
-  .admin-panel > h1:first-child{ margin-top:0; }
+  .chip.lime{ background:var(--lime); } .chip.coral{ background:var(--coral); }
+  .chip.sky{ background:var(--sky); } .chip.sun{ background:var(--sun); }
+  .chip svg{ width:20px; height:20px; }
 
-  /* collapsible "see their names" lists on the analytics tab */
+  .stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+  @media (min-width:720px){ .stat-grid{ grid-template-columns:repeat(4,1fr); } }
+  .stat{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:16px 16px 18px; }
+  .stat .chip{ width:34px; height:34px; margin-bottom:12px; }
+  .stat .chip svg{ width:17px; height:17px; }
+  .stat-num{ font-family:'IBM Plex Mono', monospace; font-size:26px; font-weight:600; line-height:1.1; }
+  .stat-label{ font-size:11.5px; font-weight:600; color:var(--text-muted); margin-top:3px; }
+  .stat-delta{ font-family:'IBM Plex Mono', monospace; font-size:11.5px; font-weight:600; margin-top:6px; }
+  .stat-delta.up{ color:var(--ok); } .stat-delta.down{ color:var(--coral); } .stat-delta.flat{ color:var(--text-muted); }
+
+  /* growth bars */
+  /* stretch, not flex-end: the columns must fill the 150px row so the track's
+     flex:1 has height to give the bars — with flex-end each column shrank to
+     its text and every bar rendered the same 3px stub. */
+  .bars{ display:flex; align-items:stretch; gap:8px; height:150px; margin-top:6px; }
+  .bar-col{ flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; min-width:0; }
+  .bar-track{ flex:1; width:100%; display:flex; align-items:flex-end; }
+  .bar-fill{
+    width:100%; border-radius:7px 7px 3px 3px; background:var(--lime-deep); min-height:3px;
+    animation:barRise .7s cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes barRise{ from{ height:0 !important; opacity:0; } }
+  .bar-label{ font-family:'IBM Plex Mono', monospace; font-size:9.5px; color:var(--text-muted); white-space:nowrap; }
+  .bar-val{ font-family:'IBM Plex Mono', monospace; font-size:11px; font-weight:600; }
+
+  /* heat calendar */
+  .heat{ display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,14px); gap:4px; overflow-x:auto; padding-bottom:4px; }
+  .heat i{ width:14px; height:14px; border-radius:3px; background:var(--paper); border:1px solid var(--line); display:block; }
+  .heat i.l1{ background:#e8f5c4; border-color:#dcecb0; }
+  .heat i.l2{ background:#cdff5e; border-color:#bff03f; }
+  .heat i.l3{ background:var(--lime-deep); border-color:#96c72f; }
+  .heat i.l4{ background:#7c9e22; border-color:#6d8b1e; }
+  .heat-legend{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); margin-top:10px; flex-wrap:wrap; }
+  .heat-legend i{ width:11px; height:11px; border-radius:3px; display:block; border:1px solid var(--line); }
+
+  /* reaction widget */
+  .reaction{ display:flex; align-items:center; gap:16px; }
+  .reaction .face{ font-size:40px; line-height:1; animation:bob 3s ease-in-out infinite; }
+  @keyframes bob{ 50%{ transform:translateY(-7px) rotate(-4deg); } }
+  .reaction .rx-title{ font-family:'Space Grotesk', sans-serif; font-size:15px; margin-bottom:3px; }
+
+  /* review + name rows */
+  .review-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:12px; }
+  .review-card h3{ font-family:'Space Grotesk', sans-serif; font-weight:500; font-size:17px; margin-bottom:3px; }
+  .review-meta{ font-size:12.5px; color:var(--text-muted); margin-bottom:10px; }
+  .review-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .btn-approve{ background:var(--lime); color:var(--ink); padding:9px 18px; border-radius:10px; font-size:13px; font-weight:600; }
+  .btn-reject{ border:1px solid var(--coral); color:var(--coral); padding:9px 18px; border-radius:10px; font-size:13px; font-weight:600; }
+  .review-actions button:disabled{ opacity:.5; cursor:not-allowed; }
+  .empty{ text-align:center; padding:44px 20px; border:1px dashed var(--line); border-radius:16px; color:var(--text-muted); font-size:13.5px; }
+
   .names-toggle{
-    background:none; border:1px solid var(--line); color:var(--bone); border-radius:6px;
-    font-family:'Inter', sans-serif; font-size:13px; font-weight:600; padding:10px 16px; cursor:pointer;
-    display:inline-flex; align-items:center; gap:8px; margin-top:6px;
+    display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--paper);
+    border-radius:10px; font-size:13px; font-weight:600; padding:10px 15px;
   }
-  .names-toggle:hover{ border-color:var(--brass); color:var(--brass); }
-  .names-toggle .chev{ transition:transform .18s ease; display:inline-block; }
+  .names-toggle:hover{ background:var(--paper-dim); }
+  .names-toggle .chev{ display:inline-block; transition:transform .18s ease; font-size:15px; }
   .names-toggle[aria-expanded="true"] .chev{ transform:rotate(90deg); }
   .names-list{ display:none; margin-top:14px; }
   .names-list.open{ display:block; }
-  .name-row{
-    display:flex; justify-content:space-between; align-items:center; gap:14px;
-    padding:12px 0; border-bottom:1px solid var(--line); font-size:13.5px;
-  }
+  .name-row{ display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); }
   .name-row:last-child{ border-bottom:none; }
-  .name-row .nr-main{ min-width:0; }
-  .name-row .nr-name{ font-weight:600; }
-  .name-row .nr-sub{ font-size:12px; color:var(--bone-dim); margin-top:2px; }
-  .name-row .nr-meta{ font-size:12px; color:var(--bone-dim); white-space:nowrap; flex-shrink:0; }
-  .name-row a{ color:var(--brass); }
+  .avatar{
+    width:32px; height:32px; border-radius:999px; background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    font-family:'Space Grotesk', sans-serif; font-size:11.5px; font-weight:600; color:var(--text-muted);
+  }
+  .nr-main{ flex:1; min-width:0; }
+  .nr-name{ font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nr-sub{ font-size:11.5px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .nr-meta{ font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-muted); flex-shrink:0; }
+  .pill{ font-size:10px; font-weight:700; border-radius:999px; padding:2px 8px; text-transform:uppercase; letter-spacing:.04em; flex-shrink:0; }
+  .pill.live{ background:var(--lime); color:var(--ink); }
+  .pill.off{ background:var(--paper); border:1px solid var(--line); color:var(--text-muted); }
 
-  .proof-card{ background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin-bottom:14px; display:flex; gap:18px; flex-wrap:wrap; }
-  .proof-thumb{ width:120px; height:120px; border-radius:6px; overflow:hidden; flex-shrink:0; background:var(--bg-alt); border:1px solid var(--line); }
-  .proof-thumb img{ width:100%; height:100%; object-fit:cover; cursor:pointer; }
-  .proof-body{ flex:1; min-width:180px; }
-  .proof-amounts{ display:flex; gap:24px; margin:10px 0 16px; }
-  .proof-amount-label{ font-size:11px; color:var(--bone-dim); text-transform:uppercase; letter-spacing:0.04em; }
-  .proof-amount-value{ font-family:'Fraunces', serif; font-size:20px; color:var(--brass); margin-top:2px; }
-  .proof-mismatch{ color:var(--err) !important; }
-  .proof-actions{ display:flex; gap:10px; }
+  /* ============ right rail ============ */
+  .rail{
+    border-left:1px solid var(--line); background:var(--paper);
+    position:sticky; top:0; height:100vh; padding:26px 18px; overflow-y:auto;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .rail h4{
+    font-family:'IBM Plex Mono', monospace; font-size:10.5px; font-weight:600; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--text-muted); margin-bottom:2px;
+  }
+  .rail-card{ background:var(--paper-dim); border:1px solid var(--line); border-radius:16px; padding:15px 16px; }
+  .rail-num{ font-family:'IBM Plex Mono', monospace; font-size:24px; font-weight:600; line-height:1.15; }
+  .rail-label{ font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+  .week-dots{ display:flex; gap:6px; margin-top:12px; }
+  .week-dots div{ flex:1; text-align:center; }
+  .week-dots i{
+    width:100%; aspect-ratio:1; max-width:22px; margin:0 auto 4px; border-radius:7px; display:block;
+    background:var(--paper); border:1px solid var(--line);
+  }
+  .week-dots i.on{ background:var(--lime-deep); border-color:var(--lime-deep); }
+  .week-dots span{ font-family:'IBM Plex Mono', monospace; font-size:9px; color:var(--text-muted); }
+
+  /* ============ mobile ============ */
+  .mobile-bar{ display:none; }
+  @media (max-width:1100px){
+    .shell.active{ grid-template-columns:220px minmax(0,1fr); }
+    .rail{ display:none; }
+  }
+  @media (max-width:760px){
+    .shell.active{ grid-template-columns:1fr; }
+    .sidebar{ display:none; }
+    .mobile-bar{
+      display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:20;
+      background:rgba(246,241,228,.92); backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line); padding:11px 14px; overflow-x:auto; scrollbar-width:none;
+    }
+    .mobile-bar::-webkit-scrollbar{ display:none; }
+    .mchip{
+      width:44px; height:44px; border-radius:999px; flex-shrink:0; position:relative;
+      background:var(--paper-dim); border:1px solid var(--line);
+      display:flex; align-items:center; justify-content:center; color:var(--text-muted);
+    }
+    .mchip svg{ width:20px; height:20px; }
+    .mchip.active{ background:var(--lime); border-color:var(--lime); color:var(--ink); animation:pop .42s cubic-bezier(.2,.7,.3,1); }
+    @keyframes pop{ 0%{ transform:scale(.8); } 55%{ transform:scale(1.1); } 100%{ transform:scale(1); } }
+    .mchip .dot{ position:absolute; top:3px; right:3px; width:9px; height:9px; border-radius:50%; background:var(--coral); }
+    .mobile-bar .out{ margin-left:auto; font-size:12.5px; color:var(--text-muted); text-decoration:underline; flex-shrink:0; }
+    .page{ padding:26px 0 70px; }
+    .page__inner{ padding:0 18px; }
+    .bars{ height:120px; gap:5px; }
+  }
+
+  /* ============ motion ============ */
+  .reveal{ opacity:0; transform:translateY(14px); transition:opacity .55s cubic-bezier(.2,.7,.3,1), transform .55s cubic-bezier(.2,.7,.3,1); }
+  .reveal.from-left{ transform:translate(-18px,10px); }
+  .reveal.from-right{ transform:translate(18px,10px); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  .ic-bar rect{ animation:eq 1.5s ease-in-out infinite; transform-origin:50% 100%; }
+  .ic-bar rect:nth-child(2){ animation-delay:.2s; } .ic-bar rect:nth-child(3){ animation-delay:.4s; }
+  @keyframes eq{ 50%{ transform:scaleY(.45); } }
+  .ic-pin .ping{ animation:ping 2.2s ease-out infinite; transform-origin:12px 10px; }
+  @keyframes ping{ 0%{ opacity:.85; transform:scale(.4); } 70%,100%{ opacity:0; transform:scale(1.5); } }
+  .ic-people .head-b{ animation:bobHead 2.4s ease-in-out infinite; }
+  @keyframes bobHead{ 50%{ transform:translateY(-1.6px); } }
+  .ic-clock .hand{ animation:tick 6s steps(12) infinite; transform-origin:12px 12px; }
+  @keyframes tick{ to{ transform:rotate(360deg); } }
+  .ic-spark path{ animation:sparkle 2s ease-in-out infinite; transform-origin:center; }
+  @keyframes sparkle{ 50%{ opacity:.45; transform:scale(.86); } }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+    .ic-bar rect, .ic-pin .ping, .ic-people .head-b, .ic-clock .hand, .ic-spark path,
+    .reaction .face, .bar-fill, .mchip.active{ animation:none !important; }
+  }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="inner">
-    <a href="index.html" class="logo">ust<em>a</em>ra</a>
-    <button class="logout-btn" id="logoutBtn" style="display:none;" data-i18n="logout">Log out</button>
-  </div>
-</nav>
-
+<!-- ============ login ============ -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
-    <h1 id="loginTitle" data-i18n="login_title">Admin login</h1>
+    <a href="index.html" class="logo">ust<em>a</em>ra</a>
+    <h1 id="loginTitle">Admin login</h1>
     <form id="loginForm">
       <div class="field-group">
-        <label data-i18n="l_email">Email</label>
+        <label for="email">Email</label>
         <input type="email" id="email" required>
       </div>
       <div class="field-group">
-        <label data-i18n="l_password">Password</label>
+        <label for="password">Password</label>
         <input type="password" id="password" required>
       </div>
-      <div class="error-text" id="errorMsg" data-i18n="err_generic">Incorrect email or password.</div>
-      <button type="submit" class="btn btn-primary" id="submitBtn" data-i18n="login_btn">Log in</button>
+      <div class="error-text" id="errorMsg">Incorrect email or password.</div>
+      <button type="submit" class="btn btn-primary" id="submitBtn">Log in</button>
     </form>
-    <div class="toggle-mode" id="toggleMode" data-i18n-html="toggle_signup">First time here? <span>Create admin account</span></div>
+    <div class="toggle-mode" id="toggleMode">First time here? <span>Create admin account</span></div>
   </div>
 </div>
 
 <div class="not-authorized" id="notAuthorized">
-  <div class="icon">🔒</div>
-  <h2 data-i18n="not_auth_h">Not authorized</h2>
-  <p data-i18n="not_auth_p">This page is restricted to the Ustara founder account.</p>
+  <div class="lock">🔒</div>
+  <h2>Not authorized</h2>
+  <p>This page is restricted to the Ustara founder account.</p>
 </div>
 
-<main id="adminMain" style="display:none;">
-  <div class="wrap">
-    <div class="admin-tabs" id="adminTabs">
-      <button class="admin-tab active" data-tab="approvals">
-        <span data-i18n="tab_approvals">Approvals</span>
-        <span class="tab-count" id="approvalsCount">0</span>
+<!-- ============ shell ============ -->
+<div class="shell" id="shell">
+
+  <aside class="sidebar">
+    <a href="index.html" class="logo">ust<em>a</em>ra</a>
+    <nav class="nav" id="sideNav">
+      <button class="nav-item active" data-page="overview">
+        <svg class="ico ic-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="4" y="12" width="3.4" height="8" rx="1.2"/><rect x="10.3" y="7" width="3.4" height="13" rx="1.2"/><rect x="16.6" y="10" width="3.4" height="10" rx="1.2"/>
+        </svg>
+        <span>Overview</span>
       </button>
-      <button class="admin-tab" data-tab="money">
-        <span data-i18n="tab_money">Promo &amp; revenue</span>
+      <button class="nav-item" data-page="approvals">
+        <svg class="ico ic-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle class="ping" cx="12" cy="10" r="4"/><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>
+        </svg>
+        <span>Approvals</span>
+        <span class="nav-count" id="approvalsCount">0</span>
       </button>
-      <button class="admin-tab" data-tab="analytics">
-        <span data-i18n="tab_analytics">Analytics</span>
+      <button class="nav-item" data-page="people">
+        <svg class="ico ic-people" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle class="head-b" cx="9" cy="8" r="3.4"/><path d="M3 20v-1a6 6 0 0112 0v1"/><path d="M16.5 5.2a3.4 3.4 0 010 5.6M18 20v-1a6 6 0 00-2.2-4.6"/>
+        </svg>
+        <span>People</span>
       </button>
+    </nav>
+    <div class="nudge">
+      <strong>Non-profit</strong>
+      Ustara takes no commission. These pages track reach and trust, not revenue.
     </div>
+    <a href="#" class="signout" id="logoutBtn">Log out</a>
+  </aside>
 
-    <!-- ============ 1 · APPROVALS ============ -->
-    <div class="admin-panel active" data-panel="approvals">
-      <!-- Barber profiles are no longer reviewed by hand — they're approved on
-           signup (sql/36-auto-approve-barbers.sql). What's left below is the
-           two checks that actually matter: the location pin and payments. -->
-      <h1 data-i18n="loc_title">Pending location verification</h1>
-      <p class="sub" data-i18n="loc_sub">Confirm a barber's pin is a real, findable shop before it appears on the public map.</p>
-      <div id="pendingLocationArea"></div>
-
-      <h1 data-i18n="proofs_title" style="margin-top:52px;">Proof of payment</h1>
-      <p class="sub" data-i18n="proofs_sub">Compare the screenshot against the owed amount below it, then mark as paid or reject.</p>
-      <div id="proofsArea"></div>
-    </div>
-
-    <!-- ============ 2 · PROMO & REVENUE ============ -->
-    <div class="admin-panel" data-panel="money">
-      <h1 data-i18n="payout_title">Payout account</h1>
-    <p class="sub" data-i18n="payout_sub">Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.</p>
-    <div class="card" style="margin-bottom:52px;">
-      <div class="field-group">
-        <label data-i18n="l_card_number">Card number</label>
-        <input type="text" id="payoutCardNumber" placeholder="8600 0000 0000 0000">
-      </div>
-      <div class="field-group" style="margin-bottom:0;">
-        <label data-i18n="l_card_name">Card holder name</label>
-        <input type="text" id="payoutCardName" placeholder="ISLOMOVA D">
-      </div>
-      <div class="admin-section-label" style="margin-top:28px;" data-i18n="section_click">Click.uz deposit settings</div>
-      <p class="sub" style="margin-top:2px;" data-i18n="click_sub">From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.</p>
-      <div class="field-group">
-        <label data-i18n="l_click_merchant_id">Merchant ID</label>
-        <input type="text" id="clickMerchantId" placeholder="12345">
-      </div>
-      <div class="field-group" style="margin-bottom:0;">
-        <label data-i18n="l_click_service_id">Service ID</label>
-        <input type="text" id="clickServiceId" placeholder="67890">
-      </div>
-      <button class="btn btn-primary" id="savePayoutBtn" style="width:auto; margin-top:16px;" data-i18n="save_payout">Save payout account</button>
-      <div class="save-msg" id="payoutSaveMsg"></div>
-    </div>
-
-      <div class="section-title" data-i18n="revenue_title">Revenue overview</div>
-      <div class="stat-row" id="revenueStats"></div>
-      <div class="card" id="revenueByBarberCard"></div>
-    </div>
-
-    <!-- ============ 3 · ANALYTICS ============ -->
-    <div class="admin-panel" data-panel="analytics">
-      <h1 data-i18n="an_title">Platform analytics</h1>
-      <p class="sub" data-i18n="an_sub">Where Ustara stands right now.</p>
-      <div class="stat-row" id="platformStats"></div>
-
-      <div class="section-title" data-i18n="an_people_title">People</div>
-      <div class="card">
-        <div style="display:flex; flex-wrap:wrap; gap:10px;">
-          <button type="button" class="names-toggle" id="waitlistNamesToggle" aria-expanded="false" aria-controls="waitlistNamesList">
-            <span class="chev">›</span><span data-i18n="an_see_waitlist">See waitlist names</span>
-          </button>
-          <button type="button" class="names-toggle" id="barberNamesToggle" aria-expanded="false" aria-controls="barberNamesList">
-            <span class="chev">›</span><span data-i18n="an_see_barbers">See barber names</span>
-          </button>
-        </div>
-        <div class="names-list" id="waitlistNamesList"></div>
-        <div class="names-list" id="barberNamesList"></div>
-      </div>
-    </div>
+  <div class="mobile-bar" id="mobileBar">
+    <button class="mchip active" data-page="overview" aria-label="Overview">
+      <svg class="ic-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="4" y="12" width="3.4" height="8" rx="1.2"/><rect x="10.3" y="7" width="3.4" height="13" rx="1.2"/><rect x="16.6" y="10" width="3.4" height="10" rx="1.2"/>
+      </svg>
+    </button>
+    <button class="mchip" data-page="approvals" aria-label="Approvals">
+      <svg class="ic-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle class="ping" cx="12" cy="10" r="4"/><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>
+      </svg>
+      <span class="dot" id="mobileApprovalDot" style="display:none;"></span>
+    </button>
+    <button class="mchip" data-page="people" aria-label="People">
+      <svg class="ic-people" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle class="head-b" cx="9" cy="8" r="3.4"/><path d="M3 20v-1a6 6 0 0112 0v1"/><path d="M16.5 5.2a3.4 3.4 0 010 5.6M18 20v-1a6 6 0 00-2.2-4.6"/>
+      </svg>
+    </button>
+    <a href="#" class="out" id="logoutBtnMobile">Log out</a>
   </div>
-</main>
+
+  <main>
+    <!-- ---------- overview ---------- -->
+    <section class="page active" data-page="overview">
+      <div class="page__photo" aria-hidden="true">
+        <i style="background-image:url('https://images.pexels.com/photos/1813272/pexels-photo-1813272.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200');"></i><b></b>
+      </div>
+      <div class="page__inner">
+        <div class="eyebrow reveal"><i style="background:var(--lime-deep);"></i>Dashboard</div>
+        <h1 class="reveal">Where Ustara stands</h1>
+        <p class="page-sub reveal">Everyone who has joined, and how fast they are arriving.</p>
+
+        <div class="stat-grid reveal" id="statGrid"></div>
+
+        <div class="section-title reveal">
+          <span class="chip sky"><svg class="ic-bar" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><rect x="4" y="12" width="3.4" height="8" rx="1.2"/><rect x="10.3" y="7" width="3.4" height="13" rx="1.2"/><rect x="16.6" y="10" width="3.4" height="10" rx="1.2"/></svg></span>
+          Sign-ups by week
+        </div>
+        <div class="card reveal from-left">
+          <div class="bars" id="growthBars"></div>
+        </div>
+
+        <div class="section-title reveal">
+          <span class="chip sun"><svg class="ic-clock" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path class="hand" d="M12 12V7.4"/><path d="M12 12l3.4 2"/></svg></span>
+          Daily activity
+        </div>
+        <div class="card reveal from-right">
+          <div class="heat" id="heatCal"></div>
+          <div class="heat-legend">
+            <span>Quieter</span>
+            <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i>
+            <span>Busier</span>
+            <span style="margin-left:auto;" id="heatSummary"></span>
+          </div>
+        </div>
+
+        <div class="section-title reveal">
+          <span class="chip coral"><svg class="ic-spark" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span>
+          Today
+        </div>
+        <div class="card reveal from-left">
+          <div class="reaction">
+            <div class="face" id="reactionFace">👀</div>
+            <div>
+              <div class="rx-title" id="reactionTitle">Loading…</div>
+              <p class="page-sub" style="margin:0;" id="reactionLine"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- approvals ---------- -->
+    <section class="page" data-page="approvals">
+      <div class="page__photo" aria-hidden="true">
+        <i style="background-image:url('https://images.pexels.com/photos/4386466/pexels-photo-4386466.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200');"></i><b></b>
+      </div>
+      <div class="page__inner">
+        <div class="eyebrow reveal"><i style="background:var(--coral);"></i>Approvals</div>
+        <h1 class="reveal">Pending location verification</h1>
+        <p class="page-sub reveal">Confirm a barber's pin is a real, findable shop before it appears on the public map. This is the only approval left — profiles are approved on signup, and Ustara no longer handles payments.</p>
+        <div id="pendingLocationArea" class="reveal"></div>
+      </div>
+    </section>
+
+    <!-- ---------- people ---------- -->
+    <section class="page" data-page="people">
+      <div class="page__photo" aria-hidden="true">
+        <i style="background-image:url('https://images.pexels.com/photos/1570807/pexels-photo-1570807.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1200');"></i><b></b>
+      </div>
+      <div class="page__inner">
+        <div class="eyebrow reveal"><i style="background:var(--sky);"></i>People</div>
+        <h1 class="reveal">Who has joined</h1>
+        <p class="page-sub reveal">Names and phone numbers load only when you open a list — there is no reason to pull personal data until it is asked for.</p>
+
+        <div class="card reveal from-left" style="margin-bottom:12px;">
+          <div class="section-title" style="margin:0 0 12px;">
+            <span class="chip lime"><svg class="ic-clock" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path class="hand" d="M12 12V7.4"/><path d="M12 12l3.4 2"/></svg></span>
+            Waitlist
+          </div>
+          <button type="button" class="names-toggle" id="waitlistNamesToggle" aria-expanded="false" aria-controls="waitlistNamesList">
+            <span class="chev">›</span><span>See waitlist names</span>
+          </button>
+          <div class="names-list" id="waitlistNamesList"></div>
+        </div>
+
+        <div class="card reveal from-right">
+          <div class="section-title" style="margin:0 0 12px;">
+            <span class="chip sun"><svg class="ic-people" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><circle class="head-b" cx="9" cy="8" r="3.4"/><path d="M3 20v-1a6 6 0 0112 0v1"/><path d="M16.5 5.2a3.4 3.4 0 010 5.6M18 20v-1a6 6 0 00-2.2-4.6"/></svg></span>
+            Barbers
+          </div>
+          <button type="button" class="names-toggle" id="barberNamesToggle" aria-expanded="false" aria-controls="barberNamesList">
+            <span class="chev">›</span><span>See barber names</span>
+          </button>
+          <div class="names-list" id="barberNamesList"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="rail">
+    <h4>Right now</h4>
+    <div class="rail-card">
+      <div class="rail-num" id="railWaitlist">—</div>
+      <div class="rail-label">On the waitlist</div>
+    </div>
+    <div class="rail-card">
+      <div class="rail-num" id="railLive">—</div>
+      <div class="rail-label">Barbers live on the map</div>
+    </div>
+    <div class="rail-card">
+      <div class="rail-num" id="railToday">—</div>
+      <div class="rail-label">Joined today</div>
+      <div class="week-dots" id="weekDots"></div>
+    </div>
+    <div class="rail-card" style="margin-top:auto;">
+      <div class="rail-label" style="margin:0;">Ustara is a non-profit — no commission, no payouts to track.</div>
+    </div>
+  </aside>
+</div>
 
 <script>
 const SUPABASE_URL = 'https://gbvfesorkmsxugpvcuqy.supabase.co';
@@ -268,128 +481,23 @@ const SUPABASE_ANON_KEY = 'sb_publishable_k7wdvlBvnpPHPNCrl9i_eg_ktsfJAst';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const FOUNDER_EMAIL = 'izzatilloanvarov641@gmail.com';
-
-const SPECIALTIES_EN = ["Skin fade","Beard shaping","Classic cuts","Kids' cuts","Hair coloring","Line-up"];
-const SPECIALTIES_LOCAL = {
-  en: SPECIALTIES_EN,
-  uz: ["Skin feyd","Soqol shakllantirish","Klassik soch olish","Bolalar uchun","Soch bo'yash","Line-up"],
-  ru: ["Skin fade","Оформление бороды","Классические стрижки","Детские стрижки","Окрашивание","Line-up"]
-};
-
-const I18N = {
-  en:{ logout:"Log out", login_title:"Admin login", l_email:"Email", l_password:"Password",
-    err_generic:"Incorrect email or password.", login_btn:"Log in", signup_btn:"Create account",
-    toggle_signup:'First time here? <span>Create admin account</span>', toggle_login:'Already have an account? <span>Log in</span>',
-    not_auth_h:"Not authorized", not_auth_p:"This page is restricted to the Ustara founder account.",
-    title:"Pending barbers", sub:"Review new barber profiles before they go live.",
-    empty_pending:"No barbers waiting for review right now.",
-    rv_district:"District", rv_experience:"Experience", rv_specialties:"Specialties", rv_bio:"Bio", years:"yrs",
-    approve:"Approve", reject:"Reject", not_set:"—",
-    loc_title:"Pending location verification", loc_sub:"Confirm a barber's pin is a real, findable shop before it appears on the public map.",
-    empty_location:"No locations waiting for verification.", view_map:"View on map ↗", verify_location:"Verify location",
-    reject_location:"Reject", reject_location_confirm:"Reject this pin? It'll be cleared and the barber will need to drop a new one.",
-    section_approval:"Barber approval", section_payments:"Payments",
-    payout_title:"Payout account", payout_sub:"Barbers see this card on their Payments tab. Change it anytime — every barber sees the new one immediately.",
-    l_card_number:"Card number", l_card_name:"Card holder name", save_payout:"Save payout account", saved:"Saved.",
-    section_click:"Click.uz deposit settings", click_sub:"From your Click merchant cabinet — not secret, safe to store here. The secret key goes into the click-payment Edge Function's secrets instead.",
-    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
-    proofs_title:"Proof of payment", proofs_sub:"Compare the screenshot against the owed amount below it, then mark as paid or reject.",
-    empty_proofs:"No payment proofs waiting for review.", proof_submitted_amount:"Claimed at submission", proof_owed_now:"Owed right now",
-    mark_paid:"Mark as paid", proof_reject:"Reject", revenue_title:"Revenue overview",
-    section_overview:"Platform overview", stat_barbers_joined:"Barbers joined", stat_clients_joined:"Clients joined",
-    tab_approvals:"Approvals", tab_money:"Promo & revenue", tab_analytics:"Analytics",
-    an_title:"Platform analytics", an_sub:"Where Ustara stands right now.",
-    an_people_title:"People", stat_waitlist:"On the waitlist",
-    an_see_waitlist:"See waitlist names", an_see_barbers:"See barber names",
-    an_loading:"Loading…", an_load_failed:"Couldn't load that list.",
-    an_waitlist_empty:"Nobody on the waitlist yet.", an_barbers_empty:"No barbers yet.",
-    an_state_pending:"Pending", an_state_live:"Live", an_state_offline:"Not live",
-    stat_bookings_completed:"Bookings completed", stat_no_shows:"No-shows" },
-  uz:{ logout:"Chiqish", login_title:"Admin kirish", l_email:"Email", l_password:"Parol",
-    err_generic:"Email yoki parol noto'g'ri.", login_btn:"Kirish", signup_btn:"Hisob yaratish",
-    toggle_signup:'Birinchi marta? <span>Admin hisobini yarating</span>', toggle_login:'Hisobingiz bormi? <span>Kirish</span>',
-    not_auth_h:"Ruxsat yo'q", not_auth_p:"Bu sahifa faqat Ustara asoschisi uchun.",
-    title:"Kutilayotgan sartaroshlar", sub:"Yangi sartarosh profillarini faollashtirishdan oldin ko'rib chiqing.",
-    empty_pending:"Hozircha ko'rib chiqish uchun sartaroshlar yo'q.",
-    rv_district:"Tuman", rv_experience:"Tajriba", rv_specialties:"Mutaxassisliklar", rv_bio:"Bio", years:"yil",
-    approve:"Tasdiqlash", reject:"Rad etish", not_set:"—",
-    loc_title:"Joylashuvni tekshirish kutilmoqda", loc_sub:"Ochiq xaritada ko'rsatishdan oldin sartaroshning belgisi haqiqiy do'kon ekanini tasdiqlang.",
-    empty_location:"Hozircha tekshirish uchun joylashuvlar yo'q.", view_map:"Xaritada ko'rish ↗", verify_location:"Joylashuvni tasdiqlash",
-    reject_location:"Rad etish", reject_location_confirm:"Bu belgi rad etilsinmi? U tozalanadi va sartarosh yangisini qo'yishi kerak bo'ladi.",
-    section_approval:"Sartaroshni tasdiqlash", section_payments:"To'lovlar",
-    payout_title:"To'lov kartasi", payout_sub:"Sartaroshlar buni o'zlarining To'lovlar bo'limida ko'rishadi. Istalgan vaqtda o'zgartiring — har bir sartarosh yangisini darhol ko'radi.",
-    l_card_number:"Karta raqami", l_card_name:"Karta egasining ismi", save_payout:"Saqlash", saved:"Saqlandi.",
-    section_click:"Click.uz depozit sozlamalari", click_sub:"Click merchant kabinetingizdan — bu maxfiy emas, shu yerda saqlash xavfsiz. Maxfiy kalit esa click-payment Edge Function sirlariga qo'yiladi.",
-    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
-    proofs_title:"To'lov isboti", proofs_sub:"Skrinshotni pastdagi qarz summasi bilan solishtiring, so'ng to'landi deb belgilang yoki rad eting.",
-    empty_proofs:"Ko'rib chiqish uchun to'lov isboti yo'q.", proof_submitted_amount:"Yuborilganda ko'rsatilgan summa", proof_owed_now:"Hozirgi qarz",
-    mark_paid:"To'landi deb belgilash", proof_reject:"Rad etish", revenue_title:"Daromad umumiy ko'rinishi",
-    section_overview:"Platforma umumiy ko'rinishi", stat_barbers_joined:"Qo'shilgan sartaroshlar", stat_clients_joined:"Qo'shilgan mijozlar",
-    tab_approvals:"Tasdiqlash", tab_money:"Aksiya va daromad", tab_analytics:"Tahlil",
-    an_title:"Platforma tahlili", an_sub:"Ustara hozir qay ahvolda.",
-    an_people_title:"Odamlar", stat_waitlist:"Navbat ro'yxatida",
-    an_see_waitlist:"Navbat ro'yxatidagi ismlar", an_see_barbers:"Sartaroshlar ismlari",
-    an_loading:"Yuklanmoqda…", an_load_failed:"Ro'yxatni yuklab bo'lmadi.",
-    an_waitlist_empty:"Hozircha navbat ro'yxatida hech kim yo'q.", an_barbers_empty:"Hozircha sartaroshlar yo'q.",
-    an_state_pending:"Kutilmoqda", an_state_live:"Faol", an_state_offline:"Faol emas",
-    stat_bookings_completed:"Bajarilgan bandlar", stat_no_shows:"Kelmagan mijozlar" },
-  ru:{ logout:"Выйти", login_title:"Вход для админа", l_email:"Email", l_password:"Пароль",
-    err_generic:"Неверный email или пароль.", login_btn:"Войти", signup_btn:"Создать аккаунт",
-    toggle_signup:'Первый раз? <span>Создать аккаунт админа</span>', toggle_login:'Уже есть аккаунт? <span>Войти</span>',
-    not_auth_h:"Нет доступа", not_auth_p:"Эта страница доступна только основателю Ustara.",
-    title:"Барберы на рассмотрении", sub:"Проверяйте новые профили барберов перед публикацией.",
-    empty_pending:"Пока никто не ждёт проверки.",
-    rv_district:"Район", rv_experience:"Опыт", rv_specialties:"Специализации", rv_bio:"Био", years:"лет",
-    approve:"Одобрить", reject:"Отклонить", not_set:"—",
-    loc_title:"Локации на проверке", loc_sub:"Подтвердите, что метка барбера — реальный, находимый салон, прежде чем она появится на публичной карте.",
-    empty_location:"Пока нет локаций, ожидающих проверки.", view_map:"Посмотреть на карте ↗", verify_location:"Подтвердить локацию",
-    reject_location:"Отклонить", reject_location_confirm:"Отклонить эту метку? Она будет очищена, барберу нужно будет поставить новую.",
-    section_approval:"Подтверждение барберов", section_payments:"Платежи",
-    payout_title:"Карта для выплат", payout_sub:"Барберы видят эту карту на вкладке Платежи. Меняйте в любой момент — каждый барбер сразу увидит новую.",
-    l_card_number:"Номер карты", l_card_name:"Имя владельца карты", save_payout:"Сохранить", saved:"Сохранено.",
-    section_click:"Настройки депозита Click.uz", click_sub:"Из вашего личного кабинета Click — это не секрет, здесь хранить безопасно. Секретный ключ добавляется в секреты Edge Function click-payment.",
-    l_click_merchant_id:"Merchant ID", l_click_service_id:"Service ID",
-    proofs_title:"Доказательство оплаты", proofs_sub:"Сравните скриншот с суммой долга под ним, затем отметьте оплаченным или отклоните.",
-    empty_proofs:"Нет доказательств оплаты для проверки.", proof_submitted_amount:"Указано при отправке", proof_owed_now:"Долг сейчас",
-    mark_paid:"Отметить оплаченным", proof_reject:"Отклонить", revenue_title:"Обзор дохода",
-    section_overview:"Обзор платформы", stat_barbers_joined:"Присоединилось барберов", stat_clients_joined:"Присоединилось клиентов",
-    tab_approvals:"Заявки", tab_money:"Промо и доход", tab_analytics:"Аналитика",
-    an_title:"Аналитика платформы", an_sub:"Как обстоят дела прямо сейчас.",
-    an_people_title:"Люди", stat_waitlist:"В листе ожидания",
-    an_see_waitlist:"Показать лист ожидания", an_see_barbers:"Показать барберов",
-    an_loading:"Загрузка…", an_load_failed:"Не удалось загрузить список.",
-    an_waitlist_empty:"В листе ожидания пока никого.", an_barbers_empty:"Барберов пока нет.",
-    an_state_pending:"Ожидает", an_state_live:"Активен", an_state_offline:"Не активен",
-    stat_bookings_completed:"Завершено записей", stat_no_shows:"Не пришли" }
-};
-
-// founder-only screen, so this one stays on English regardless of locale
-const currentLang = 'en';
 let signupMode = false;
 
-function t(key){ return I18N[currentLang][key]; }
-function applyStaticI18n(){
-  document.querySelectorAll('[data-i18n]').forEach(el=>{
-    if(I18N[currentLang][el.dataset.i18n] !== undefined) el.textContent = I18N[currentLang][el.dataset.i18n];
-  });
-  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
-    if(I18N[currentLang][el.dataset.i18nHtml] !== undefined) el.innerHTML = I18N[currentLang][el.dataset.i18nHtml];
-  });
-}
-applyStaticI18n();
-
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
-function formatPrice(n){ return n ? Number(n).toLocaleString('en-US').replace(/,/g,' ') + ' UZS' : '0 UZS'; }
-function localizeSpecialty(enTag){
-  const idx = SPECIALTIES_EN.indexOf(enTag);
-  return idx === -1 ? enTag : SPECIALTIES_LOCAL[currentLang][idx];
+function initials(name){
+  return (name || '?').trim().split(/\s+/).slice(0,2).map(w => w[0] || '').join('').toUpperCase() || '?';
 }
+const dayStart = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+const countBetween = (dates, from, to) => dates.filter(d => d >= from && d < to).length;
 
+/* ---------- auth ---------- */
 document.getElementById('toggleMode').addEventListener('click', ()=>{
   signupMode = !signupMode;
-  document.getElementById('loginTitle').textContent = signupMode ? t('signup_btn') : t('login_title');
-  document.getElementById('submitBtn').textContent = signupMode ? t('signup_btn') : t('login_btn');
-  document.getElementById('toggleMode').innerHTML = signupMode ? t('toggle_login') : t('toggle_signup');
+  document.getElementById('loginTitle').textContent = signupMode ? 'Create admin account' : 'Admin login';
+  document.getElementById('submitBtn').textContent = signupMode ? 'Create account' : 'Log in';
+  document.getElementById('toggleMode').innerHTML = signupMode
+    ? 'Already have an account? <span>Log in</span>'
+    : 'First time here? <span>Create admin account</span>';
   document.getElementById('errorMsg').style.display = 'none';
 });
 
@@ -407,14 +515,8 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     : await supabaseClient.auth.signInWithPassword({ email: emailVal, password: passwordVal });
   btn.disabled = false;
 
-  if(error){
-    errorMsg.textContent = t('err_generic');
-    errorMsg.style.display = 'block';
-    return;
-  }
-  if(!data.session){
-    // no active session yet (e.g. email confirmation still required) — nothing more we can do here
-    errorMsg.textContent = t('err_generic');
+  if(error || !data.session){
+    errorMsg.textContent = error ? 'Incorrect email or password.' : 'Confirm your email first, then log in.';
     errorMsg.style.display = 'block';
     return;
   }
@@ -428,74 +530,277 @@ async function checkAuthorizedAndEnter(user){
     document.getElementById('notAuthorized').classList.add('active');
     return;
   }
-  document.getElementById('logoutBtn').style.display = 'inline-block';
-  document.getElementById('adminMain').style.display = 'block';
-  loadPlatformOverview();
+  document.getElementById('shell').classList.add('active');
+  loadDashboard();
   loadPendingLocations();
-  loadPayoutSettings();
-  loadProofs();
-  loadRevenue();
   setupNamesToggle('waitlistNamesToggle', 'waitlistNamesList', waitlistNamesHtml);
   setupNamesToggle('barberNamesToggle', 'barberNamesList', barberNamesHtml);
+  revealPage(document.querySelector('.page.active'));
 }
 
-/* ---------- tabs ---------- */
-document.getElementById('adminTabs').addEventListener('click', (e)=>{
-  const tab = e.target.closest('.admin-tab');
-  if(!tab) return;
-  document.querySelectorAll('.admin-tab').forEach(x => x.classList.toggle('active', x === tab));
-  document.querySelectorAll('.admin-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab.dataset.tab));
-  window.scrollTo(0, 0);
+async function doLogout(e){
+  if(e) e.preventDefault();
+  await supabaseClient.auth.signOut();
+  window.location.href = 'index.html';
+}
+document.getElementById('logoutBtn').addEventListener('click', doLogout);
+document.getElementById('logoutBtnMobile').addEventListener('click', doLogout);
+
+(async ()=>{
+  const { data } = await supabaseClient.auth.getSession();
+  if(data.session) await checkAuthorizedAndEnter(data.session.user);
+  else document.getElementById('loginWrap').classList.add('active');
+})();
+
+/* ---------- navigation ---------- */
+function goToPage(name){
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+  document.querySelectorAll('.mchip').forEach(b => b.classList.toggle('active', b.dataset.page === name));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.dataset.page === name));
+  window.scrollTo(0,0);
+  revealPage(document.querySelector('.page[data-page="' + name + '"]'));
+}
+document.getElementById('sideNav').addEventListener('click', e=>{
+  const b = e.target.closest('.nav-item'); if(b) goToPage(b.dataset.page);
+});
+document.getElementById('mobileBar').addEventListener('click', e=>{
+  const b = e.target.closest('.mchip'); if(b) goToPage(b.dataset.page);
 });
 
-// the Approvals tab carries a count badge so you can see there's work waiting
-// without opening it — barbers awaiting approval + pins + payment proofs
-const approvalCounts = { locations:0, proofs:0 };
-function updateApprovalsCount(){
-  const el = document.getElementById('approvalsCount');
-  if(!el) return;
-  const n = approvalCounts.locations + approvalCounts.proofs;
-  el.textContent = n;
-  document.querySelector('.admin-tab[data-tab="approvals"]').classList.toggle('has-pending', n > 0);
+/* re-run per page so switching pages animates the new one in */
+function revealPage(page){
+  if(!page) return;
+  const els = [...page.querySelectorAll('.reveal')];
+  els.forEach(el => el.classList.remove('in'));
+  els.forEach((el,i) => setTimeout(()=> el.classList.add('in'), i * 70));
 }
 
-/* ---------- platform overview ---------- */
-async function loadPlatformOverview(){
-  const [waitlist, barbers, clients, bookingsCompleted, noShows] = await Promise.all([
+function setApprovalsCount(n){
+  const el = document.getElementById('approvalsCount');
+  el.textContent = n;
+  el.classList.toggle('hot', n > 0);
+  document.getElementById('mobileApprovalDot').style.display = n > 0 ? 'block' : 'none';
+}
+
+/* ---------- dashboard ---------- */
+async function loadDashboard(){
+  const [waitlist, barbers, clients, bookingsDone, live] = await Promise.all([
     supabaseClient.from('waitlist').select('*', { count:'exact', head:true }),
     supabaseClient.from('barbers').select('*', { count:'exact', head:true }),
     supabaseClient.from('clients').select('*', { count:'exact', head:true }),
-    supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status', 'completed'),
-    supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status', 'no_show'),
+    supabaseClient.from('bookings').select('*', { count:'exact', head:true }).eq('status','completed'),
+    supabaseClient.from('barbers').select('*', { count:'exact', head:true }).eq('is_published', true)
   ]);
-  document.getElementById('platformStats').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-num">${waitlist.count ?? 0}</div>
-      <div class="stat-label">${t('stat_waitlist')}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${barbers.count ?? 0}</div>
-      <div class="stat-label">${t('stat_barbers_joined')}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${clients.count ?? 0}</div>
-      <div class="stat-label">${t('stat_clients_joined')}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${bookingsCompleted.count ?? 0}</div>
-      <div class="stat-label">${t('stat_bookings_completed')}</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${noShows.count ?? 0}</div>
-      <div class="stat-label">${t('stat_no_shows')}</div>
-    </div>
-  `;
+
+  // sign-up dates drive the growth chart, the heat calendar and the rail.
+  // waitlist + barbers are the two the founder policies let us read in full.
+  const [wRows, bRows] = await Promise.all([
+    supabaseClient.from('waitlist').select('created_at'),
+    supabaseClient.from('barbers').select('created_at')
+  ]);
+  const dates = []
+    .concat((wRows.data || []).map(r => r.created_at))
+    .concat((bRows.data || []).map(r => r.created_at))
+    .filter(Boolean)
+    .map(d => new Date(d));
+
+  renderStats(waitlist.count, barbers.count, clients.count, bookingsDone.count, dates);
+  renderGrowth(dates);
+  renderHeat(dates);
+  renderRail(waitlist.count, live.count, dates);
+  renderReaction(dates, waitlist.count);
 }
 
-/* ---------- "see their names" lists ----------
-   Loaded lazily on first expand rather than up front: these are the only
-   queries on the page that pull personal data (names, phone numbers), so
-   there's no reason to fetch them until they're actually asked for. */
+function renderStats(waitlistN, barbersN, clientsN, bookingsN, dates){
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+  const twoWeeks = new Date(now); twoWeeks.setDate(now.getDate() - 14);
+  const thisWeek = countBetween(dates, weekAgo, now);
+  const lastWeek = countBetween(dates, twoWeeks, weekAgo);
+
+  // more sign-ups is the good direction, so growth reads green
+  let deltaHtml = '<div class="stat-delta flat">no change</div>';
+  if(lastWeek > 0){
+    const pct = Math.round((thisWeek - lastWeek) / lastWeek * 100);
+    const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : 'flat');
+    deltaHtml = '<div class="stat-delta ' + cls + '">' + (pct > 0 ? '+' : '') + pct + '% vs last week</div>';
+  } else if(thisWeek > 0){
+    deltaHtml = '<div class="stat-delta up">+' + thisWeek + ' this week</div>';
+  }
+
+  const cards = [
+    { chip:'lime', num:waitlistN || 0, label:'On the waitlist', extra:deltaHtml,
+      icon:'<svg class="ic-clock" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path class="hand" d="M12 12V7.4"/><path d="M12 12l3.4 2"/></svg>' },
+    { chip:'sun', num:barbersN || 0, label:'Barbers signed up',
+      icon:'<svg class="ic-people" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><circle class="head-b" cx="9" cy="8" r="3.4"/><path d="M3 20v-1a6 6 0 0112 0v1"/><path d="M16.5 5.2a3.4 3.4 0 010 5.6M18 20v-1a6 6 0 00-2.2-4.6"/></svg>' },
+    { chip:'sky', num:clientsN || 0, label:'Client accounts',
+      icon:'<svg class="ic-spark" viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>' },
+    { chip:'coral', num:bookingsN || 0, label:'Bookings completed',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="#12151c" stroke-width="2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>' }
+  ];
+
+  document.getElementById('statGrid').innerHTML = cards.map(c =>
+    '<div class="stat">' +
+      '<span class="chip ' + c.chip + '">' + c.icon + '</span>' +
+      '<div class="stat-num">' + c.num + '</div>' +
+      '<div class="stat-label">' + c.label + '</div>' +
+      (c.extra || '') +
+    '</div>').join('');
+}
+
+function renderGrowth(dates){
+  const weeks = [];
+  const now = new Date();
+  for(let i = 7; i >= 0; i--){
+    const start = dayStart(now); start.setDate(now.getDate() - (i*7 + now.getDay()));
+    const end = new Date(start); end.setDate(start.getDate() + 7);
+    weeks.push({ label:(start.getMonth()+1) + '/' + start.getDate(), n:countBetween(dates, start, end) });
+  }
+  const max = Math.max(1, ...weeks.map(w => w.n));
+  document.getElementById('growthBars').innerHTML = weeks.map((w,i) =>
+    '<div class="bar-col">' +
+      '<div class="bar-val">' + w.n + '</div>' +
+      '<div class="bar-track">' +
+        '<div class="bar-fill" style="height:' + Math.round(w.n/max*100) + '%; animation-delay:' + (i*0.06).toFixed(2) + 's"></div>' +
+      '</div>' +
+      '<div class="bar-label">' + w.label + '</div>' +
+    '</div>').join('');
+}
+
+function renderHeat(dates){
+  // 12 whole Sun–Sat weeks, so every column is a full week
+  const now = dayStart(new Date());
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay() - 11*7);
+
+  const perDay = {};
+  dates.forEach(d => { const k = dayStart(d).getTime(); perDay[k] = (perDay[k] || 0) + 1; });
+
+  const cells = [];
+  let busiest = 0;
+  for(let i = 0; i < 12*7; i++){
+    const day = new Date(start); day.setDate(start.getDate() + i);
+    const n = day > now ? -1 : (perDay[day.getTime()] || 0);
+    if(n > busiest) busiest = n;
+    const lvl = n <= 0 ? '' : (n === 1 ? 'l1' : n <= 3 ? 'l2' : n <= 6 ? 'l3' : 'l4');
+    const title = n < 0 ? '' : n + ' on ' + day.toLocaleDateString();
+    cells.push('<i class="' + lvl + '" title="' + title + '"></i>');
+  }
+  document.getElementById('heatCal').innerHTML = cells.join('');
+  document.getElementById('heatSummary').textContent =
+    busiest > 0 ? 'Best day: ' + busiest + ' sign-ups' : 'No sign-ups yet';
+}
+
+function renderRail(waitlistN, liveN, dates){
+  document.getElementById('railWaitlist').textContent = waitlistN || 0;
+  document.getElementById('railLive').textContent = liveN || 0;
+
+  const today = dayStart(new Date());
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  document.getElementById('railToday').textContent = countBetween(dates, today, tomorrow);
+
+  const names = ['S','M','T','W','T','F','S'];
+  const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
+  let html = '';
+  for(let i = 0; i < 7; i++){
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+    const next = new Date(d); next.setDate(d.getDate() + 1);
+    html += '<div><i class="' + (countBetween(dates, d, next) > 0 ? 'on' : '') + '"></i><span>' + names[i] + '</span></div>';
+  }
+  document.getElementById('weekDots').innerHTML = html;
+}
+
+/* a small daily read on the numbers — the line rotates so it isn't the same forever */
+function renderReaction(dates, waitlistN){
+  const today = dayStart(new Date());
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  const todayN = countBetween(dates, today, tomorrow);
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekN = countBetween(dates, weekAgo, new Date());
+
+  let face = '👀', title = 'Quiet so far today';
+  let lines = [
+    'Nobody new yet — a good day to walk into a barbershop and show them.',
+    'Still, ' + (waitlistN || 0) + ' people are already waiting on you.',
+    'Quiet days are normal this early. The waitlist is the number that matters.'
+  ];
+  if(todayN > 0){
+    face = '🎉';
+    title = todayN + (todayN === 1 ? ' person joined today' : ' people joined today');
+    lines = [
+      'That is ' + weekN + ' in the last seven days.',
+      'Momentum. Keep the barbershops hearing about it.',
+      'Every one of these is a real phone number in Tashkent.'
+    ];
+  } else if(weekN >= 5){
+    face = '🔥';
+    title = 'Strong week';
+    lines = [weekN + ' sign-ups in seven days, even with today quiet.'];
+  }
+  document.getElementById('reactionFace').textContent = face;
+  document.getElementById('reactionTitle').textContent = title;
+  document.getElementById('reactionLine').textContent = lines[new Date().getDate() % lines.length];
+}
+
+/* ---------- approvals ---------- */
+async function loadPendingLocations(){
+  const area = document.getElementById('pendingLocationArea');
+  const { data, error } = await supabaseClient
+    .from('barbers').select('*')
+    .not('latitude', 'is', null)
+    .eq('is_location_verified', false)
+    .order('created_at', { ascending:true });
+
+  setApprovalsCount((data || []).length);
+
+  if(error || !data || data.length === 0){
+    area.innerHTML = '<div class="empty">No pins waiting. Nothing to approve right now.</div>';
+    return;
+  }
+
+  area.innerHTML = data.map(b => {
+    const mapUrl = 'https://www.openstreetmap.org/?mlat=' + b.latitude + '&mlon=' + b.longitude +
+                   '#map=17/' + b.latitude + '/' + b.longitude;
+    return '<div class="review-card">' +
+      '<h3>' + escapeHtml(b.full_name || '—') + '</h3>' +
+      '<div class="review-meta">' + escapeHtml(b.shop_name || 'Shop name not set') +
+        (b.district ? ' · ' + escapeHtml(b.district) : '') + '</div>' +
+      '<div class="review-meta"><a href="' + mapUrl + '" target="_blank" rel="noopener" ' +
+        'style="color:var(--sky); font-weight:600;">View on map ↗</a></div>' +
+      '<div class="review-actions">' +
+        '<button class="btn-approve" data-verify="' + b.id + '">Verify location</button>' +
+        '<button class="btn-reject" data-reject-location="' + b.id + '">Reject pin</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  area.querySelectorAll('[data-verify]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      const { error } = await supabaseClient.from('barbers')
+        .update({ is_location_verified:true }).eq('id', btn.dataset.verify);
+      if(error) console.error('Verify location failed:', error);
+      loadPendingLocations();
+    });
+  });
+  area.querySelectorAll('[data-reject-location]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Reject this pin? It is cleared from the map and the barber can drop a new one.')) return;
+      btn.disabled = true;
+      // clearing the pin removes it from this queue and from the public map;
+      // the barber sees their pin is gone and can drop a new, accurate one
+      const { error } = await supabaseClient.from('barbers').update({
+        latitude:null, longitude:null, is_location_verified:false
+      }).eq('id', btn.dataset.rejectLocation);
+      if(error) console.error('Reject location failed:', error);
+      loadPendingLocations();
+    });
+  });
+}
+
+/* ---------- people ----------
+   Loaded lazily on first expand: these are the only queries on the page that
+   pull personal data, so there's no reason to fetch until they're asked for. */
 function setupNamesToggle(btnId, listId, loader){
   const btn = document.getElementById(btnId);
   const list = document.getElementById(listId);
@@ -505,9 +810,13 @@ function setupNamesToggle(btnId, listId, loader){
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     if(open && !loaded){
       loaded = true;
-      list.innerHTML = `<div class="nr-sub" style="padding:12px 0;">${t('an_loading')}</div>`;
+      list.innerHTML = '<div class="nr-sub" style="padding:12px 0;">Loading…</div>';
       try{ list.innerHTML = await loader(); }
-      catch(e){ console.error(listId + ' load failed:', e); list.innerHTML = `<div class="nr-sub" style="padding:12px 0;">${t('an_load_failed')}</div>`; loaded = false; }
+      catch(e){
+        console.error(listId + ' load failed:', e);
+        list.innerHTML = '<div class="nr-sub" style="padding:12px 0;">Could not load. Try again.</div>';
+        loaded = false;
+      }
     }
   });
 }
@@ -517,326 +826,46 @@ async function waitlistNamesHtml(){
     .from('waitlist').select('full_name, phone, city, contact, role, created_at')
     .order('created_at', { ascending:false });
   if(error) throw error;
-  if(!data || data.length === 0) return `<div class="nr-sub" style="padding:12px 0;">${t('an_waitlist_empty')}</div>`;
-  // rows collected by the older form have no name and store their contact
-  // detail in `contact`, so fall back to that rather than showing placeholders
+  if(!data || data.length === 0) return '<div class="nr-sub" style="padding:12px 0;">Nobody on the waitlist yet.</div>';
+  // rows from the older form have no name and keep their contact detail in
+  // `contact`, so fall back to that rather than showing a placeholder
   const isPlaceholder = v => !v || v === '—' || /^unknown-/.test(v);
   return data.map(w => {
     const name = isPlaceholder(w.full_name) ? (w.contact || '—') : w.full_name;
     const reach = isPlaceholder(w.phone) ? (w.contact || '') : w.phone;
     const bits = [];
-    if(reach) bits.push(`<a href="tel:${escapeHtml(reach)}">${escapeHtml(reach)}</a>`);
+    if(reach) bits.push('<a href="tel:' + escapeHtml(reach) + '">' + escapeHtml(reach) + '</a>');
     if(w.city) bits.push(escapeHtml(w.city));
     if(w.role && w.role !== 'client') bits.push(escapeHtml(w.role));
-    return `
-      <div class="name-row">
-        <div class="nr-main">
-          <div class="nr-name">${escapeHtml(name)}</div>
-          <div class="nr-sub">${bits.join(' · ')}</div>
-        </div>
-        <div class="nr-meta">${new Date(w.created_at).toLocaleDateString()}</div>
-      </div>
-    `;
+    return '<div class="name-row">' +
+      '<div class="avatar">' + escapeHtml(initials(name)) + '</div>' +
+      '<div class="nr-main">' +
+        '<div class="nr-name">' + escapeHtml(name) + '</div>' +
+        '<div class="nr-sub">' + bits.join(' · ') + '</div>' +
+      '</div>' +
+      '<div class="nr-meta">' + new Date(w.created_at).toLocaleDateString() + '</div>' +
+    '</div>';
   }).join('');
 }
 
 async function barberNamesHtml(){
   const { data, error } = await supabaseClient
-    .from('barbers').select('full_name, district, phone, is_approved, is_published, created_at')
+    .from('barbers').select('full_name, district, phone, is_published, created_at')
     .order('created_at', { ascending:false });
   if(error) throw error;
-  if(!data || data.length === 0) return `<div class="nr-sub" style="padding:12px 0;">${t('an_barbers_empty')}</div>`;
-  return data.map(b => {
-    const state = !b.is_approved ? t('an_state_pending') : (b.is_published ? t('an_state_live') : t('an_state_offline'));
-    return `
-      <div class="name-row">
-        <div class="nr-main">
-          <div class="nr-name">${escapeHtml(b.full_name || '—')}</div>
-          <div class="nr-sub">${b.district ? escapeHtml(b.district) : ''}${b.phone ? (b.district ? ' · ' : '') + escapeHtml(b.phone) : ''}</div>
-        </div>
-        <div class="nr-meta">${state}</div>
-      </div>
-    `;
-  }).join('');
+  if(!data || data.length === 0) return '<div class="nr-sub" style="padding:12px 0;">No barbers yet.</div>';
+  return data.map(b =>
+    '<div class="name-row">' +
+      '<div class="avatar">' + escapeHtml(initials(b.full_name)) + '</div>' +
+      '<div class="nr-main">' +
+        '<div class="nr-name">' + escapeHtml(b.full_name || '—') + '</div>' +
+        '<div class="nr-sub">' + (b.district ? escapeHtml(b.district) : '') +
+          (b.phone ? (b.district ? ' · ' : '') + escapeHtml(b.phone) : '') + '</div>' +
+      '</div>' +
+      '<span class="pill ' + (b.is_published ? 'live' : 'off') + '">' +
+        (b.is_published ? 'Live' : 'Offline') + '</span>' +
+    '</div>').join('');
 }
-
-/* ---------- payout account ---------- */
-async function loadPayoutSettings(){
-  const { data, error } = await supabaseClient.from('platform_settings').select('*').eq('id', 1).single();
-  if(error){ console.error('Failed to load payout settings:', error); return; }
-  document.getElementById('payoutCardNumber').value = data?.payout_card_number || '';
-  document.getElementById('payoutCardName').value = data?.payout_card_name || '';
-  document.getElementById('clickMerchantId').value = data?.click_merchant_id || '';
-  document.getElementById('clickServiceId').value = data?.click_service_id || '';
-}
-
-document.getElementById('savePayoutBtn').addEventListener('click', async ()=>{
-  const btn = document.getElementById('savePayoutBtn');
-  const msg = document.getElementById('payoutSaveMsg');
-  btn.disabled = true;
-  const { error } = await supabaseClient.from('platform_settings').update({
-    payout_card_number: document.getElementById('payoutCardNumber').value.trim(),
-    payout_card_name: document.getElementById('payoutCardName').value.trim(),
-    click_merchant_id: document.getElementById('clickMerchantId').value.trim() || null,
-    click_service_id: document.getElementById('clickServiceId').value.trim() || null
-  }).eq('id', 1);
-  btn.disabled = false;
-  if(error){
-    console.error('Failed to save payout settings:', error);
-    msg.style.color = 'var(--err)';
-    msg.textContent = 'Save failed — ' + (error.message || 'please try again.');
-    msg.style.display = 'block';
-    return;
-  }
-  msg.style.color = 'var(--ok)';
-  msg.textContent = t('saved');
-  msg.style.display = 'block';
-  setTimeout(()=> msg.style.display = 'none', 1800);
-});
-
-/* ---------- proof-of-payment review ---------- */
-function computeOwedForBarber(barberId, bookings, lastSettledAt){
-  const lastSettled = new Date(lastSettledAt || 0);
-  return bookings
-    .filter(b => b.barber_id === barberId && b.status === 'completed' && b.completed_at && new Date(b.completed_at) > lastSettled)
-    .reduce((sum, b) => sum + (b.commission_amount || 0), 0);
-}
-
-async function loadProofs(){
-  const area = document.getElementById('proofsArea');
-  const { data: proofs, error } = await supabaseClient
-    .from('payment_proofs')
-    .select('*, barbers(full_name, last_settled_at)')
-    .eq('status', 'pending')
-    .order('created_at', { ascending:true });
-
-  if(error){ console.error('Failed to load payment proofs:', error); area.innerHTML = ''; approvalCounts.proofs = 0; updateApprovalsCount(); return; }
-  approvalCounts.proofs = (proofs || []).length;
-  updateApprovalsCount();
-  if(!proofs || proofs.length === 0){
-    area.innerHTML = `<div class="empty-state" style="margin-bottom:52px;">${t('empty_proofs')}</div>`;
-    return;
-  }
-
-  const { data: completedBookings } = await supabaseClient
-    .from('bookings').select('barber_id, status, completed_at, commission_amount').eq('status', 'completed');
-
-  const rows = await Promise.all(proofs.map(async p => {
-    const { data: signed } = await supabaseClient.storage.from('payment-proofs').createSignedUrl(p.screenshot_path, 3600);
-    const owedNow = computeOwedForBarber(p.barber_id, completedBookings || [], p.barbers?.last_settled_at);
-    const mismatch = owedNow !== Number(p.amount_owed);
-    return `
-      <div class="proof-card">
-        <div class="proof-thumb">
-          ${signed ? `<a href="${signed.signedUrl}" target="_blank" rel="noopener"><img src="${signed.signedUrl}" alt=""></a>` : ''}
-        </div>
-        <div class="proof-body">
-          <h3 style="margin-bottom:2px;">${escapeHtml(p.barbers?.full_name || '—')}</h3>
-          <div class="review-meta">${new Date(p.created_at).toLocaleString()}</div>
-          <div class="proof-amounts">
-            <div>
-              <div class="proof-amount-label">${t('proof_submitted_amount')}</div>
-              <div class="proof-amount-value">${formatPrice(p.amount_owed)}</div>
-            </div>
-            <div>
-              <div class="proof-amount-label">${t('proof_owed_now')}</div>
-              <div class="proof-amount-value${mismatch ? ' proof-mismatch' : ''}">${formatPrice(owedNow)}</div>
-            </div>
-          </div>
-          <div class="proof-actions">
-            <button class="btn btn-approve" data-mark-paid="${p.id}" data-barber="${p.barber_id}">${t('mark_paid')}</button>
-            <button class="btn btn-reject" data-reject-proof="${p.id}">${t('proof_reject')}</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }));
-  area.innerHTML = rows.join('');
-
-  area.querySelectorAll('[data-mark-paid]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if(!confirm('Confirm the screenshot shows this exact amount paid to your card? This resets the barber\'s owed total to zero.')) return;
-      btn.disabled = true;
-      const now = new Date().toISOString();
-      const { error: proofErr } = await supabaseClient.from('payment_proofs')
-        .update({ status: 'approved', reviewed_at: now }).eq('id', btn.dataset.markPaid);
-      const { error: barberErr } = await supabaseClient.from('barbers')
-        .update({ last_settled_at: now }).eq('id', btn.dataset.barber);
-      if(!proofErr && !barberErr){ await loadProofs(); await loadRevenue(); }
-      else { btn.disabled = false; console.error('Mark as paid failed:', proofErr || barberErr); }
-    });
-  });
-  area.querySelectorAll('[data-reject-proof]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if(!confirm('Reject this proof? The barber will still owe this commission.')) return;
-      btn.disabled = true;
-      const { error } = await supabaseClient.from('payment_proofs')
-        .update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', btn.dataset.rejectProof);
-      if(!error) await loadProofs();
-      else { btn.disabled = false; console.error('Reject proof failed:', error); }
-    });
-  });
-}
-
-async function loadRevenue(){
-  const { data: completedBookings, error } = await supabaseClient
-    .from('bookings')
-    .select('*, barbers(full_name, commission_flat, commission_percent, last_settled_at)')
-    .eq('status', 'completed')
-    .order('completed_at', { ascending: false });
-
-  if(error){ console.error('Failed to load revenue data:', error); return; }
-
-  const totalCuts = completedBookings.length;
-  const totalRevenue = completedBookings.reduce((sum, b) => sum + (b.service_price || 0), 0);
-  const totalCommission = completedBookings.reduce((sum, b) => sum + (b.commission_amount || 0), 0);
-
-  document.getElementById('revenueStats').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-num">${totalCuts}</div>
-      <div class="stat-label">Total haircuts completed</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${formatPrice(totalRevenue)}</div>
-      <div class="stat-label">Total revenue processed</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num">${formatPrice(totalCommission)}</div>
-      <div class="stat-label">Total commission (all-time)</div>
-    </div>
-  `;
-
-  const byBarber = {};
-  completedBookings.forEach(b => {
-    if(!b.barbers) return;
-    const key = b.barber_id;
-    if(!byBarber[key]) {
-      byBarber[key] = {
-        name: b.barbers.full_name,
-        lastSettled: b.barbers.last_settled_at,
-        cutsSinceSettlement: 0,
-        owedSinceSettlement: 0,
-        totalCuts: 0
-      };
-    }
-    byBarber[key].totalCuts += 1;
-    if(new Date(b.completed_at) > new Date(b.barbers.last_settled_at)) {
-      byBarber[key].cutsSinceSettlement += 1;
-      byBarber[key].owedSinceSettlement += (b.commission_amount || 0);
-    }
-  });
-
-  const rows = Object.entries(byBarber).sort((a,b) => b[1].owedSinceSettlement - a[1].owedSinceSettlement);
-
-  document.getElementById('revenueByBarberCard').innerHTML = rows.length === 0
-    ? '<div class="empty-state">No completed haircuts yet.</div>'
-    : rows.map(([barberId, d]) => `
-        <div class="info-row" style="align-items:center;">
-          <div>
-            <strong>${escapeHtml(d.name)}</strong><br>
-            <span style="font-size:12px; color:var(--bone-dim);">
-              ${d.cutsSinceSettlement} cuts since last settled · ${d.totalCuts} all-time
-            </span>
-          </div>
-          <div style="text-align:right; display:flex; align-items:center; gap:12px;">
-            <div>
-              <div style="font-weight:700; color:var(--brass);">${formatPrice(d.owedSinceSettlement)}</div>
-              <div style="font-size:11px; color:var(--bone-dim);">owed now</div>
-            </div>
-            <button class="btn btn-secondary" data-settle="${barberId}"
-              ${d.owedSinceSettlement === 0 ? 'disabled' : ''}>Mark as paid</button>
-          </div>
-        </div>
-      `).join('');
-
-  document.querySelectorAll('[data-settle]').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      if(!confirm('Confirm you have physically collected this commission from the barber? This resets their owed total to zero.')) return;
-      btn.disabled = true;
-      const { error } = await supabaseClient.from('barbers')
-        .update({ last_settled_at: new Date().toISOString() })
-        .eq('id', btn.dataset.settle);
-      if(!error) await loadRevenue();
-    });
-  });
-}
-
-async function loadPendingLocations(){
-  const area = document.getElementById('pendingLocationArea');
-  const { data, error } = await supabaseClient
-    .from('barbers')
-    .select('*')
-    .not('latitude', 'is', null)
-    .eq('is_location_verified', false)
-    .order('created_at', { ascending:true });
-
-  approvalCounts.locations = (data || []).length;
-  updateApprovalsCount();
-  if(error || !data || data.length === 0){
-    area.innerHTML = `<div class="empty-pending">${t('empty_location')}</div>`;
-    return;
-  }
-
-  area.innerHTML = data.map(b => {
-    const mapUrl = `https://www.openstreetmap.org/?mlat=${b.latitude}&mlon=${b.longitude}#map=17/${b.latitude}/${b.longitude}`;
-    return `
-      <div class="review-card">
-        <h3>${escapeHtml(b.full_name)}</h3>
-        <div class="review-meta">${escapeHtml(b.shop_name || t('not_set'))}${b.district ? ' · ' + escapeHtml(b.district) : ''}</div>
-        <div class="review-meta"><a href="${mapUrl}" target="_blank" rel="noopener" style="color:var(--brass); font-weight:600;">${t('view_map')}</a></div>
-        <div class="review-actions">
-          <button class="btn btn-approve" data-verify="${b.id}">${t('verify_location')}</button>
-          <button class="btn btn-reject" data-reject-location="${b.id}">${t('reject_location')}</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  area.querySelectorAll('[data-verify]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      btn.disabled = true;
-      const { error } = await supabaseClient.from('barbers').update({ is_location_verified: true }).eq('id', btn.dataset.verify);
-      if(error) console.error('Verify location failed:', error);
-      loadPendingLocations();
-    });
-  });
-  area.querySelectorAll('[data-reject-location]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      if(!confirm(t('reject_location_confirm'))) return;
-      btn.disabled = true;
-      // clearing the pin removes it from this queue and from the public map;
-      // the barber sees their pin is gone and can drop a new, accurate one
-      const { error } = await supabaseClient.from('barbers').update({
-        latitude: null, longitude: null, is_location_verified: false
-      }).eq('id', btn.dataset.rejectLocation);
-      if(error) console.error('Reject location failed:', error);
-      loadPendingLocations();
-    });
-  });
-}
-
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await supabaseClient.auth.signOut();
-  window.location.href = 'index.html';
-});
-
-async function init(){
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  if(sessionData.session){
-    await checkAuthorizedAndEnter(sessionData.session.user);
-  } else {
-    document.getElementById('loginWrap').classList.add('active');
-  }
-}
-
-init();
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch(console.warn);
-    });
-  }
 </script>
 </body>
 </html>

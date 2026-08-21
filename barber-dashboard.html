@@ -679,12 +679,6 @@
         <span data-i18n="nav_clients">Clients</span>
         <span style="position:absolute; top:2px; left:34px; width:8px; height:8px; border-radius:50%; background:var(--brass); z-index:2;"></span>
       </button>
-      <button class="nav-item" data-view="payments" style="position:relative;">
-        <span class="nav-emoji">💳</span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-        <span data-i18n="nav_payments">Payments</span>
-        <span id="paymentsNavBadge" style="display:none; position:absolute; top:2px; left:34px; width:8px; height:8px; border-radius:50%; background:var(--err); z-index:2;"></span>
-      </button>
       <button class="nav-item" data-view="profile">
         <span class="nav-emoji">👤</span>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
@@ -881,28 +875,6 @@
     </div>
 
     <!-- ============ PAYMENTS ============ -->
-    <div class="view" data-view="payments">
-      <div style="position:relative;">
-        <span class="icon-accent" aria-hidden="true" style="top:-14px; right:0;">💳</span>
-        <h1 data-i18n="nav_payments">Payments</h1>
-      </div>
-      <p class="page-sub" data-i18n="payments_sub">Pay your commission and keep proof of every payment.</p>
-
-      <div class="card" style="margin-bottom:24px;" id="paymentsOwedCard"></div>
-
-      <div class="section-title"><span data-i18n="payout_account_title">Pay to</span></div>
-      <div class="card" id="payoutAccountCard" style="margin-bottom:24px;"></div>
-
-      <div class="section-title"><span data-i18n="upload_proof_title">Upload proof of payment</span></div>
-      <div class="card" style="margin-bottom:24px;">
-        <label class="file-btn" for="proofPhotoInput">📎 <span data-i18n="upload_screenshot">Upload screenshot</span></label>
-        <input type="file" id="proofPhotoInput" accept="image/*">
-        <div id="proofUploadMsg" style="font-size:12.5px; margin-top:10px; display:none;"></div>
-      </div>
-
-      <div class="section-title"><span data-i18n="proof_history_title">Your submissions</span></div>
-      <div id="paymentProofsArea"></div>
-    </div>
 
     <!-- ============ PROFILE (merged: photo + info + location + portfolio + account) ============ -->
     <div class="view" data-view="profile">
@@ -1478,7 +1450,6 @@ function applyLang(lang){
     renderOverviewBookings();
     renderBookingsList();
     renderCancellationAlert();
-    updatePaymentsNavBadge();
     renderClientsList();
     if(document.querySelector('.view[data-view="analytics"]').classList.contains('active')) renderAnalytics();
     revealViewTitle(document.querySelector('.view.active'));
@@ -1575,7 +1546,6 @@ document.getElementById('sidebarNav').addEventListener('click', (e)=>{
   btn.classList.add('active');
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.dataset.view === btn.dataset.view));
   if(btn.dataset.view === 'analytics') renderAnalytics();
-  if(btn.dataset.view === 'payments') renderPayments();
   revealNow(document.querySelector(`.view[data-view="${btn.dataset.view}"]`));
   revealViewTitle(document.querySelector(`.view[data-view="${btn.dataset.view}"]`));
 });
@@ -3019,105 +2989,6 @@ function renderClientsList(){
   }).join('') + `</div>`;
 }
 
-/* ---------- payments (commission owed, payout account, proof of payment) ---------- */
-function computeOwedAmount(){
-  const lastSettled = new Date(barberData.last_settled_at || 0);
-  return bookingsData
-    .filter(b => b.status === 'completed' && b.completed_at && new Date(b.completed_at) > lastSettled)
-    .reduce((sum, b) => sum + (b.commission_amount || 0), 0);
-}
-
-function updatePaymentsNavBadge(){
-  const badge = document.getElementById('paymentsNavBadge');
-  if(!badge) return;
-  badge.style.display = computeOwedAmount() > 0 ? 'block' : 'none';
-}
-
-async function renderPayments(){
-  const owed = computeOwedAmount();
-  const owedCard = document.getElementById('paymentsOwedCard');
-  owedCard.innerHTML = owed > 0
-    ? `<div style="font-size:12.5px; color:var(--ink-dim); margin-bottom:6px;">${t('owed_amount_label')}</div>
-       <div class="mono" style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:32px; color:var(--brass);">${formatPrice(owed)}</div>`
-    : `<div style="color:var(--ink-dim); font-size:13.5px;">✅ ${t('owed_zero_msg')}</div>`;
-
-  const { data: settings } = await supabaseClient.from('platform_settings').select('*').eq('id', 1).single();
-  const payoutCard = document.getElementById('payoutAccountCard');
-  if(settings && (settings.payout_card_number || settings.payout_card_name)){
-    payoutCard.innerHTML = `
-      <div class="info-row"><span class="k">${t('pay_to_card_label')}</span><span class="v mono">${escapeHtml(settings.payout_card_number || '—')}</span></div>
-      <div class="info-row"><span class="k">${t('pay_to_name_label')}</span><span class="v">${escapeHtml(settings.payout_card_name || '—')}</span></div>
-    `;
-  } else {
-    payoutCard.innerHTML = `<div style="color:var(--ink-dim); font-size:13px;">${t('no_payout_set')}</div>`;
-  }
-
-  renderPaymentProofs();
-}
-
-async function renderPaymentProofs(){
-  const area = document.getElementById('paymentProofsArea');
-  const { data: proofs, error } = await supabaseClient
-    .from('payment_proofs')
-    .select('*')
-    .eq('barber_id', barberData.id)
-    .order('created_at', { ascending:false });
-  if(error || !proofs || proofs.length === 0){
-    area.innerHTML = `<div class="empty-state">${t('no_proofs_yet')}</div>`;
-    return;
-  }
-  const statusColor = { pending:'var(--sun)', approved:'var(--ok)', rejected:'var(--err)' };
-  const items = await Promise.all(proofs.map(async p => {
-    const { data: signed } = await supabaseClient.storage.from('payment-proofs').createSignedUrl(p.screenshot_path, 3600);
-    const imgUrl = signed ? signed.signedUrl : '';
-    return `
-      <div class="client-row" style="align-items:center;">
-        <div style="display:flex; align-items:center; gap:12px;">
-          ${imgUrl ? `<a href="${imgUrl}" target="_blank" rel="noopener"><img src="${imgUrl}" alt="" style="width:50px; height:50px; object-fit:cover; border-radius:8px; border:1px solid var(--line);"></a>` : ''}
-          <div>
-            <div class="cr-name mono">${formatPrice(p.amount_owed)}</div>
-            <div style="font-size:11.5px; color:var(--ink-dim);">${new Date(p.created_at).toLocaleString()}</div>
-          </div>
-        </div>
-        <div style="font-size:11.5px; font-weight:700; color:${statusColor[p.status] || 'var(--ink-dim)'};">${t('proof_status_' + p.status)}</div>
-      </div>
-    `;
-  }));
-  area.innerHTML = items.join('');
-}
-
-document.getElementById('proofPhotoInput').addEventListener('change', async (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const msg = document.getElementById('proofUploadMsg');
-  msg.style.display = 'block';
-  msg.style.color = 'var(--ink-dim)';
-  msg.textContent = t('proof_uploading');
-
-  const ext = file.name.split('.').pop();
-  const path = `${barberData.id}/${crypto.randomUUID()}.${ext}`;
-  const { error: uploadError } = await supabaseClient.storage.from('payment-proofs').upload(path, file);
-  if(uploadError){
-    console.error('Payment proof upload error:', uploadError);
-    msg.style.color = 'var(--err)';
-    msg.textContent = t('proof_upload_failed');
-    return;
-  }
-  const { error: dbError } = await supabaseClient.from('payment_proofs').insert([{
-    barber_id: barberData.id, screenshot_path: path, amount_owed: computeOwedAmount()
-  }]);
-  if(dbError){
-    console.error('Payment proof insert error:', dbError);
-    msg.style.color = 'var(--err)';
-    msg.textContent = t('proof_upload_failed');
-    return;
-  }
-  msg.style.color = 'var(--ok)';
-  msg.textContent = t('proof_uploaded_msg');
-  e.target.value = '';
-  renderPaymentProofs();
-});
-
 /* ---------- walk-in booking ---------- */
 function blocksForWalkinDay(dayKey){
   return availabilityData.filter(b => b.day === dayKey);
@@ -3350,7 +3221,6 @@ function renderCancellationAlert(){
     await supabaseClient.from('bookings').update({ barber_seen_cancellation: true }).in('id', ids);
     unseen.forEach(b => b.barber_seen_cancellation = true);
     renderCancellationAlert();
-    updatePaymentsNavBadge();
   };
 }
 
